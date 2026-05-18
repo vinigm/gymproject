@@ -172,9 +172,81 @@ input, select { font: inherit; color: inherit; }
 
 .sync-status {
   text-align: center; color: var(--muted); font-size: 11px;
-  margin: 8px 0 0;
+  margin: 0;
   min-height: 1em;
 }
+.sync-status[data-kind="ok"]  { color: var(--good); }
+.sync-status[data-kind="err"] { color: var(--bad); }
+
+/* === REGISTRO: data + botão salvar === */
+.block-head--registro {
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+.registro-title {
+  display: flex; flex-direction: column; gap: 6px;
+  width: 100%;
+}
+.registro-controls {
+  display: flex; align-items: center; gap: 8px;
+}
+.date-input {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 6px 8px;
+  color: var(--text);
+  font-size: 13px;
+  color-scheme: dark; /* date picker do iOS/macOS em tema escuro */
+  font-variant-numeric: tabular-nums;
+}
+.date-input::-webkit-calendar-picker-indicator {
+  filter: invert(0.7);
+  cursor: pointer;
+}
+
+.save-bar {
+  margin-top: 12px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.save-btn {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 12px;
+  font-size: 15px; font-weight: 700;
+  background: var(--card-2);
+  color: var(--muted);
+  border: 1px solid var(--border);
+  transition: transform 0.08s ease, background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.save-btn:active:not(:disabled) { transform: scale(0.98); }
+.save-btn:disabled { cursor: default; opacity: 0.7; }
+.save-btn.is-dirty {
+  background: linear-gradient(135deg, #2563eb, #6366f1);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
+}
+
+/* indicação de pendente no card da pessoa */
+.person-card.has-pending {
+  box-shadow: 0 0 0 1px var(--accent), var(--shadow);
+}
+.person-card.has-pending::after {
+  content: "alterações não salvas";
+  display: block;
+  font-size: 10px; color: var(--accent); font-weight: 600;
+  text-align: center;
+  margin-top: 8px;
+  text-transform: uppercase; letter-spacing: 0.08em;
+}
+
+/* cabeçalho do detalhe do calendário com botão de editar */
+.cal-detail-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; margin-bottom: 6px;
+}
+.cal-detail-head h4 { margin: 0; }
 
 /* === STATS === */
 .select {

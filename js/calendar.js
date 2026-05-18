@@ -1,5 +1,5 @@
 import { getRange } from "./storage.js";
-import { todayISO } from "./app.js";
+import { todayISO, jumpToDate } from "./app.js";
 
 const MONTHS_PT = [
   "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
@@ -36,13 +36,19 @@ function renderDetail(day) {
     : "—";
   el.hidden = false;
   el.innerHTML = `
-    <h4>${day.date}</h4>
+    <div class="cal-detail-head">
+      <h4>${day.date}</h4>
+      <button class="ghost-btn" id="cal-edit-btn" data-date="${day.date}">editar este dia</button>
+    </div>
     <div class="line"><span class="lbl">Exercícios:</span>${ex}</div>
     <div class="line"><span class="lbl">Água:</span>${day.water || "—"}</div>
     <div class="line"><span class="lbl">Almoço:</span>${day.lunch || "—"}</div>
     <div class="line"><span class="lbl">Janta:</span>${day.dinner || "—"}</div>
     <div class="line"><span class="lbl">Cigarros:</span>${day.cigarettes ?? "—"}</div>
   `;
+  document.getElementById("cal-edit-btn").addEventListener("click", (e) => {
+    jumpToDate(e.currentTarget.dataset.date);
+  });
 }
 
 function bindControls() {

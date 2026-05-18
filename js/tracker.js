@@ -1,18 +1,61 @@
 import { getDay, saveDay } from "./storage.js";
 import { getState, USERS } from "./app.js";
 
-// Estado por usuário
-const local = {}; // { vinicius: dayObj, victoria: dayObj }
-const saveTimers = {};
+// Snapshot por usuário do que está NO BANCO (após carregar/salvar)
+const saved = {};
+// Estado local que o usuário está mexendo (pode estar dirty)
+const local = {};
 
-function setStatus(text) {
-  document.getElementById("sync-status").textContent = text;
+function setStatus(text, kind = "") {
+  const el = document.getElementById("sync-status");
+  el.textContent = text;
+  el.dataset.kind = kind;
 }
-function pulseSaved() {
-  const pill = document.getElementById("today-saved");
-  pill.hidden = false;
-  clearTimeout(pulseSaved._t);
-  pulseSaved._t = setTimeout(() => { pill.hidden = true; }, 1400);
+
+function isDirtyUser(userId) {
+  const a = saved[userId], b = local[userId];
+  if (!a || !b) return false;
+  return JSON.stringify(normalize(a)) !== JSON.stringify(normalize(b));
+}
+
+function normalize(d) {
+  // Comparação estável (exercises ordenado, campos nulos virados em null)
+  return {
+    exercises: [...(d.exercises || [])].sort(),
+    water: d.water ?? null,
+    lunch: d.lunch ?? null,
+    dinner: d.dinner ?? null,
+    cigarettes: (d.cigarettes ?? null) === "" ? null : (d.cigarettes ?? null)
+  };
+}
+
+function dirtyCount() {
+  return USERS.reduce((acc, u) => acc + (isDirtyUser(u) ? 1 : 0), 0);
+}
+
+export function hasUnsavedChanges() {
+  return dirtyCount() > 0;
+}
+
+function paintSaveButton() {
+  const btn = document.getElementById("btn-save");
+  const n = dirtyCount();
+  if (n === 0) {
+    btn.disabled = true;
+    btn.classList.remove("is-dirty");
+    btn.textContent = "Tudo salvo";
+  } else {
+    btn.disabled = false;
+    btn.classList.add("is-dirty");
+    btn.textContent = n === 1
+      ? "Salvar 1 alteração"
+      : `Salvar ${n} alterações`;
+  }
+  // marca a coluna que tem mudança pendente
+  USERS.forEach(u => {
+    const card = document.querySelector(`.person-card[data-user="${u}"]`);
+    if (card) card.classList.toggle("has-pending", isDirtyUser(u));
+  });
 }
 
 function paintCard(userId) {
@@ -30,21 +73,6 @@ function paintCard(userId) {
   });
 }
 
-function scheduleSave(userId) {
-  setStatus("salvando…");
-  clearTimeout(saveTimers[userId]);
-  saveTimers[userId] = setTimeout(async () => {
-    try {
-      await saveDay(userId, getState().date, local[userId]);
-      setStatus("");
-      pulseSaved();
-    } catch (err) {
-      console.error(err);
-      setStatus("erro ao salvar — tente novamente");
-    }
-  }, 350);
-}
-
 function handleChipClick(userId, chip) {
   const grid = chip.closest(".chip-grid");
   const group = grid.dataset.group;
@@ -59,7 +87,7 @@ function handleChipClick(userId, chip) {
     d[group] = d[group] === v ? null : v;
   }
   paintCard(userId);
-  scheduleSave(userId);
+  paintSaveButton();
 }
 
 export function initTracker() {
@@ -72,6 +100,31 @@ export function initTracker() {
       });
     });
   });
+
+  document.getElementById("btn-save").addEventListener("click", () => {
+    saveAllDirty();
+  });
+}
+
+export async function saveAllDirty() {
+  const dirty = USERS.filter(isDirtyUser);
+  if (dirty.length === 0) return;
+
+  const { date } = getState();
+  setStatus("salvando…");
+  try {
+    await Promise.all(dirty.map(u => saveDay(u, date, local[u])));
+    // atualiza snapshot pro estado considerar limpo
+    dirty.forEach(u => { saved[u] = JSON.parse(JSON.stringify(local[u])); });
+    paintSaveButton();
+    setStatus("salvo!", "ok");
+    setTimeout(() => {
+      if (document.getElementById("sync-status").dataset.kind === "ok") setStatus("");
+    }, 1500);
+  } catch (err) {
+    console.error(err);
+    setStatus("erro ao salvar — tente novamente", "err");
+  }
 }
 
 export async function refreshAllTrackers() {
@@ -82,12 +135,14 @@ export async function refreshAllTrackers() {
     USERS.forEach((u, i) => {
       const d = results[i];
       d.exercises = d.exercises || [];
-      local[u] = d;
+      saved[u] = JSON.parse(JSON.stringify(d));
+      local[u] = JSON.parse(JSON.stringify(d));
       paintCard(u);
     });
+    paintSaveButton();
     setStatus("");
   } catch (err) {
     console.error(err);
-    setStatus("erro ao carregar");
+    setStatus("erro ao carregar", "err");
   }
 }

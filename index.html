@@ -19,11 +19,16 @@
   </header>
 
   <main class="page">
-    <!-- ====== HOJE ====== -->
+    <!-- ====== REGISTRO ====== -->
     <section class="block">
-      <div class="block-head">
-        <h2>Hoje</h2>
-        <span id="today-saved" class="saved-pill" hidden>salvo</span>
+      <div class="block-head block-head--registro">
+        <div class="registro-title">
+          <h2 id="registro-title">Registro de hoje</h2>
+          <div class="registro-controls">
+            <input type="date" id="date-input" class="date-input" />
+            <button id="btn-today" class="ghost-btn" hidden>hoje</button>
+          </div>
+        </div>
       </div>
 
       <div class="two-col">
@@ -121,7 +126,10 @@
           </div>
         </article>
       </div>
-      <p id="sync-status" class="sync-status"></p>
+      <div class="save-bar">
+        <button id="btn-save" class="save-btn" disabled>Tudo salvo</button>
+        <p id="sync-status" class="sync-status"></p>
+      </div>
     </section>
 
     <!-- ====== ESTATÍSTICAS ====== -->

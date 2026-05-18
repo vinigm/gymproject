@@ -1,5 +1,5 @@
 // Service Worker simples: cache da casca do app + network-first pro Firebase.
-const CACHE = "habitos-shell-v5";
+const CACHE = "habitos-shell-v6";
 const SHELL = [
   "./",
   "./index.html",
