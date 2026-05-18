@@ -616,6 +616,84 @@ input, select { font: inherit; color: inherit; }
   .totals-card > .totals-value { margin: 0; flex: 1; }
 }
 
+/* === DETALHAMENTO POR PESSOA === */
+.bd-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 10px;
+  box-shadow: var(--shadow);
+}
+.bd-card[data-user="vinicius"] { border-top: 3px solid var(--vini); }
+.bd-card[data-user="victoria"] { border-top: 3px solid var(--vic); }
+
+.bd-head {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 8px;
+}
+.bd-name { font-weight: 700; font-size: 14px; }
+
+.bd-body {
+  display: flex; flex-direction: column; gap: 4px;
+  margin-bottom: 8px;
+}
+.bd-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 5px 8px;
+  border-radius: 6px;
+  font-size: 13px;
+  background: var(--card-2);
+  border: 1px solid var(--border);
+}
+.bd-row--good .bd-pts { color: var(--good); font-weight: 700; }
+.bd-row--bad  .bd-pts { color: var(--bad);  font-weight: 700; }
+.bd-row--good { border-left: 3px solid var(--good); }
+.bd-row--bad  { border-left: 3px solid var(--bad); }
+.bd-label { color: var(--text); }
+.bd-pts {
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+}
+
+.bd-empty {
+  font-size: 12px; padding: 8px;
+  text-align: center;
+}
+
+.bd-total {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 8px 2px;
+  border-top: 1px dashed var(--border);
+  font-weight: 700; font-size: 14px;
+}
+.bd-total.is-good { color: var(--good); }
+.bd-total.is-bad  { color: var(--bad); }
+
+.breakdown-combined {
+  margin-top: 10px;
+}
+.bd-combined-card {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, rgba(110,168,255,0.12), rgba(167,139,250,0.10));
+  border: 1px solid var(--accent);
+  border-radius: 12px;
+}
+.bd-combined-card.is-bad {
+  background: linear-gradient(135deg, rgba(248,113,113,0.12), rgba(248,113,113,0.06));
+  border-color: var(--bad);
+}
+.bd-combined-label {
+  font-size: 11px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.08em;
+  font-weight: 600;
+}
+.bd-combined-value {
+  font-size: 20px; font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.bd-combined-card.is-bad .bd-combined-value { color: var(--bad); }
+
 .rewards-list {
   display: flex; flex-direction: column; gap: 10px;
 }

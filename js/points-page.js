@@ -7,6 +7,10 @@ import { POINTS, REWARDS } from "./points-config.js";
 
 const NAMES = { vinicius: "Vinicius", victoria: "Victoria" };
 const AVATAR_CLASS = { vinicius: "avatar--vini", victoria: "avatar--vic" };
+const EX_LABELS = {
+  academia: "Academia", corrida: "Corrida", yoga: "Yoga",
+  jiujitsu: "Jiu Jitsu", bicicleta: "Bicicleta"
+};
 
 const pad = (n) => String(n).padStart(2, "0");
 const toISO = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -64,6 +68,87 @@ function periodRange(period) {
   return [clampStart(start), end];
 }
 
+// --- breakdown por categoria ----------------------------------------
+// Retorna lista de linhas mostrando o que somou/perdeu cada categoria,
+// pra exibir item a item por pessoa.
+function breakdownForDays(days) {
+  const exerciseCounts = {};
+  let waterDays = 0, waterPts = 0;
+  let lunchClean = 0, lunchDirty = 0;
+  let dinnerClean = 0, dinnerDirty = 0;
+  let cigTotal = 0;
+
+  for (const d of days) {
+    for (const ex of (d.exercises || [])) {
+      exerciseCounts[ex] = (exerciseCounts[ex] || 0) + 1;
+    }
+    if (d.water && POINTS.water?.[d.water] != null) {
+      waterDays++;
+      waterPts += POINTS.water[d.water];
+    }
+    if (d.lunch === "limpo") lunchClean++;
+    else if (d.lunch === "sujo") lunchDirty++;
+    if (d.dinner === "limpo") dinnerClean++;
+    else if (d.dinner === "sujo") dinnerDirty++;
+    if (d.cigarettes != null && d.cigarettes !== "") {
+      cigTotal += Number(d.cigarettes);
+    }
+  }
+
+  const lines = [];
+
+  // Exercícios — uma linha por modalidade praticada
+  for (const [ex, count] of Object.entries(exerciseCounts)) {
+    const ptsPer = POINTS.exercises?.[ex] || 0;
+    if (count > 0 && ptsPer !== 0) {
+      lines.push({
+        label: EX_LABELS[ex] || ex,
+        count, pts: ptsPer * count,
+        kind: ptsPer > 0 ? "good" : "bad"
+      });
+    }
+  }
+
+  // Água — uma linha só, agregada (dias com água marcada)
+  if (waterDays > 0 && waterPts !== 0) {
+    lines.push({
+      label: "Água",
+      count: waterDays, pts: waterPts,
+      kind: waterPts > 0 ? "good" : "bad"
+    });
+  }
+
+  // Refeições — separar limpo / sujo por slot
+  const mealRow = (label, c, pPer) => {
+    if (c > 0 && pPer !== 0) {
+      lines.push({ label, count: c, pts: pPer * c, kind: pPer > 0 ? "good" : "bad" });
+    }
+  };
+  mealRow("Almoço limpo", lunchClean,  POINTS.meals?.lunch?.limpo  || 0);
+  mealRow("Almoço sujo",  lunchDirty,  POINTS.meals?.lunch?.sujo   || 0);
+  mealRow("Janta limpa",  dinnerClean, POINTS.meals?.dinner?.limpo || 0);
+  mealRow("Janta suja",   dinnerDirty, POINTS.meals?.dinner?.sujo  || 0);
+
+  // Cigarros — count é o total de cigarros, não dias
+  if (cigTotal > 0 && (POINTS.cigarettes || 0) !== 0) {
+    const pPer = POINTS.cigarettes;
+    lines.push({
+      label: "Cigarros",
+      count: cigTotal, pts: pPer * cigTotal,
+      kind: pPer > 0 ? "good" : "bad"
+    });
+  }
+
+  // Positivos primeiro, depois negativos; cada grupo ordenado por magnitude
+  lines.sort((a, b) => {
+    if (a.kind !== b.kind) return a.kind === "good" ? -1 : 1;
+    return Math.abs(b.pts) - Math.abs(a.pts);
+  });
+
+  const total = lines.reduce((s, l) => s + l.pts, 0);
+  return { lines, total };
+}
+
 // --- soma por período -----------------------------------------------
 function pointsInPeriod(userDays, period) {
   const [start, end] = periodRange(period);
@@ -110,6 +195,60 @@ function renderTotals(dataByUser) {
   }).join("");
 
   el.innerHTML = cards;
+}
+
+// --- render: detalhamento por pessoa --------------------------------
+function fmtPts(n) {
+  return `${n >= 0 ? "+" : ""}${n}`;
+}
+
+function renderBreakdown(dataByUser, period) {
+  const el = document.getElementById("breakdown");
+  const combinedEl = document.getElementById("breakdown-combined");
+  const [start, end] = periodRange(period);
+
+  const perUserResult = USERS.map(u => {
+    const days = dataByUser[u].filter(d => d.date >= start && d.date <= end);
+    return { user: u, ...breakdownForDays(days) };
+  });
+
+  const cols = perUserResult.map(({ user, lines, total }) => {
+    const totalKlass = total < 0 ? "is-bad" : (total > 0 ? "is-good" : "");
+    const rows = lines.length === 0
+      ? `<div class="bd-empty muted">nada marcado no período</div>`
+      : lines.map(l => `
+          <div class="bd-row bd-row--${l.kind}">
+            <span class="bd-label">${l.label}${l.count > 1 ? ` ×${l.count}` : ""}</span>
+            <span class="bd-pts">${fmtPts(l.pts)}</span>
+          </div>
+        `).join("");
+
+    return `
+      <div class="bd-card" data-user="${user}">
+        <div class="bd-head">
+          <span class="avatar ${AVATAR_CLASS[user]} avatar--sm">V</span>
+          <span class="bd-name">${NAMES[user]}</span>
+        </div>
+        <div class="bd-body">${rows}</div>
+        <div class="bd-total ${totalKlass}">
+          <span>Total</span>
+          <span>${fmtPts(total)} pts</span>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  el.innerHTML = cols;
+
+  // total combinado (que conta pros prêmios desse período)
+  const combinedTotal = perUserResult.reduce((s, r) => s + r.total, 0);
+  const combinedKlass = combinedTotal < 0 ? "is-bad" : "";
+  combinedEl.innerHTML = `
+    <div class="bd-combined-card ${combinedKlass}">
+      <span class="bd-combined-label">somado · ${PERIOD_LABELS[period]}</span>
+      <span class="bd-combined-value">${fmtPts(combinedTotal)} pts</span>
+    </div>
+  `;
 }
 
 // --- render: prêmios ------------------------------------------------
@@ -171,7 +310,12 @@ function renderHeaderPeriod() {
     renderHeaderPeriod();
     const data = await loadAllData();
     renderTotals(data);
+    renderBreakdown(data, "weekly");
     renderRewards(data);
+
+    document.getElementById("breakdown-period").addEventListener("change", (e) => {
+      renderBreakdown(data, e.target.value);
+    });
   } catch (err) {
     console.error(err);
     document.getElementById("totals").innerHTML =

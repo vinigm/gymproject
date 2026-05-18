@@ -31,6 +31,21 @@
 
     <section class="block">
       <div class="block-head">
+        <h2>Detalhamento por pessoa</h2>
+        <select id="breakdown-period" class="select">
+          <option value="weekly" selected>semana</option>
+          <option value="monthly">mês</option>
+          <option value="all">total</option>
+        </select>
+      </div>
+      <div id="breakdown" class="two-col">
+        <p class="muted" style="padding:8px">carregando…</p>
+      </div>
+      <div id="breakdown-combined" class="breakdown-combined"></div>
+    </section>
+
+    <section class="block">
+      <div class="block-head">
         <h2>Prêmios</h2>
         <span class="muted" style="font-size:11px">soma dos dois</span>
       </div>
