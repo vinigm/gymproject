@@ -437,20 +437,13 @@ function computeAllRecords(dataByUser) {
   }));
 }
 
-function findTopRecord(allRecords) {
-  const entries = [
-    { kind: "Melhor dia",    field: "bestDay",   when: r => fmtDayFull(r.date) },
-    { kind: "Melhor semana", field: "bestWeek",  when: r => fmtWeekRange(r.weekStart) },
-    { kind: "Melhor mês",    field: "bestMonth", when: r => fmtMonth(r.monthKey) },
-  ];
+function findTopByPeriod(allRecords, field, fmtWhen) {
   let top = null;
   for (const u of USERS) {
-    for (const e of entries) {
-      const rec = allRecords[u][e.field];
-      if (!rec) continue;
-      if (!top || rec.total > top.points) {
-        top = { user: u, kind: e.kind, points: rec.total, when: e.when(rec) };
-      }
+    const rec = allRecords[u][field];
+    if (!rec) continue;
+    if (!top || rec.total > top.points) {
+      top = { user: u, points: rec.total, when: fmtWhen(rec) };
     }
   }
   return top;
@@ -459,24 +452,44 @@ function findTopRecord(allRecords) {
 function renderRecordsBanner(allRecords) {
   const el = document.getElementById("records-banner");
   if (!el) return;
-  const top = findTopRecord(allRecords);
-  if (!top) {
+
+  const banners = [
+    { label: "Recorde de dia",    top: findTopByPeriod(allRecords, "bestDay",   r => fmtDayFull(r.date)) },
+    { label: "Recorde de semana", top: findTopByPeriod(allRecords, "bestWeek",  r => fmtWeekRange(r.weekStart)) },
+    { label: "Recorde de mês",    top: findTopByPeriod(allRecords, "bestMonth", r => fmtMonth(r.monthKey)) },
+  ];
+
+  if (banners.every(b => !b.top)) {
     el.innerHTML = `<div class="banner-empty muted">sem recordes ainda — registre pontos pra começar</div>`;
     return;
   }
-  el.innerHTML = `
-    <div class="banner-card" data-user="${top.user}">
-      <div class="banner-icon" aria-hidden="true">🏆</div>
-      <div class="banner-body">
-        <div class="banner-label">Recorde geral</div>
-        <div class="banner-value">${fmtPts(top.points)} pts</div>
-        <div class="banner-meta">
-          <span class="avatar ${AVATAR_CLASS[top.user]} avatar--xs">V</span>
-          <span>${NAMES[top.user]} · ${top.kind} · ${top.when}</span>
+
+  el.innerHTML = banners.map(({ label, top }) => {
+    if (!top) {
+      return `
+        <div class="banner-card banner-card--empty">
+          <div class="banner-icon" aria-hidden="true">🏆</div>
+          <div class="banner-body">
+            <div class="banner-label">${label}</div>
+            <div class="banner-value-empty">sem dados ainda</div>
+          </div>
+        </div>
+      `;
+    }
+    return `
+      <div class="banner-card" data-user="${top.user}">
+        <div class="banner-icon" aria-hidden="true">🏆</div>
+        <div class="banner-body">
+          <div class="banner-label">${label}</div>
+          <div class="banner-value">${fmtPts(top.points)} pts</div>
+          <div class="banner-meta">
+            <span class="avatar ${AVATAR_CLASS[top.user]} avatar--xs">V</span>
+            <span>${NAMES[top.user]} · ${top.when}</span>
+          </div>
         </div>
       </div>
-    </div>
-  `;
+    `;
+  }).join("");
 }
 
 function renderRecords(allRecords) {
