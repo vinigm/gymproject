@@ -426,15 +426,65 @@ function renderEmptyRecord(label) {
   `;
 }
 
-function renderRecords(dataByUser) {
+function computeAllRecords(dataByUser) {
+  return Object.fromEntries(USERS.map(u => {
+    const days = dataByUser[u];
+    return [u, {
+      bestDay:   getBestDay(days),
+      bestWeek:  getBestWeek(days),
+      bestMonth: getBestMonth(days),
+    }];
+  }));
+}
+
+function findTopRecord(allRecords) {
+  const entries = [
+    { kind: "Melhor dia",    field: "bestDay",   when: r => fmtDayFull(r.date) },
+    { kind: "Melhor semana", field: "bestWeek",  when: r => fmtWeekRange(r.weekStart) },
+    { kind: "Melhor mês",    field: "bestMonth", when: r => fmtMonth(r.monthKey) },
+  ];
+  let top = null;
+  for (const u of USERS) {
+    for (const e of entries) {
+      const rec = allRecords[u][e.field];
+      if (!rec) continue;
+      if (!top || rec.total > top.points) {
+        top = { user: u, kind: e.kind, points: rec.total, when: e.when(rec) };
+      }
+    }
+  }
+  return top;
+}
+
+function renderRecordsBanner(allRecords) {
+  const el = document.getElementById("records-banner");
+  if (!el) return;
+  const top = findTopRecord(allRecords);
+  if (!top) {
+    el.innerHTML = `<div class="banner-empty muted">sem recordes ainda — registre pontos pra começar</div>`;
+    return;
+  }
+  el.innerHTML = `
+    <div class="banner-card" data-user="${top.user}">
+      <div class="banner-icon" aria-hidden="true">🏆</div>
+      <div class="banner-body">
+        <div class="banner-label">Recorde geral</div>
+        <div class="banner-value">${fmtPts(top.points)} pts</div>
+        <div class="banner-meta">
+          <span class="avatar ${AVATAR_CLASS[top.user]} avatar--xs">V</span>
+          <span>${NAMES[top.user]} · ${top.kind} · ${top.when}</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderRecords(allRecords) {
   const el = document.getElementById("records");
   if (!el) return;
 
   const cols = USERS.map(u => {
-    const days = dataByUser[u];
-    const bestDay   = getBestDay(days);
-    const bestWeek  = getBestWeek(days);
-    const bestMonth = getBestMonth(days);
+    const { bestDay, bestWeek, bestMonth } = allRecords[u];
 
     const dayCard = bestDay
       ? renderRecordCard("Melhor dia", bestDay.total, fmtDayFull(bestDay.date), bestDay.lines)
@@ -526,7 +576,9 @@ async function initPointsPage(user) {
     renderTotals(data);
     renderBreakdown(data, "weekly");
     renderRewards(data);
-    renderRecords(data);
+    const allRecords = computeAllRecords(data);
+    renderRecordsBanner(allRecords);
+    renderRecords(allRecords);
 
     document.getElementById("breakdown-period").addEventListener("change", (e) => {
       renderBreakdown(data, e.target.value);
