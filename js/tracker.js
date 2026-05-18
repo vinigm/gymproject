@@ -100,10 +100,8 @@ export function initTracker() {
       });
     });
   });
-
-  document.getElementById("btn-save").addEventListener("click", () => {
-    saveAllDirty();
-  });
+  // O handler do botão Salvar fica em app.js pra poder
+  // re-renderizar Estatísticas/Histórico/Calendário após salvar.
 }
 
 export async function saveAllDirty() {

@@ -30,21 +30,29 @@ function paintDateUI() {
   document.getElementById("btn-today").hidden = isToday;
 }
 
+async function refreshDependentViews() {
+  // Tudo que depende do estado salvo no banco — chamar após save ou nav
+  await Promise.all([renderStats(), renderHistory(), renderCalendar()]);
+}
+
+async function saveAndRefresh() {
+  await saveAllDirty();
+  await refreshDependentViews();
+}
+
 async function navigateToDate(newDate) {
   if (newDate === state.date) return;
 
   if (hasUnsavedChanges()) {
     const ok = confirm("Você tem alterações não salvas. Deseja salvá-las antes de mudar de data?\n\nOK = salvar e mudar\nCancelar = descartar e mudar");
     if (ok) {
-      await saveAllDirty();
+      await saveAndRefresh();
     }
     // se cancelar, descarta e segue
   }
   state.date = newDate;
   paintDateUI();
   await refreshAllTrackers();
-  // re-render outras seções (histórico/stats incluem o dia atual nos cálculos)
-  renderHistory();
 }
 
 export function jumpToDate(iso) {
@@ -69,6 +77,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
   document.getElementById("btn-today").addEventListener("click", () => {
     navigateToDate(todayISO());
+  });
+  document.getElementById("btn-save").addEventListener("click", () => {
+    saveAndRefresh();
   });
 
   // Aviso antes de fechar a aba com alterações pendentes
