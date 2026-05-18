@@ -10,7 +10,7 @@ export const USERS = ["vinicius", "victoria"];
 // Data a partir da qual o app começa a registrar/exibir.
 // Antes dessa data nada aparece nem pode ser registrado.
 // Mude essa linha pra deslocar o início.
-export const APP_START_DATE = "2026-05-17";
+export const APP_START_DATE = "2026-05-18";
 
 const state = { date: todayISO() };
 export function getState() { return state; }
