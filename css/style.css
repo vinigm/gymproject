@@ -324,8 +324,13 @@ input, select { font: inherit; color: inherit; }
 }
 .donut-total {
   fill: var(--text);
-  font: 700 26px -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  font: 700 24px -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
   text-anchor: middle;
+}
+.donut-of {
+  fill: var(--muted);
+  font-size: 14px;
+  font-weight: 600;
 }
 .donut-sub {
   fill: var(--muted);

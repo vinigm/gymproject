@@ -24,6 +24,10 @@ function monthStartISO() {
 function daysElapsedInMonth() {
   return new Date().getDate(); // 1..31
 }
+function daysInCurrentMonth() {
+  const t = new Date();
+  return new Date(t.getFullYear(), t.getMonth() + 1, 0).getDate();
+}
 
 function waterLitres(v) {
   if (v === "1L") return 1;
@@ -49,10 +53,10 @@ function streakOfExercise(byDate) {
   return streak;
 }
 
-function semiDonut(clean, dirty) {
-  const total = clean + dirty;
-  const pClean = total > 0 ? (clean / total) * 100 : 0;
-  const pDirty = total > 0 ? 100 - pClean : 0;
+function semiDonut(clean, dirty, totalPossible) {
+  const logged = clean + dirty;
+  const pClean = logged > 0 ? (clean / logged) * 100 : 0;
+  const pDirty = logged > 0 ? 100 - pClean : 0;
 
   return `
     <div class="donut">
@@ -62,8 +66,8 @@ function semiDonut(clean, dirty) {
         <path d="M 20 100 A 80 80 0 0 1 180 100"
               class="donut-fg" pathLength="100"
               stroke-dasharray="${pClean} 100"/>
-        <text x="100" y="88" class="donut-total">${total}</text>
-        <text x="100" y="110" class="donut-sub">refeições</text>
+        <text x="100" y="86" class="donut-total">${logged}<tspan class="donut-of"> / ${totalPossible}</tspan></text>
+        <text x="100" y="110" class="donut-sub">refeições logadas</text>
       </svg>
       <div class="donut-legend">
         <div class="leg leg--good">
@@ -168,7 +172,7 @@ function renderUserCol(userId, rangeData, monthData, totalDays) {
 
     <div class="stat-card">
       <h3>Alimentação · mês atual</h3>
-      ${semiDonut(cleanMonth, dirtyMonth)}
+      ${semiDonut(cleanMonth, dirtyMonth, 2 * daysInCurrentMonth())}
     </div>
   `;
 }
