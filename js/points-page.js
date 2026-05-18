@@ -4,6 +4,7 @@
 import { getRange } from "./storage.js";
 import { todayISO, USERS, APP_START_DATE } from "./app.js";
 import { POINTS, REWARDS } from "./points-config.js";
+import { pointsForDay } from "./points-engine.js";
 
 const NAMES = { vinicius: "Vinicius", victoria: "Victoria" };
 const AVATAR_CLASS = { vinicius: "avatar--vini", victoria: "avatar--vic" };
@@ -21,27 +22,7 @@ const PERIOD_LABELS = {
   all:     "total",
 };
 
-// --- pontos por dia -------------------------------------------------
-function pointsForDay(day) {
-  if (!day) return 0;
-  let pts = 0;
-  for (const ex of (day.exercises || [])) {
-    pts += POINTS.exercises?.[ex] || 0;
-  }
-  if (day.water && POINTS.water?.[day.water] != null) {
-    pts += POINTS.water[day.water];
-  }
-  if (day.lunch && POINTS.meals?.lunch?.[day.lunch] != null) {
-    pts += POINTS.meals.lunch[day.lunch];
-  }
-  if (day.dinner && POINTS.meals?.dinner?.[day.dinner] != null) {
-    pts += POINTS.meals.dinner[day.dinner];
-  }
-  if (day.cigarettes != null && day.cigarettes !== "") {
-    pts += Number(day.cigarettes) * (POINTS.cigarettes || 0);
-  }
-  return pts;
-}
+// --- pontos por dia: importado de ./points-engine.js ---------------
 
 // --- períodos -------------------------------------------------------
 function weekStartISO() {
@@ -77,6 +58,7 @@ function breakdownForDays(days) {
   let lunchClean = 0, lunchDirty = 0;
   let dinnerClean = 0, dinnerDirty = 0;
   let cigTotal = 0;
+  let dessertNao = 0, dessertSim = 0;
 
   for (const d of days) {
     for (const ex of (d.exercises || [])) {
@@ -93,6 +75,8 @@ function breakdownForDays(days) {
     if (d.cigarettes != null && d.cigarettes !== "") {
       cigTotal += Number(d.cigarettes);
     }
+    if (d.dessert === "nao") dessertNao++;
+    else if (d.dessert === "sim") dessertSim++;
   }
 
   const lines = [];
@@ -138,6 +122,15 @@ function breakdownForDays(days) {
       kind: pPer > 0 ? "good" : "bad"
     });
   }
+
+  // Sobremesa
+  const dessertRow = (label, c, pPer) => {
+    if (c > 0 && pPer !== 0) {
+      lines.push({ label, count: c, pts: pPer * c, kind: pPer > 0 ? "good" : "bad" });
+    }
+  };
+  dessertRow("Sem sobremesa",   dessertNao, POINTS.dessert?.nao || 0);
+  dessertRow("Sobremesa (sim)", dessertSim, POINTS.dessert?.sim || 0);
 
   // Positivos primeiro, depois negativos; cada grupo ordenado por magnitude
   lines.sort((a, b) => {

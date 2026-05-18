@@ -17,7 +17,9 @@
     <h1 class="brand">Hábitos</h1>
     <div class="topbar-right">
       <div id="topbar-date" class="topbar-date"></div>
-      <a href="./points.html" class="ghost-btn topbar-link" aria-label="Pontuação e prêmios">🏆</a>
+      <a href="./points.html" class="ghost-btn topbar-link points-badge" aria-label="Pontuação e prêmios">
+        <span id="topbar-points">···</span> 🏆
+      </a>
     </div>
   </header>
 
@@ -52,7 +54,8 @@
           </div>
 
           <h3 class="mini-title">Hidratação</h3>
-          <div class="chip-grid chip-grid--3" data-group="water">
+          <div class="chip-grid chip-grid--2" data-group="water">
+            <button class="chip" data-value="0.5L">0,5L</button>
             <button class="chip" data-value="1L">1L</button>
             <button class="chip" data-value="1.5L">1,5L</button>
             <button class="chip" data-value="2L">2L</button>
@@ -68,6 +71,12 @@
           <div class="chip-grid chip-grid--2" data-group="dinner">
             <button class="chip chip--good" data-value="limpo">Limpo</button>
             <button class="chip chip--bad" data-value="sujo">Sujo</button>
+          </div>
+
+          <h3 class="mini-title">Sobremesa</h3>
+          <div class="chip-grid chip-grid--2" data-group="dessert">
+            <button class="chip chip--good" data-value="nao">Não</button>
+            <button class="chip chip--bad" data-value="sim">Sim</button>
           </div>
 
           <h3 class="mini-title">Cigarros fumados</h3>
@@ -99,7 +108,8 @@
           </div>
 
           <h3 class="mini-title">Hidratação</h3>
-          <div class="chip-grid chip-grid--3" data-group="water">
+          <div class="chip-grid chip-grid--2" data-group="water">
+            <button class="chip" data-value="0.5L">0,5L</button>
             <button class="chip" data-value="1L">1L</button>
             <button class="chip" data-value="1.5L">1,5L</button>
             <button class="chip" data-value="2L">2L</button>
@@ -115,6 +125,12 @@
           <div class="chip-grid chip-grid--2" data-group="dinner">
             <button class="chip chip--good" data-value="limpo">Limpo</button>
             <button class="chip chip--bad" data-value="sujo">Sujo</button>
+          </div>
+
+          <h3 class="mini-title">Sobremesa</h3>
+          <div class="chip-grid chip-grid--2" data-group="dessert">
+            <button class="chip chip--good" data-value="nao">Não</button>
+            <button class="chip chip--bad" data-value="sim">Sim</button>
           </div>
 
           <h3 class="mini-title">Cigarros fumados</h3>

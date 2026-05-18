@@ -27,8 +27,9 @@ export const POINTS = {
   },
 
   // Pontos pela QUANTIDADE de água marcada no dia.
-  // Só uma das três opções é marcada por dia.
+  // Só uma das quatro opções é marcada por dia.
   water: {
+    "0.5L":  3,
     "1L":    5,
     "1.5L":  8,
     "2L":   10,
@@ -45,6 +46,12 @@ export const POINTS = {
   // Marcar 0 cigarros = 0 pontos (nem soma nem perde).
   // Marcar 4 cigarros com cigarettes = -3  → -12 pontos.
   cigarettes: -3,
+
+  // Sobremesa: "sim" = comeu doce depois da refeição. "nao" = resistiu.
+  dessert: {
+    sim: -3,
+    nao:  3,
+  },
 };
 
 

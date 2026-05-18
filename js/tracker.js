@@ -25,7 +25,8 @@ function normalize(d) {
     water: d.water ?? null,
     lunch: d.lunch ?? null,
     dinner: d.dinner ?? null,
-    cigarettes: (d.cigarettes ?? null) === "" ? null : (d.cigarettes ?? null)
+    cigarettes: (d.cigarettes ?? null) === "" ? null : (d.cigarettes ?? null),
+    dessert: d.dessert ?? null
   };
 }
 

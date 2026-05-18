@@ -1,8 +1,9 @@
-import { storageMode } from "./storage.js";
+import { storageMode, getRange } from "./storage.js";
 import { initTracker, refreshAllTrackers, hasUnsavedChanges, saveAllDirty } from "./tracker.js";
 import { renderStats } from "./stats.js";
 import { renderHistory } from "./history.js";
 import { renderCalendar } from "./calendar.js";
+import { pointsForDay } from "./points-engine.js";
 
 export const USERS = ["vinicius", "victoria"];
 
@@ -37,9 +38,31 @@ function paintDateUI() {
   document.getElementById("btn-today").hidden = isToday;
 }
 
+async function refreshPointsBadge() {
+  const el = document.getElementById("topbar-points");
+  if (!el) return;
+  try {
+    const end = todayISO();
+    const start = APP_START_DATE;
+    const results = await Promise.all(
+      USERS.map(u => getRange(u, start, end).catch(() => []))
+    );
+    const total = results.flat().reduce((s, d) => s + pointsForDay(d), 0);
+    el.textContent = String(total);
+  } catch (err) {
+    console.error(err);
+    el.textContent = "···";
+  }
+}
+
 async function refreshDependentViews() {
   // Tudo que depende do estado salvo no banco — chamar após save ou nav
-  await Promise.all([renderStats(), renderHistory(), renderCalendar()]);
+  await Promise.all([
+    renderStats(),
+    renderHistory(),
+    renderCalendar(),
+    refreshPointsBadge(),
+  ]);
 }
 
 async function saveAndRefresh() {
@@ -108,4 +131,5 @@ document.addEventListener("DOMContentLoaded", async () => {
   await renderStats();
   await renderHistory();
   await renderCalendar();
+  await refreshPointsBadge();
 });

@@ -412,8 +412,8 @@ input, select { font: inherit; color: inherit; }
 .hg-header,
 .hg-row {
   display: grid;
-  grid-template-columns: 20px repeat(5, 1fr);
-  gap: 3px;
+  grid-template-columns: 18px repeat(6, 1fr);
+  gap: 2px;
   align-items: center;
 }
 .hg-header {
@@ -574,6 +574,17 @@ input, select { font: inherit; color: inherit; }
   font-size: 16px; padding: 6px 10px;
   text-decoration: none;
 }
+.points-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: linear-gradient(135deg, rgba(110,168,255,0.18), rgba(167,139,250,0.18));
+  border-color: var(--accent);
+  color: var(--text);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  font-size: 14px;
+  padding: 5px 10px;
+}
+.points-badge #topbar-points { letter-spacing: -0.01em; }
 
 /* === PÁGINA DE PONTOS === */
 .totals-grid {

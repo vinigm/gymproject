@@ -44,6 +44,7 @@ function renderDetail(day) {
     <div class="line"><span class="lbl">Água:</span>${day.water || "—"}</div>
     <div class="line"><span class="lbl">Almoço:</span>${day.lunch || "—"}</div>
     <div class="line"><span class="lbl">Janta:</span>${day.dinner || "—"}</div>
+    <div class="line"><span class="lbl">Sobremesa:</span>${day.dessert === "sim" ? "Sim" : day.dessert === "nao" ? "Não" : "—"}</div>
     <div class="line"><span class="lbl">Cigarros:</span>${day.cigarettes ?? "—"}</div>
   `;
   document.getElementById("cal-edit-btn").addEventListener("click", (e) => {

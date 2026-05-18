@@ -60,6 +60,11 @@ function cellFor(habit, day) {
       const n = Number(day.cigarettes);
       return `<div class="hg-cell hg-on ${cigClass(n)}">${n}</div>`;
     }
+    case "dessert": {
+      if (day.dessert === "nao") return `<div class="hg-cell hg-on hg-on--clean">Não</div>`;
+      if (day.dessert === "sim") return `<div class="hg-cell hg-on hg-on--dirty">Sim</div>`;
+      return NOT_DONE;
+    }
   }
   return NOT_DONE;
 }
@@ -84,6 +89,7 @@ function renderUserGrid(userId, data) {
         ${cellFor("water", day)}
         ${cellFor("lunch", day)}
         ${cellFor("dinner", day)}
+        ${cellFor("dessert", day)}
         ${cellFor("cigarettes", day)}
       </div>
     `);
@@ -101,6 +107,7 @@ function renderUserGrid(userId, data) {
         <div class="hg-hdr">água</div>
         <div class="hg-hdr">alm</div>
         <div class="hg-hdr">jan</div>
+        <div class="hg-hdr">sob</div>
         <div class="hg-hdr">cig</div>
       </div>
       <div class="hg-body">
