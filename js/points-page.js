@@ -222,6 +222,30 @@ function fmtPts(n) {
   return `${n >= 0 ? "+" : ""}${n}`;
 }
 
+function fmtDayFull(iso) {
+  const [y, m, d] = iso.split("-").map(Number);
+  const date = new Date(y, m - 1, d);
+  const dd = String(d).padStart(2, "0");
+  const mm = String(m).padStart(2, "0");
+  // "segunda-feira" → "Segunda Feira"
+  const wkRaw = date.toLocaleDateString("pt-BR", { weekday: "long" });
+  const wk = wkRaw.split("-")
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+  return `${dd}/${mm}/${y} - ${wk}`;
+}
+
+// Quebra os dias em blocos individuais com o breakdown de cada um
+function breakdownByDay(days) {
+  return [...days]
+    .sort((a, b) => b.date.localeCompare(a.date))  // mais recente primeiro
+    .map(d => {
+      const { lines, total } = breakdownForDays([d]);
+      return { date: d.date, lines, total };
+    })
+    .filter(b => b.lines.length > 0);
+}
+
 function renderBreakdown(dataByUser, period) {
   const el = document.getElementById("breakdown");
   const combinedEl = document.getElementById("breakdown-combined");
@@ -229,19 +253,36 @@ function renderBreakdown(dataByUser, period) {
 
   const perUserResult = USERS.map(u => {
     const days = dataByUser[u].filter(d => d.date >= start && d.date <= end);
-    return { user: u, ...breakdownForDays(days) };
+    const dayBreakdowns = breakdownByDay(days);
+    const total = dayBreakdowns.reduce((s, b) => s + b.total, 0);
+    return { user: u, dayBreakdowns, total };
   });
 
-  const cols = perUserResult.map(({ user, lines, total }) => {
+  const renderDayBlock = ({ date, lines, total: subtotal }) => {
+    const subKlass = subtotal < 0 ? "is-bad" : (subtotal > 0 ? "is-good" : "");
+    const rows = lines.map(l => `
+      <div class="bd-row bd-row--${l.kind}">
+        <span class="bd-label">${l.label}${l.count > 1 ? ` ×${l.count}` : ""}</span>
+        <span class="bd-pts">${fmtPts(l.pts)}</span>
+      </div>
+    `).join("");
+    return `
+      <div class="bd-day">
+        <div class="bd-day-label">${fmtDayFull(date)}</div>
+        <div class="bd-day-rows">${rows}</div>
+        <div class="bd-day-subtotal ${subKlass}">
+          <span>Subtotal</span>
+          <span>${fmtPts(subtotal)} pts</span>
+        </div>
+      </div>
+    `;
+  };
+
+  const cols = perUserResult.map(({ user, dayBreakdowns, total }) => {
     const totalKlass = total < 0 ? "is-bad" : (total > 0 ? "is-good" : "");
-    const rows = lines.length === 0
+    const body = dayBreakdowns.length === 0
       ? `<div class="bd-empty muted">nada marcado no período</div>`
-      : lines.map(l => `
-          <div class="bd-row bd-row--${l.kind}">
-            <span class="bd-label">${l.label}${l.count > 1 ? ` ×${l.count}` : ""}</span>
-            <span class="bd-pts">${fmtPts(l.pts)}</span>
-          </div>
-        `).join("");
+      : dayBreakdowns.map(renderDayBlock).join("");
 
     return `
       <div class="bd-card" data-user="${user}">
@@ -249,7 +290,7 @@ function renderBreakdown(dataByUser, period) {
           <span class="avatar ${AVATAR_CLASS[user]} avatar--sm">V</span>
           <span class="bd-name">${NAMES[user]}</span>
         </div>
-        <div class="bd-body">${rows}</div>
+        <div class="bd-body">${body}</div>
         <div class="bd-total ${totalKlass}">
           <span>Total</span>
           <span>${fmtPts(total)} pts</span>
