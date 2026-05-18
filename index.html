@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Hábitos" />
+  <title>Hábitos · Vini & Vic</title>
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" type="image/svg+xml" href="./icons/icon.svg" />
+  <link rel="stylesheet" href="./css/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <h1 class="brand">Hábitos</h1>
+    <div id="topbar-date" class="topbar-date"></div>
+  </header>
+
+  <main class="page">
+    <!-- ====== HOJE ====== -->
+    <section class="block">
+      <div class="block-head">
+        <h2>Hoje</h2>
+        <span id="today-saved" class="saved-pill" hidden>salvo</span>
+      </div>
+
+      <div class="two-col">
+        <!-- VINICIUS -->
+        <article class="person-card" data-user="vinicius">
+          <header class="person-head">
+            <span class="avatar avatar--vini avatar--md">V</span>
+            <span class="person-name">Vinicius</span>
+          </header>
+
+          <h3 class="mini-title">Exercícios</h3>
+          <div class="chip-grid chip-grid--1" data-group="exercises">
+            <button class="chip" data-value="academia">Academia</button>
+            <button class="chip" data-value="corrida">Corrida</button>
+            <button class="chip" data-value="yoga">Yoga</button>
+            <button class="chip" data-value="jiujitsu">Jiu Jitsu</button>
+            <button class="chip" data-value="bicicleta">Bicicleta</button>
+          </div>
+
+          <h3 class="mini-title">Hidratação</h3>
+          <div class="chip-grid chip-grid--3" data-group="water">
+            <button class="chip" data-value="1L">1L</button>
+            <button class="chip" data-value="1.5L">1,5L</button>
+            <button class="chip" data-value="2L">2L</button>
+          </div>
+
+          <h3 class="mini-title">Almoço</h3>
+          <div class="chip-grid chip-grid--2" data-group="lunch">
+            <button class="chip chip--good" data-value="limpo">Limpo</button>
+            <button class="chip chip--bad" data-value="sujo">Sujo</button>
+          </div>
+
+          <h3 class="mini-title">Janta</h3>
+          <div class="chip-grid chip-grid--2" data-group="dinner">
+            <button class="chip chip--good" data-value="limpo">Limpo</button>
+            <button class="chip chip--bad" data-value="sujo">Sujo</button>
+          </div>
+        </article>
+
+        <!-- VICTORIA -->
+        <article class="person-card" data-user="victoria">
+          <header class="person-head">
+            <span class="avatar avatar--vic avatar--md">V</span>
+            <span class="person-name">Victoria</span>
+          </header>
+
+          <h3 class="mini-title">Exercícios</h3>
+          <div class="chip-grid chip-grid--1" data-group="exercises">
+            <button class="chip" data-value="academia">Academia</button>
+            <button class="chip" data-value="corrida">Corrida</button>
+            <button class="chip" data-value="yoga">Yoga</button>
+            <button class="chip" data-value="jiujitsu">Jiu Jitsu</button>
+            <button class="chip" data-value="bicicleta">Bicicleta</button>
+          </div>
+
+          <h3 class="mini-title">Hidratação</h3>
+          <div class="chip-grid chip-grid--3" data-group="water">
+            <button class="chip" data-value="1L">1L</button>
+            <button class="chip" data-value="1.5L">1,5L</button>
+            <button class="chip" data-value="2L">2L</button>
+          </div>
+
+          <h3 class="mini-title">Almoço</h3>
+          <div class="chip-grid chip-grid--2" data-group="lunch">
+            <button class="chip chip--good" data-value="limpo">Limpo</button>
+            <button class="chip chip--bad" data-value="sujo">Sujo</button>
+          </div>
+
+          <h3 class="mini-title">Janta</h3>
+          <div class="chip-grid chip-grid--2" data-group="dinner">
+            <button class="chip chip--good" data-value="limpo">Limpo</button>
+            <button class="chip chip--bad" data-value="sujo">Sujo</button>
+          </div>
+        </article>
+      </div>
+      <p id="sync-status" class="sync-status"></p>
+    </section>
+
+    <!-- ====== ESTATÍSTICAS ====== -->
+    <section class="block">
+      <div class="block-head">
+        <h2>Estatísticas</h2>
+        <select id="stats-range" class="select">
+          <option value="7">7 dias</option>
+          <option value="30" selected>30 dias</option>
+          <option value="90">90 dias</option>
+        </select>
+      </div>
+      <div class="two-col">
+        <div id="stats-vinicius" class="stats-col"></div>
+        <div id="stats-victoria" class="stats-col"></div>
+      </div>
+    </section>
+
+    <!-- ====== CALENDÁRIO ====== -->
+    <section class="block">
+      <div class="block-head">
+        <h2 id="cal-title">Calendário</h2>
+        <div class="cal-controls">
+          <div class="seg" id="cal-user-seg">
+            <button data-user="vinicius" class="seg-btn is-on">Vini</button>
+            <button data-user="victoria" class="seg-btn">Vic</button>
+          </div>
+          <div class="cal-nav">
+            <button id="cal-prev" class="ghost-btn">‹</button>
+            <button id="cal-next" class="ghost-btn">›</button>
+          </div>
+        </div>
+      </div>
+      <div id="calendar" class="calendar"></div>
+      <div id="cal-detail" class="cal-detail" hidden></div>
+      <div class="legend">
+        <span><i class="dot dot--ex"></i> exercício</span>
+        <span><i class="dot dot--water"></i> água</span>
+        <span><i class="dot dot--clean"></i> limpo</span>
+        <span><i class="dot dot--dirty"></i> sujo</span>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <span id="storage-badge" class="muted"></span>
+    </footer>
+  </main>
+
+  <script type="module" src="./js/app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./service-worker.js').catch(() => {});
+      });
+    }
+  </script>
+</body>
+</html>

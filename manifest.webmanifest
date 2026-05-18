@@ -1,0 +1,19 @@
+{
+  "name": "Hábitos · Vini & Vic",
+  "short_name": "Hábitos",
+  "description": "Registro diário de exercícios e alimentação",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b1220",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "./icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
