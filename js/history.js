@@ -18,40 +18,44 @@ function cigClass(n) {
   return "hg-on--neutral";
 }
 
+const NOT_DONE = `<div class="hg-cell hg-x">❌</div>`;
+
+function fmtWater(v) {
+  return v.replace(".", ",");
+}
+
 function cellFor(habit, day) {
-  if (!day) return `<div class="hg-cell hg-x">×</div>`;
+  if (!day) return NOT_DONE;
 
   switch (habit) {
     case "exercise": {
       const did = day.exercises && day.exercises.length > 0;
       return did
-        ? `<div class="hg-cell hg-on hg-on--ex"></div>`
-        : `<div class="hg-cell hg-x">×</div>`;
+        ? `<div class="hg-cell hg-on hg-on--ex">Sim</div>`
+        : NOT_DONE;
     }
     case "water": {
       return day.water
-        ? `<div class="hg-cell hg-on hg-on--water"></div>`
-        : `<div class="hg-cell hg-x">×</div>`;
+        ? `<div class="hg-cell hg-on hg-on--water">${fmtWater(day.water)}</div>`
+        : NOT_DONE;
     }
     case "lunch": {
-      if (day.lunch === "limpo") return `<div class="hg-cell hg-on hg-on--clean"></div>`;
-      if (day.lunch === "sujo")  return `<div class="hg-cell hg-on hg-on--dirty"></div>`;
-      return `<div class="hg-cell hg-x">×</div>`;
+      if (day.lunch === "limpo") return `<div class="hg-cell hg-on hg-on--clean">Limpo</div>`;
+      if (day.lunch === "sujo")  return `<div class="hg-cell hg-on hg-on--dirty">Sujo</div>`;
+      return NOT_DONE;
     }
     case "dinner": {
-      if (day.dinner === "limpo") return `<div class="hg-cell hg-on hg-on--clean"></div>`;
-      if (day.dinner === "sujo")  return `<div class="hg-cell hg-on hg-on--dirty"></div>`;
-      return `<div class="hg-cell hg-x">×</div>`;
+      if (day.dinner === "limpo") return `<div class="hg-cell hg-on hg-on--clean">Limpo</div>`;
+      if (day.dinner === "sujo")  return `<div class="hg-cell hg-on hg-on--dirty">Sujo</div>`;
+      return NOT_DONE;
     }
     case "cigarettes": {
-      if (day.cigarettes == null || day.cigarettes === "") {
-        return `<div class="hg-cell hg-x">×</div>`;
-      }
+      if (day.cigarettes == null || day.cigarettes === "") return NOT_DONE;
       const n = Number(day.cigarettes);
       return `<div class="hg-cell hg-on ${cigClass(n)}">${n}</div>`;
     }
   }
-  return `<div class="hg-cell hg-x">×</div>`;
+  return NOT_DONE;
 }
 
 function renderUserGrid(userId, data) {
