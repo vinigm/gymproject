@@ -287,6 +287,88 @@ input, select { font: inherit; color: inherit; }
 .leg--good { border-top: 2px solid var(--good); }
 .leg--bad  { border-top: 2px solid var(--bad); }
 
+/* === HISTÓRICO (grid de hábitos do mês) === */
+.hg-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 8px 12px;
+  box-shadow: var(--shadow);
+}
+.hg-card[data-user="vinicius"] { border-top: 3px solid var(--vini); }
+.hg-card[data-user="victoria"] { border-top: 3px solid var(--vic); }
+
+.hg-card-head {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 8px; padding: 0 2px;
+}
+.hg-card-name { font-weight: 700; font-size: 14px; }
+
+.hg-header,
+.hg-row {
+  display: grid;
+  grid-template-columns: 20px repeat(5, 1fr);
+  gap: 3px;
+  align-items: center;
+}
+.hg-header {
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 4px;
+}
+.hg-hdr {
+  font-size: 9px; color: var(--muted);
+  text-align: center; font-weight: 600;
+  letter-spacing: 0.05em; text-transform: uppercase;
+}
+.hg-body { display: flex; flex-direction: column; gap: 3px; }
+
+.hg-row.is-today {
+  background: rgba(110, 168, 255, 0.10);
+  border-radius: 6px;
+  padding: 1px 0;
+  outline: 1px solid rgba(110, 168, 255, 0.35);
+}
+
+.hg-day {
+  font-size: 10px; color: var(--muted);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.hg-cell {
+  height: 22px;
+  border-radius: 5px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700;
+  background: var(--card-2);
+  border: 1px solid var(--border);
+  font-variant-numeric: tabular-nums;
+}
+.hg-x { color: rgba(138, 153, 192, 0.45); }
+.hg-on { color: #0b1220; }
+.hg-on--ex     { background: var(--ex);    border-color: var(--ex); }
+.hg-on--water  { background: var(--water); border-color: var(--water); }
+.hg-on--clean  { background: var(--good);  border-color: var(--good); }
+.hg-on--dirty  { background: var(--bad);   border-color: var(--bad); }
+.hg-on--warn   { background: #f59e0b;      border-color: #f59e0b; }
+.hg-on--neutral{ background: var(--card-2); color: var(--text); }
+
+/* legenda do histórico */
+.hg-legend {
+  display: flex; flex-wrap: wrap; gap: 6px 12px;
+  margin: 10px 4px 0;
+  font-size: 11px;
+}
+.hg-legend > span { display: inline-flex; align-items: center; gap: 5px; }
+.hg-sw {
+  width: 14px; height: 14px; border-radius: 4px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700;
+  background: var(--card-2); border: 1px solid var(--border);
+  color: #0b1220;
+}
+.hg-sw.hg-x { color: rgba(138, 153, 192, 0.7); }
+
 /* === CALENDÁRIO === */
 .cal-controls { display: flex; align-items: center; gap: 8px; }
 .cal-nav { display: flex; gap: 4px; }

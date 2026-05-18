@@ -1,6 +1,7 @@
 import { storageMode } from "./storage.js";
 import { initTracker, refreshAllTrackers } from "./tracker.js";
 import { renderStats } from "./stats.js";
+import { renderHistory } from "./history.js";
 import { renderCalendar } from "./calendar.js";
 
 export const USERS = ["vinicius", "victoria"];
@@ -31,5 +32,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   initTracker();
   await refreshAllTrackers();
   await renderStats();
+  await renderHistory();
   await renderCalendar();
 });
