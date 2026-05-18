@@ -12,11 +12,14 @@
 
 import {
   db, isConfigured,
-  doc, getDoc, setDoc, collection, query, where, getDocs, serverTimestamp
+  doc, getDoc, setDoc, collection, query, where, getDocs,
+  addDoc, deleteDoc, orderBy, serverTimestamp
 } from "./firebase-config.js";
 
 const LS_KEY = "habitos-days-v1";
+const LS_TX_KEY = "habitos-transactions-v1";
 const COL = "days";
+const TX_COL = "transactions";
 
 function readLS() {
   try { return JSON.parse(localStorage.getItem(LS_KEY)) || {}; }
@@ -95,3 +98,72 @@ export async function getRange(userId, startDate, endDate) {
 }
 
 export const storageMode = isConfigured ? "firebase" : "local";
+
+// ===== Transações (carteira / resgate de prêmios) =====
+// Cada doc representa um resgate de recompensa.
+// scope:
+//   "shared"            → desconta do saldo conjunto (futuro)
+//   "personal-victoria" → desconta só do saldo pessoal da Vic
+//   "personal-vinicius" → idem pro Vini (futuro)
+//
+// Estrutura:
+//   { scope, item, price, note?, created_at }
+
+function readTxLS() {
+  try { return JSON.parse(localStorage.getItem(LS_TX_KEY)) || []; }
+  catch { return []; }
+}
+function writeTxLS(arr) {
+  localStorage.setItem(LS_TX_KEY, JSON.stringify(arr));
+}
+
+export async function addTransaction({ scope, item, price, note }) {
+  const payload = {
+    scope, item, price: Number(price),
+    note: note || null,
+  };
+  if (isConfigured) {
+    await addDoc(collection(db, TX_COL), {
+      ...payload,
+      created_at: serverTimestamp(),
+    });
+    return;
+  }
+  const all = readTxLS();
+  all.push({ ...payload, id: `local-${Date.now()}`, created_at: new Date().toISOString() });
+  writeTxLS(all);
+}
+
+export async function getTransactions({ scope } = {}) {
+  if (isConfigured) {
+    let q;
+    if (scope) {
+      q = query(collection(db, TX_COL), where("scope", "==", scope));
+    } else {
+      q = collection(db, TX_COL);
+    }
+    const snap = await getDocs(q);
+    const out = [];
+    snap.forEach(d => out.push({ id: d.id, ...d.data() }));
+    // ordenar por created_at desc; serverTimestamp pode vir como Timestamp
+    out.sort((a, b) => {
+      const ta = a.created_at?.toMillis ? a.created_at.toMillis() : (a.created_at ? new Date(a.created_at).getTime() : 0);
+      const tb = b.created_at?.toMillis ? b.created_at.toMillis() : (b.created_at ? new Date(b.created_at).getTime() : 0);
+      return tb - ta;
+    });
+    return out;
+  }
+  const all = readTxLS();
+  return all
+    .filter(t => !scope || t.scope === scope)
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+}
+
+export async function deleteTransaction(id) {
+  if (isConfigured) {
+    await deleteDoc(doc(db, TX_COL, id));
+    return;
+  }
+  const all = readTxLS().filter(t => t.id !== id);
+  writeTxLS(all);
+}

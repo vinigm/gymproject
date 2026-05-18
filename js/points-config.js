@@ -148,3 +148,51 @@ export const REWARDS = [
     description: "Pousada perto, sem agenda apertada",
   },
 ];
+
+
+// ─────────────────────────────────────────────────────────────────────
+//  3) RECOMPENSAS PESSOAIS DA VICTORIA
+// ─────────────────────────────────────────────────────────────────────
+//  Itens que SÓ descontam da carteira pessoal da Vic.
+//  Os pontos ganhos por ela contam pro saldo pessoal E pro saldo conjunto
+//  (futuro), mas quando ela compra algo aqui, só o saldo pessoal cai.
+//  Edite essa lista com o que ela quiser comprar.
+// ─────────────────────────────────────────────────────────────────────
+export const REWARDS_VICTORIA = [
+  {
+    name: "Esmalte novo",
+    icon: "💅",
+    price: 300,
+    description: "Cor nova que ela tava de olho",
+  },
+  {
+    name: "Manicure",
+    icon: "💖",
+    price: 500,
+    description: "Sessão completa",
+  },
+  {
+    name: "Skincare especial",
+    icon: "🧴",
+    price: 800,
+    description: "Algum produto bom que ela quer",
+  },
+  {
+    name: "Livro novo",
+    icon: "📖",
+    price: 600,
+    description: "Físico, daqueles bonitos",
+  },
+  {
+    name: "Roupa nova",
+    icon: "👗",
+    price: 1500,
+    description: "Algo legal que ela ver",
+  },
+  {
+    name: "Bolsa / acessório",
+    icon: "👜",
+    price: 2500,
+    description: "Item maior",
+  },
+];

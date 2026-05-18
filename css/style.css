@@ -1051,6 +1051,154 @@ input, select { font: inherit; color: inherit; }
   font-weight: 500;
 }
 
+/* === MENU PRINCIPAL (index.html) === */
+.main-menu {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin: 0 0 18px;
+}
+@media (max-width: 480px) {
+  .main-menu { grid-template-columns: repeat(2, 1fr); }
+}
+.menu-pill {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 4px;
+  padding: 12px 8px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  text-decoration: none;
+  color: var(--text);
+  transition: transform 0.08s ease, border-color 0.15s ease, background 0.15s ease;
+  box-shadow: var(--shadow);
+  position: relative;
+  overflow: hidden;
+}
+.menu-pill::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--accent);
+  opacity: 0.8;
+}
+.menu-pill[data-color="gold"]::before   { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+.menu-pill[data-color="silver"]::before { background: linear-gradient(90deg, #94a3b8, #cbd5e1); }
+.menu-pill[data-color="vic"]::before    { background: linear-gradient(90deg, var(--vic), #f9a8d4); }
+.menu-pill[data-color="accent"]::before { background: linear-gradient(90deg, var(--vini), var(--accent)); }
+
+.menu-pill:active { transform: scale(0.96); }
+.menu-pill:hover { border-color: var(--accent); }
+.menu-pill-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+.menu-pill-label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* === PÁGINA PESSOAL DA VIC === */
+.vic-balance-card {
+  background: linear-gradient(135deg, rgba(236, 72, 153, 0.18), rgba(244, 114, 182, 0.10));
+  border: 1px solid var(--vic);
+  border-radius: 16px;
+  padding: 18px 18px 16px;
+  box-shadow: 0 8px 28px rgba(244, 114, 182, 0.18);
+}
+.vic-balance-header {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 8px;
+}
+.vic-balance-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.vic-balance-value {
+  font-size: 44px;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.vic-balance-value.is-good { color: var(--good); }
+.vic-balance-value.is-bad  { color: var(--bad); }
+.vic-balance-unit {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--muted);
+  margin-left: 4px;
+}
+.vic-balance-meta,
+.vic-balance-extra {
+  display: flex; gap: 8px; flex-wrap: wrap;
+  font-size: 12px; color: var(--muted);
+  margin-top: 6px;
+}
+.vic-balance-meta b,
+.vic-balance-extra b {
+  color: var(--text);
+  font-weight: 700;
+}
+
+/* Botão de comprar */
+.vic-reward-card.is-buyable {
+  border-color: rgba(244, 114, 182, 0.6);
+}
+.vic-buy-row {
+  margin-top: 10px;
+  display: flex;
+  justify-content: flex-end;
+}
+.buy-btn {
+  background: linear-gradient(135deg, var(--vic), #f9a8d4);
+  border: none;
+  color: #1f2937;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: transform 0.08s, opacity 0.15s;
+}
+.buy-btn:active { transform: scale(0.96); }
+.buy-btn.is-disabled, .buy-btn[disabled] {
+  background: var(--card-2);
+  color: var(--muted);
+  cursor: not-allowed;
+  font-weight: 500;
+}
+
+/* Histórico de compras */
+.vic-history-list {
+  list-style: none; padding: 0; margin: 0;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.vic-history-item {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 13px;
+}
+.vic-h-item { font-weight: 600; }
+.vic-h-date { color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+.vic-h-price {
+  color: var(--bad);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.vic-h-undo { font-size: 11px; }
+
 .rewards-list {
   display: flex; flex-direction: column; gap: 10px;
 }
