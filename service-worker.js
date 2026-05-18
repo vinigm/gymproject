@@ -1,24 +1,11 @@
-// Service Worker simples: cache da casca do app + network-first pro Firebase.
-const CACHE = "habitos-shell-v7";
-const SHELL = [
-  "./",
-  "./index.html",
-  "./css/style.css",
-  "./js/app.js",
-  "./js/tracker.js",
-  "./js/stats.js",
-  "./js/history.js",
-  "./js/calendar.js",
-  "./js/storage.js",
-  "./js/firebase-config.js",
-  "./manifest.webmanifest",
-  "./icons/icon.svg"
-];
+// Estratégia: network-first com fallback pra cache.
+// Em conexões normais, sempre busca a versão mais recente.
+// Só recorre ao cache se a rede falhar (offline).
+// Isso evita ficar "preso" em uma versão antiga após deploy.
+const CACHE = "habitos-shell-v8";
 
 self.addEventListener("install", (e) => {
-  e.waitUntil(
-    caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())
-  );
+  self.skipWaiting();
 });
 
 self.addEventListener("activate", (e) => {
@@ -32,22 +19,24 @@ self.addEventListener("activate", (e) => {
 self.addEventListener("fetch", (e) => {
   const url = new URL(e.request.url);
 
-  // Não cachear chamadas ao Firebase/Firestore
+  // Nunca interferir com o Firebase
   if (url.hostname.includes("googleapis.com") ||
       url.hostname.includes("firebaseio.com") ||
       url.hostname.includes("gstatic.com")) {
-    return; // browser faz a request normal
+    return;
   }
 
   if (e.request.method !== "GET") return;
 
+  // Network-first com fallback offline
   e.respondWith(
-    caches.match(e.request).then(cached =>
-      cached || fetch(e.request).then(resp => {
+    fetch(e.request, { cache: "no-store" })
+      .then(resp => {
+        // copia pro cache em background pra usar offline depois
         const copy = resp.clone();
         caches.open(CACHE).then(c => c.put(e.request, copy)).catch(() => {});
         return resp;
-      }).catch(() => cached)
-    )
+      })
+      .catch(() => caches.match(e.request))
   );
 });
