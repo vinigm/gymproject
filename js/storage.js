@@ -63,19 +63,30 @@ export async function saveDay(userId, date, data) {
   writeLS(all);
 }
 
-export async function getRange(userId, startDate, endDate) {
-  // startDate / endDate são strings YYYY-MM-DD inclusivas
-  if (isConfigured) {
-    const q = query(
-      collection(db, COL),
-      where("userId", "==", userId),
-      where("date", ">=", startDate),
-      where("date", "<=", endDate)
+function enumerateDates(startISO, endISO) {
+  const out = [];
+  const [sy, sm, sd] = startISO.split("-").map(Number);
+  const [ey, em, ed] = endISO.split("-").map(Number);
+  const cursor = new Date(sy, sm - 1, sd);
+  const endD = new Date(ey, em - 1, ed);
+  while (cursor <= endD) {
+    out.push(
+      `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, "0")}-${String(cursor.getDate()).padStart(2, "0")}`
     );
-    const snap = await getDocs(q);
-    const out = [];
-    snap.forEach(d => out.push(d.data()));
-    return out;
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return out;
+}
+
+export async function getRange(userId, startDate, endDate) {
+  if (isConfigured) {
+    // Busca cada dia por ID direto — combina perfeitamente com a regra de segurança
+    // (que valida `docId.matches(...)`) e não exige índice composto.
+    const dates = enumerateDates(startDate, endDate);
+    const snaps = await Promise.all(
+      dates.map(date => getDoc(doc(db, COL, `${userId}_${date}`)))
+    );
+    return snaps.filter(s => s.exists()).map(s => s.data());
   }
   const all = readLS();
   return Object.values(all).filter(d =>
