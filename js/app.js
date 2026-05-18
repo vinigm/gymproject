@@ -4,6 +4,7 @@ import { renderStats } from "./stats.js";
 import { renderHistory } from "./history.js";
 import { renderCalendar } from "./calendar.js";
 import { pointsForDay } from "./points-engine.js";
+import { setupAuthGate, renderAuthFooter } from "./auth.js";
 
 export const USERS = ["vinicius", "victoria"];
 
@@ -93,11 +94,7 @@ export function jumpToDate(iso) {
   });
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
-  // app.js também é importado pela points-page (que reusa APP_START_DATE / USERS /
-  // todayISO). Se não estamos na página principal, não há nada pra inicializar.
-  if (!document.getElementById("date-input")) return;
-
+async function initApp(user) {
   paintDateUI();
   document.getElementById("date-input").min = APP_START_DATE;
 
@@ -105,6 +102,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   badge.textContent = storageMode === "firebase"
     ? "sincronizado · firebase"
     : "modo local — configure o firebase pra sincronizar entre celulares";
+
+  renderAuthFooter(user);
 
   document.getElementById("date-input").addEventListener("change", (e) => {
     const v = e.target.value;
@@ -132,4 +131,15 @@ document.addEventListener("DOMContentLoaded", async () => {
   await renderHistory();
   await renderCalendar();
   await refreshPointsBadge();
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  // app.js também é importado pela points-page (que reusa APP_START_DATE / USERS /
+  // todayISO). Se não estamos na página principal, não há nada pra inicializar.
+  if (!document.getElementById("date-input")) return;
+
+  // Espera o auth confirmar antes de carregar qualquer coisa do banco
+  setupAuthGate({
+    onAuthorized: (user) => { initApp(user); }
+  });
 });

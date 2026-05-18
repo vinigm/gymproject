@@ -17,6 +17,9 @@ import {
   doc, getDoc, setDoc, collection, query, where, getDocs,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {
+  getAuth, GoogleAuthProvider, browserLocalPersistence, setPersistence
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA-D0nMCeDIVvByW8oxaNapUJl2kkHmYHg",
@@ -31,11 +34,18 @@ export const isConfigured = !firebaseConfig.apiKey.includes("COLE_AQUI");
 
 let _app = null;
 let _db = null;
+let _auth = null;
 
 if (isConfigured) {
   _app = initializeApp(firebaseConfig);
   _db = getFirestore(_app);
+  _auth = getAuth(_app);
+  // Mantém sessão entre recarregamentos (default já é local, garantindo)
+  setPersistence(_auth, browserLocalPersistence).catch(err => {
+    console.error("persistence error:", err);
+  });
 }
 
 export const db = _db;
-export { doc, getDoc, setDoc, collection, query, where, getDocs, serverTimestamp };
+export const auth = _auth;
+export { doc, getDoc, setDoc, collection, query, where, getDocs, serverTimestamp, GoogleAuthProvider };

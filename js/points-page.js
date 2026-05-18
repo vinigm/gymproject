@@ -5,6 +5,7 @@ import { getRange } from "./storage.js";
 import { todayISO, USERS, APP_START_DATE } from "./app.js";
 import { POINTS, REWARDS } from "./points-config.js";
 import { pointsForDay } from "./points-engine.js";
+import { setupAuthGate, renderAuthFooter } from "./auth.js";
 
 const NAMES = { vinicius: "Vinicius", victoria: "Victoria" };
 const AVATAR_CLASS = { vinicius: "avatar--vini", victoria: "avatar--vic" };
@@ -368,7 +369,8 @@ function renderHeaderPeriod() {
 }
 
 // --- bootstrap ------------------------------------------------------
-(async () => {
+async function initPointsPage(user) {
+  renderAuthFooter(user);
   try {
     renderHeaderPeriod();
     const data = await loadAllData();
@@ -385,4 +387,11 @@ function renderHeaderPeriod() {
       `<p class="muted" style="padding:8px">erro ao carregar: ${err.message}</p>`;
     document.getElementById("rewards").innerHTML = "";
   }
-})();
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  // Só inicializa após autenticação confirmada e email autorizado
+  setupAuthGate({
+    onAuthorized: (user) => { initPointsPage(user); }
+  });
+});
