@@ -56,12 +56,39 @@ function fmtLitres(n) {
   return n.toFixed(1).replace(".", ",") + "L";
 }
 
-function streakOfExercise(byDate) {
+// Status semântico de um dia em relação a um hábito:
+//   "satisfied" = conta pra streak (avança)
+//   "broken"    = quebra a streak (zera)
+//   "skip"      = não registrado / neutro (não conta nem quebra hoje;
+//                 mas QUEBRA se for um dia do meio da streak)
+function exerciseStatus(d) {
+  if (!d) return "skip";
+  if (!d.exercises || d.exercises.length === 0) return "skip";
+  return "satisfied";
+}
+function smokeFreeStatus(d) {
+  if (!d) return "skip";
+  const c = d.cigarettes;
+  if (c == null || c === "") return "skip";
+  if (c === "0" || c === 0) return "satisfied";
+  return "broken";
+}
+
+function streakBackwards(byDate, statusFn) {
   let streak = 0;
   let cursor = todayISO();
-  while (true) {
-    const day = byDate.get(cursor);
-    if (day && day.exercises && day.exercises.length > 0) {
+
+  // Hoje recebe tratamento especial:
+  // - satisfied: conta no loop normalmente
+  // - broken: zera (streak quebrada hoje)
+  // - skip: pula hoje, começa a contar de ontem
+  const todayStatus = statusFn(byDate.get(cursor));
+  if (todayStatus === "broken") return 0;
+  if (todayStatus === "skip") cursor = shiftISO(cursor, -1);
+
+  while (cursor >= APP_START_DATE) {
+    const s = statusFn(byDate.get(cursor));
+    if (s === "satisfied") {
       streak++;
       cursor = shiftISO(cursor, -1);
     } else break;
@@ -99,18 +126,23 @@ function semiDonut(clean, dirty, totalPossible) {
   `;
 }
 
-function renderUserCol(userId, rangeData, monthData, totalDays) {
-  const byDate = new Map(rangeData.map(d => [d.date, d]));
+function renderUserCol(userId, rangeData, monthData, totalDays, allData) {
+  const fullByDate = new Map(allData.map(d => [d.date, d]));
 
   // === RANGE (7/30/90) ===
   const exCount = {};
   let exDays = 0;
+  let totalCig = 0;
   for (const d of rangeData) {
     const arr = d.exercises || [];
     if (arr.length > 0) exDays++;
     for (const e of arr) exCount[e] = (exCount[e] || 0) + 1;
+    if (d.cigarettes != null && d.cigarettes !== "") {
+      totalCig += Number(d.cigarettes);
+    }
   }
-  const streak = streakOfExercise(byDate);
+  const exStreak = streakBackwards(fullByDate, exerciseStatus);
+  const smokeFreeStreak = streakBackwards(fullByDate, smokeFreeStatus);
   // refeições % no range só pra KPI rápido
   let cleanRange = 0, dirtyRange = 0;
   for (const d of rangeData) {
@@ -161,22 +193,30 @@ function renderUserCol(userId, rangeData, monthData, totalDays) {
 
     <div class="stat-card">
       <h3>Resumo</h3>
-      <div class="kpi-grid">
-        <div class="kpi">
-          <div class="kpi-value">${exDays}<span class="muted" style="font-size:12px;font-weight:500">/${totalDays}</span></div>
-          <div class="kpi-label">dias c/ exerc.</div>
+      <div class="kpi-list">
+        <div class="kpi-row">
+          <div class="kpi-value">${exDays}<span class="kpi-suffix">/${totalDays}</span></div>
+          <div class="kpi-label">dias com exercício no período</div>
         </div>
-        <div class="kpi">
-          <div class="kpi-value">${streak}</div>
-          <div class="kpi-label">streak (dias)</div>
+        <div class="kpi-row">
+          <div class="kpi-value">${exStreak}</div>
+          <div class="kpi-label">${exStreak === 1 ? "dia" : "dias"} de exercício em sequência</div>
         </div>
-        <div class="kpi">
+        <div class="kpi-row">
           <div class="kpi-value">${fmtLitres(avgWater)}</div>
-          <div class="kpi-label">água/dia · mês</div>
+          <div class="kpi-label">média de água por dia · mês</div>
         </div>
-        <div class="kpi">
-          <div class="kpi-value">${pct(cleanRange, cleanRange + dirtyRange)}<span class="muted" style="font-size:12px;font-weight:500">%</span></div>
-          <div class="kpi-label">refeições limpas</div>
+        <div class="kpi-row">
+          <div class="kpi-value">${pct(cleanRange, cleanRange + dirtyRange)}<span class="kpi-suffix">%</span></div>
+          <div class="kpi-label">refeições limpas no período</div>
+        </div>
+        <div class="kpi-row">
+          <div class="kpi-value">${totalCig}</div>
+          <div class="kpi-label">cigarros fumados no período</div>
+        </div>
+        <div class="kpi-row kpi-row--good">
+          <div class="kpi-value">${smokeFreeStreak}</div>
+          <div class="kpi-label">${smokeFreeStreak === 1 ? "dia" : "dias"} sem fumar em sequência</div>
         </div>
       </div>
     </div>
@@ -221,7 +261,7 @@ export async function renderStats() {
       const rangeData = all.filter(d => d.date >= rangeStart);
       const monthData = all.filter(d => d.date >= mStart);
       const el = document.getElementById(`stats-${u}`);
-      el.innerHTML = renderUserCol(u, rangeData, monthData, effectiveDays);
+      el.innerHTML = renderUserCol(u, rangeData, monthData, effectiveDays, all);
     });
   };
 
