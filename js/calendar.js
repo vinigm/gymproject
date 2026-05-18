@@ -1,5 +1,5 @@
 import { getRange } from "./storage.js";
-import { todayISO, jumpToDate } from "./app.js";
+import { todayISO, jumpToDate, APP_START_DATE } from "./app.js";
 
 const MONTHS_PT = [
   "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
@@ -117,6 +117,8 @@ export async function renderCalendar() {
     const day = byDate.get(dateStr);
     const cell = document.createElement("div");
     cell.className = "cal-cell";
+    const beforeStart = dateStr < APP_START_DATE;
+    if (beforeStart) cell.classList.add("is-disabled");
     if (dateStr === today) cell.classList.add("is-today");
     if (dateStr === calState.selectedDate) cell.classList.add("is-selected");
 
@@ -131,12 +133,14 @@ export async function renderCalendar() {
       <span class="day-num">${d}</span>
       <span class="dots">${dots.map(t => `<i class="dot dot--${t}"></i>`).join("")}</span>
     `;
-    cell.addEventListener("click", () => {
-      calState.selectedDate = dateStr;
-      grid.querySelectorAll(".cal-cell").forEach(c => c.classList.remove("is-selected"));
-      cell.classList.add("is-selected");
-      renderDetail(day || { date: dateStr, exercises: [], water: null, lunch: null, dinner: null });
-    });
+    if (!beforeStart) {
+      cell.addEventListener("click", () => {
+        calState.selectedDate = dateStr;
+        grid.querySelectorAll(".cal-cell").forEach(c => c.classList.remove("is-selected"));
+        cell.classList.add("is-selected");
+        renderDetail(day || { date: dateStr, exercises: [], water: null, lunch: null, dinner: null });
+      });
+    }
     grid.appendChild(cell);
   }
 

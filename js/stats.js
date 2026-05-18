@@ -1,5 +1,5 @@
 import { getRange } from "./storage.js";
-import { todayISO, USERS } from "./app.js";
+import { todayISO, USERS, APP_START_DATE } from "./app.js";
 
 const EX_LABELS = {
   academia: "Academia", corrida: "Corrida", yoga: "Yoga",
@@ -19,14 +19,30 @@ const bar = (p) => `<div class="bar"><i style="width:${p}%"></i></div>`;
 
 function monthStartISO() {
   const t = new Date();
-  return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-01`;
+  const first = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-01`;
+  return first < APP_START_DATE ? APP_START_DATE : first;
+}
+function effectiveStartDayOfMonth() {
+  const t = new Date();
+  const [sy, sm, sd] = APP_START_DATE.split("-").map(Number);
+  return (sy === t.getFullYear() && sm === t.getMonth() + 1) ? sd : 1;
 }
 function daysElapsedInMonth() {
-  return new Date().getDate(); // 1..31
+  // dias decorridos desde o efetivo início do mês (mínimo 1 quando hoje >= APP_START_DATE)
+  return Math.max(1, new Date().getDate() - effectiveStartDayOfMonth() + 1);
 }
 function daysInCurrentMonth() {
+  // dias totais possíveis no mês a partir do efetivo início
   const t = new Date();
-  return new Date(t.getFullYear(), t.getMonth() + 1, 0).getDate();
+  const lastDay = new Date(t.getFullYear(), t.getMonth() + 1, 0).getDate();
+  return lastDay - effectiveStartDayOfMonth() + 1;
+}
+function daysBetweenInclusive(startISO, endISO) {
+  const [sy, sm, sd] = startISO.split("-").map(Number);
+  const [ey, em, ed] = endISO.split("-").map(Number);
+  const s = new Date(sy, sm - 1, sd);
+  const e = new Date(ey, em - 1, ed);
+  return Math.round((e - s) / 86400000) + 1;
 }
 
 function waterLitres(v) {
@@ -183,7 +199,9 @@ export async function renderStats() {
   const render = async () => {
     const days = Number(select.value);
     const end = todayISO();
-    const rangeStart = shiftISO(end, -(days - 1));
+    let rangeStart = shiftISO(end, -(days - 1));
+    if (rangeStart < APP_START_DATE) rangeStart = APP_START_DATE;
+    const effectiveDays = daysBetweenInclusive(rangeStart, end);
     const mStart = monthStartISO();
     // Busca tudo de uma vez (do mais antigo entre range e mês até hoje)
     const fetchStart = rangeStart < mStart ? rangeStart : mStart;
@@ -203,7 +221,7 @@ export async function renderStats() {
       const rangeData = all.filter(d => d.date >= rangeStart);
       const monthData = all.filter(d => d.date >= mStart);
       const el = document.getElementById(`stats-${u}`);
-      el.innerHTML = renderUserCol(u, rangeData, monthData, days);
+      el.innerHTML = renderUserCol(u, rangeData, monthData, effectiveDays);
     });
   };
 

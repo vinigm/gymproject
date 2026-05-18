@@ -1,5 +1,5 @@
 import { getRange } from "./storage.js";
-import { todayISO, USERS } from "./app.js";
+import { todayISO, USERS, APP_START_DATE } from "./app.js";
 
 const NAMES = { vinicius: "Vinicius", victoria: "Victoria" };
 const AVATAR_CLASS = { vinicius: "avatar--vini", victoria: "avatar--vic" };
@@ -8,7 +8,13 @@ const pad = (n) => String(n).padStart(2, "0");
 
 function monthStartISO() {
   const t = new Date();
-  return `${t.getFullYear()}-${pad(t.getMonth() + 1)}-01`;
+  const first = `${t.getFullYear()}-${pad(t.getMonth() + 1)}-01`;
+  return first < APP_START_DATE ? APP_START_DATE : first;
+}
+function effectiveStartDayOfMonth() {
+  const t = new Date();
+  const [sy, sm, sd] = APP_START_DATE.split("-").map(Number);
+  return (sy === t.getFullYear() && sm === t.getMonth() + 1) ? sd : 1;
 }
 
 function cigClass(n) {
@@ -66,7 +72,8 @@ function renderUserGrid(userId, data) {
   const m = t.getMonth() + 1;
   const rows = [];
 
-  for (let dayNum = t.getDate(); dayNum >= 1; dayNum--) {
+  const startDayNum = effectiveStartDayOfMonth();
+  for (let dayNum = t.getDate(); dayNum >= startDayNum; dayNum--) {
     const dateStr = `${y}-${pad(m)}-${pad(dayNum)}`;
     const day = byDate.get(dateStr);
     const isToday = dateStr === today;
@@ -103,9 +110,19 @@ function renderUserGrid(userId, data) {
   `;
 }
 
+function fmtDayMonthBR(iso) {
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString("pt-BR", {
+    day: "2-digit", month: "long"
+  });
+}
+
 export async function renderHistory() {
   const mStart = monthStartISO();
   const end = todayISO();
+
+  const sub = document.getElementById("history-subtitle");
+  if (sub) sub.textContent = `de ${fmtDayMonthBR(mStart)} até hoje`;
 
   USERS.forEach(u => {
     const el = document.getElementById(`history-${u}`);

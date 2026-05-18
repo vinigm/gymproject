@@ -498,6 +498,11 @@ input, select { font: inherit; color: inherit; }
 }
 .cal-cell { position: relative; padding: 3px; cursor: pointer; }
 .cal-cell.is-empty { background: transparent; border-color: transparent; cursor: default; }
+.cal-cell.is-disabled {
+  opacity: 0.25;
+  cursor: default;
+  background: transparent;
+}
 .cal-cell.is-today { outline: 2px solid var(--accent); outline-offset: -2px; }
 .cal-cell.is-selected { background: rgba(110, 168, 255, 0.25); }
 .cal-cell .day-num { font-weight: 600; font-size: 12px; }

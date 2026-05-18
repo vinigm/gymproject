@@ -6,8 +6,15 @@ import { renderCalendar } from "./calendar.js";
 
 export const USERS = ["vinicius", "victoria"];
 
+// Data a partir da qual o app começa a registrar/exibir.
+// Antes dessa data nada aparece nem pode ser registrado.
+// Mude essa linha pra deslocar o início.
+export const APP_START_DATE = "2026-05-17";
+
 const state = { date: todayISO() };
 export function getState() { return state; }
+
+if (state.date < APP_START_DATE) state.date = APP_START_DATE;
 
 export function todayISO() {
   const d = new Date();
@@ -41,6 +48,7 @@ async function saveAndRefresh() {
 }
 
 async function navigateToDate(newDate) {
+  if (newDate < APP_START_DATE) newDate = APP_START_DATE;
   if (newDate === state.date) return;
 
   if (hasUnsavedChanges()) {
@@ -64,6 +72,7 @@ export function jumpToDate(iso) {
 
 document.addEventListener("DOMContentLoaded", async () => {
   paintDateUI();
+  document.getElementById("date-input").min = APP_START_DATE;
 
   const badge = document.getElementById("storage-badge");
   badge.textContent = storageMode === "firebase"
