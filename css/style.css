@@ -976,6 +976,81 @@ input, select { font: inherit; color: inherit; }
   font-style: italic;
 }
 
+/* === PLACARES === */
+.scoreboards {
+  display: flex; flex-direction: column; gap: 10px;
+}
+.sb-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 14px 12px;
+  box-shadow: var(--shadow);
+  position: relative;
+}
+.sb-card[data-leader="vinicius"] { border-top: 3px solid var(--vini); }
+.sb-card[data-leader="victoria"] { border-top: 3px solid var(--vic); }
+
+.sb-label {
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.sb-headline-row {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.sb-headline {
+  font-size: 15px; font-weight: 700;
+}
+.sb-headline--vini { color: var(--vini); }
+.sb-headline--vic  { color: var(--vic); }
+.sb-headline--neutral {
+  color: var(--muted); font-style: italic; font-weight: 500;
+}
+
+.sb-score {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.sb-side {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 10px;
+  border-radius: 10px;
+  background: var(--card-2);
+  border: 1px solid var(--border);
+  font-size: 13px;
+  transition: border-color 0.15s, background 0.15s;
+}
+.sb-side-name { color: var(--muted); }
+.sb-side-num {
+  font-weight: 800;
+  font-size: 18px;
+  color: var(--text);
+}
+.sb-side--vini.is-winning {
+  border-color: var(--vini);
+  background: rgba(96, 165, 250, 0.10);
+}
+.sb-side--vic.is-winning {
+  border-color: var(--vic);
+  background: rgba(244, 114, 182, 0.10);
+}
+.sb-x {
+  font-size: 16px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
 .rewards-list {
   display: flex; flex-direction: column; gap: 10px;
 }
