@@ -20,34 +20,34 @@ export function isAuthorizedEmail(email) {
 const provider = auth ? new GoogleAuthProvider() : null;
 if (provider) provider.setCustomParameters({ prompt: "select_account" });
 
-// Detecta se é PWA standalone (iOS / Android instalado) — nesses casos popup é bloqueado
-function isStandalonePWA() {
-  return window.matchMedia("(display-mode: standalone)").matches
-      || window.navigator.standalone === true;
-}
-
-// Processa retorno do redirect (se acabou de voltar do Google)
+// Processa retorno do redirect (caso a versão anterior tenha disparado um)
 if (auth) {
   getRedirectResult(auth).catch(err => {
     console.error("redirect result error:", err);
   });
 }
 
+// Tenta SEMPRE popup primeiro (funciona em browser e em PWA iOS 16+).
+// Redirect é fallback de último caso — em PWA o redirect quebra a sessão
+// porque iOS abre a navegação no Safari (fora do escopo do PWA).
 export async function signInWithGoogle() {
   if (!auth) throw new Error("Firebase não configurado");
-  // PWA standalone só funciona com redirect; navegador comum usa popup (UX melhor)
-  if (isStandalonePWA()) {
-    await signInWithRedirect(auth, provider);
-  } else {
-    try {
-      await signInWithPopup(auth, provider);
-    } catch (err) {
-      // Se popup foi bloqueado, cai pro redirect
-      if (err.code === "auth/popup-blocked" || err.code === "auth/popup-closed-by-user" || err.code === "auth/cancelled-popup-request") {
-        await signInWithRedirect(auth, provider);
-      } else {
-        throw err;
-      }
+  try {
+    await signInWithPopup(auth, provider);
+  } catch (err) {
+    console.error("popup signin error:", err);
+    const fallbackCodes = [
+      "auth/popup-blocked",
+      "auth/cancelled-popup-request",
+    ];
+    if (fallbackCodes.includes(err.code)) {
+      console.log("popup bloqueado — caindo pra redirect");
+      await signInWithRedirect(auth, provider);
+    } else if (err.code === "auth/popup-closed-by-user") {
+      // usuário fechou — não erra
+      throw new Error("Login cancelado");
+    } else {
+      throw err;
     }
   }
 }
