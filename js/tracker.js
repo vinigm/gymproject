@@ -1,6 +1,10 @@
 import { getDay, saveDay } from "./storage.js";
 import { getState, USERS } from "./app.js";
 
+// Grupos que se comportam como multi-select (array de strings).
+// Demais grupos são radio-like (string única ou null).
+const MULTI_GROUPS = new Set(["exercises", "extras"]);
+
 // Snapshot por usuário do que está NO BANCO (após carregar/salvar)
 const saved = {};
 // Estado local que o usuário está mexendo (pode estar dirty)
@@ -19,14 +23,16 @@ function isDirtyUser(userId) {
 }
 
 function normalize(d) {
-  // Comparação estável (exercises ordenado, campos nulos virados em null)
+  // Comparação estável (arrays ordenados, campos nulos virados em null)
   return {
     exercises: [...(d.exercises || [])].sort(),
+    extras: [...(d.extras || [])].sort(),
     water: d.water ?? null,
     lunch: d.lunch ?? null,
     dinner: d.dinner ?? null,
     cigarettes: (d.cigarettes ?? null) === "" ? null : (d.cigarettes ?? null),
-    dessert: d.dessert ?? null
+    dessert: d.dessert ?? null,
+    soda: d.soda ?? null
   };
 }
 
@@ -66,8 +72,8 @@ function paintCard(userId) {
     const group = grid.dataset.group;
     grid.querySelectorAll(".chip").forEach(chip => {
       const v = chip.dataset.value;
-      const on = group === "exercises"
-        ? d.exercises.includes(v)
+      const on = MULTI_GROUPS.has(group)
+        ? (d[group] || []).includes(v)
         : d[group] === v;
       chip.classList.toggle("is-on", on);
     });
@@ -80,10 +86,11 @@ function handleChipClick(userId, chip) {
   const v = chip.dataset.value;
   const d = local[userId];
 
-  if (group === "exercises") {
-    const i = d.exercises.indexOf(v);
-    if (i >= 0) d.exercises.splice(i, 1);
-    else d.exercises.push(v);
+  if (MULTI_GROUPS.has(group)) {
+    if (!Array.isArray(d[group])) d[group] = [];
+    const i = d[group].indexOf(v);
+    if (i >= 0) d[group].splice(i, 1);
+    else d[group].push(v);
   } else {
     d[group] = d[group] === v ? null : v;
   }
@@ -134,6 +141,7 @@ export async function refreshAllTrackers() {
     USERS.forEach((u, i) => {
       const d = results[i];
       d.exercises = d.exercises || [];
+      d.extras = d.extras || [];
       saved[u] = JSON.parse(JSON.stringify(d));
       local[u] = JSON.parse(JSON.stringify(d));
       paintCard(u);

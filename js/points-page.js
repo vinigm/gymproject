@@ -12,6 +12,12 @@ const EX_LABELS = {
   academia: "Academia", corrida: "Corrida", yoga: "Yoga",
   jiujitsu: "Jiu Jitsu", bicicleta: "Bicicleta"
 };
+const EXTRA_LABELS = {
+  marmita: "Marmita", vegetais: "Vegetais", fruta: "Fruta",
+  cafe: "Café manhã", mercado: "Mercado", escada: "Escada",
+  leitura: "Leitura", conversa: "Conversa", skincare: "Skincare",
+  suplemento: "Suplemento"
+};
 
 const pad = (n) => String(n).padStart(2, "0");
 const toISO = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -59,10 +65,15 @@ function breakdownForDays(days) {
   let dinnerClean = 0, dinnerDirty = 0;
   let cigTotal = 0;
   let dessertNao = 0, dessertSim = 0;
+  let sodaNao = 0, sodaSim = 0;
+  const extrasCounts = {};
 
   for (const d of days) {
     for (const ex of (d.exercises || [])) {
       exerciseCounts[ex] = (exerciseCounts[ex] || 0) + 1;
+    }
+    for (const e of (d.extras || [])) {
+      extrasCounts[e] = (extrasCounts[e] || 0) + 1;
     }
     if (d.water && POINTS.water?.[d.water] != null) {
       waterDays++;
@@ -77,6 +88,8 @@ function breakdownForDays(days) {
     }
     if (d.dessert === "nao") dessertNao++;
     else if (d.dessert === "sim") dessertSim++;
+    if (d.soda === "nao") sodaNao++;
+    else if (d.soda === "sim") sodaSim++;
   }
 
   const lines = [];
@@ -124,13 +137,27 @@ function breakdownForDays(days) {
   }
 
   // Sobremesa
-  const dessertRow = (label, c, pPer) => {
+  const yesNoRow = (label, c, pPer) => {
     if (c > 0 && pPer !== 0) {
       lines.push({ label, count: c, pts: pPer * c, kind: pPer > 0 ? "good" : "bad" });
     }
   };
-  dessertRow("Sem sobremesa",   dessertNao, POINTS.dessert?.nao || 0);
-  dessertRow("Sobremesa (sim)", dessertSim, POINTS.dessert?.sim || 0);
+  yesNoRow("Sem sobremesa",   dessertNao, POINTS.dessert?.nao || 0);
+  yesNoRow("Sobremesa (sim)", dessertSim, POINTS.dessert?.sim || 0);
+  yesNoRow("Sem refrigerante",   sodaNao, POINTS.soda?.nao || 0);
+  yesNoRow("Refrigerante (sim)", sodaSim, POINTS.soda?.sim || 0);
+
+  // Outros hábitos — uma linha por hábito praticado
+  for (const [key, count] of Object.entries(extrasCounts)) {
+    const ptsPer = POINTS.extras?.[key] || 0;
+    if (count > 0 && ptsPer !== 0) {
+      lines.push({
+        label: EXTRA_LABELS[key] || key,
+        count, pts: ptsPer * count,
+        kind: ptsPer > 0 ? "good" : "bad"
+      });
+    }
+  }
 
   // Positivos primeiro, depois negativos; cada grupo ordenado por magnitude
   lines.sort((a, b) => {
@@ -252,14 +279,16 @@ function renderRewards(dataByUser) {
     return;
   }
 
+  // Por enquanto cada prêmio mede o acumulado de todo o histórico ("all").
+  // Quando virmos o wallet/loja com botão de comprar, isso muda.
   const cards = REWARDS.map(r => {
     const combined =
-      USERS.reduce((sum, u) => sum + pointsInPeriod(dataByUser[u], r.period), 0);
-    const target = Math.max(1, r.target || 1);
-    const rawPct = (combined / target) * 100;
+      USERS.reduce((sum, u) => sum + pointsInPeriod(dataByUser[u], "all"), 0);
+    const price = Math.max(1, r.price ?? r.target ?? 1);
+    const rawPct = (combined / price) * 100;
     const pct = Math.max(0, Math.min(100, Math.round(rawPct)));
-    const achieved = combined >= target;
-    const missing = Math.max(0, target - combined);
+    const achieved = combined >= price;
+    const missing = Math.max(0, price - combined);
 
     return `
       <div class="reward-card${achieved ? " is-achieved" : ""}">
@@ -269,13 +298,13 @@ function renderRewards(dataByUser) {
             <div class="reward-name">${r.name}</div>
             ${r.description ? `<div class="reward-desc">${r.description}</div>` : ""}
           </div>
-          <span class="reward-period">${PERIOD_LABELS[r.period] || r.period}</span>
+          <span class="reward-period">${price} pts</span>
         </div>
         <div class="reward-progress" aria-hidden="true"><i style="width:${pct}%"></i></div>
         <div class="reward-stats">
-          <span><span class="pts-current">${combined}</span> / ${target} pts</span>
+          <span><span class="pts-current">${combined}</span> / ${price} pts</span>
           ${achieved
-            ? `<span class="reward-status reward-status--good">✓ desbloqueado</span>`
+            ? `<span class="reward-status reward-status--good">✓ pode comprar</span>`
             : `<span class="reward-status">faltam ${missing}</span>`}
         </div>
       </div>

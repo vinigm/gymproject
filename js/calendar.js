@@ -10,6 +10,12 @@ const EX_LABELS = {
   academia: "Academia", corrida: "Corrida", yoga: "Yoga",
   jiujitsu: "Jiu Jitsu", bicicleta: "Bicicleta"
 };
+const EXTRA_LABELS = {
+  marmita: "Marmita", vegetais: "Vegetais", fruta: "Fruta",
+  cafe: "Café manhã", mercado: "Mercado", escada: "Escada",
+  leitura: "Leitura", conversa: "Conversa", skincare: "Skincare",
+  suplemento: "Suplemento"
+};
 
 const calState = {
   year: null, month: null,
@@ -34,6 +40,10 @@ function renderDetail(day) {
   const ex = (day.exercises && day.exercises.length)
     ? day.exercises.map(e => EX_LABELS[e] || e).join(", ")
     : "—";
+  const extras = (day.extras && day.extras.length)
+    ? day.extras.map(e => EXTRA_LABELS[e] || e).join(", ")
+    : "—";
+  const yesNo = (v) => v === "sim" ? "Sim" : v === "nao" ? "Não" : "—";
   el.hidden = false;
   el.innerHTML = `
     <div class="cal-detail-head">
@@ -44,8 +54,10 @@ function renderDetail(day) {
     <div class="line"><span class="lbl">Água:</span>${day.water || "—"}</div>
     <div class="line"><span class="lbl">Almoço:</span>${day.lunch || "—"}</div>
     <div class="line"><span class="lbl">Janta:</span>${day.dinner || "—"}</div>
-    <div class="line"><span class="lbl">Sobremesa:</span>${day.dessert === "sim" ? "Sim" : day.dessert === "nao" ? "Não" : "—"}</div>
+    <div class="line"><span class="lbl">Sobremesa:</span>${yesNo(day.dessert)}</div>
+    <div class="line"><span class="lbl">Refrigerante:</span>${yesNo(day.soda)}</div>
     <div class="line"><span class="lbl">Cigarros:</span>${day.cigarettes ?? "—"}</div>
+    <div class="line"><span class="lbl">Outros:</span>${extras}</div>
   `;
   document.getElementById("cal-edit-btn").addEventListener("click", (e) => {
     jumpToDate(e.currentTarget.dataset.date);

@@ -25,6 +25,12 @@ export function pointsForDay(day) {
   if (day.dessert && POINTS.dessert?.[day.dessert] != null) {
     pts += POINTS.dessert[day.dessert];
   }
+  if (day.soda && POINTS.soda?.[day.soda] != null) {
+    pts += POINTS.soda[day.soda];
+  }
+  for (const e of (day.extras || [])) {
+    pts += POINTS.extras?.[e] || 0;
+  }
 
   return pts;
 }
