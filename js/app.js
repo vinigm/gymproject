@@ -71,6 +71,10 @@ export function jumpToDate(iso) {
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
+  // app.js também é importado pela points-page (que reusa APP_START_DATE / USERS /
+  // todayISO). Se não estamos na página principal, não há nada pra inicializar.
+  if (!document.getElementById("date-input")) return;
+
   paintDateUI();
   document.getElementById("date-input").min = APP_START_DATE;
 

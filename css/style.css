@@ -114,6 +114,8 @@ input, select { font: inherit; color: inherit; }
 .avatar--vini { background: linear-gradient(135deg, #60a5fa, #818cf8); }
 .avatar--vic  { background: linear-gradient(135deg, #f472b6, #f9a8d4); }
 .avatar--md { width: 30px; height: 30px; font-size: 14px; }
+.avatar--sm { width: 22px; height: 22px; font-size: 11px; }
+.avatar--xs { width: 18px; height: 18px; font-size: 10px; }
 
 /* === CHIPS === */
 .chip-grid {
@@ -565,6 +567,111 @@ input, select { font: inherit; color: inherit; }
   text-align: center;
   font-size: 11px;
 }
+
+/* topbar — botão à direita */
+.topbar-right { display: flex; align-items: center; gap: 8px; }
+.topbar-link {
+  font-size: 16px; padding: 6px 10px;
+  text-decoration: none;
+}
+
+/* === PÁGINA DE PONTOS === */
+.totals-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+}
+.totals-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 10px;
+  box-shadow: var(--shadow);
+}
+.totals-label {
+  font-size: 10px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.08em;
+  font-weight: 600;
+}
+.totals-value {
+  font-size: 26px; font-weight: 700; line-height: 1;
+  margin: 6px 0;
+  font-variant-numeric: tabular-nums;
+}
+.totals-value--bad { color: var(--bad); }
+.totals-unit {
+  font-size: 12px; color: var(--muted); font-weight: 500;
+  margin-left: 2px;
+}
+.totals-breakdown {
+  display: flex; flex-direction: column; gap: 4px;
+  font-size: 11px; color: var(--muted);
+}
+.totals-user {
+  display: inline-flex; align-items: center; gap: 5px;
+}
+
+@media (max-width: 480px) {
+  .totals-grid { grid-template-columns: 1fr; }
+  .totals-card { display: flex; align-items: center; gap: 14px; padding: 10px 12px; }
+  .totals-card > .totals-label { min-width: 70px; }
+  .totals-card > .totals-value { margin: 0; flex: 1; }
+}
+
+.rewards-list {
+  display: flex; flex-direction: column; gap: 10px;
+}
+.reward-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: var(--shadow);
+  transition: border-color 0.2s ease;
+}
+.reward-card.is-achieved {
+  border-color: var(--good);
+  background: linear-gradient(180deg, rgba(52,211,153,0.08), transparent 60%), var(--card);
+}
+.reward-header {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 8px;
+}
+.reward-icon { font-size: 22px; line-height: 1; }
+.reward-name-wrap { flex: 1; min-width: 0; }
+.reward-name { font-weight: 700; font-size: 15px; line-height: 1.2; }
+.reward-desc { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.reward-period {
+  font-size: 10px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.06em;
+  font-weight: 600;
+  padding: 3px 7px;
+  background: var(--card-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.reward-progress {
+  height: 8px;
+  background: var(--card-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.reward-progress > i {
+  display: block; height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--good));
+  border-radius: 999px;
+  transition: width 0.6s ease;
+}
+.is-achieved .reward-progress > i {
+  background: var(--good);
+}
+.reward-stats {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-top: 6px;
+  font-size: 12px; color: var(--muted);
+}
+.pts-current { color: var(--text); font-weight: 700; }
+.reward-status { font-weight: 600; }
+.reward-status--good { color: var(--good); }
 
 /* === RESPONSIVO === */
 /* Em telas muito estreitas (< 360px) é raro mas mantém legível */
