@@ -236,6 +236,84 @@ function fmtDayFull(iso) {
   return `${dd}/${mm}/${y} - ${wk}`;
 }
 
+// --- recordes -------------------------------------------------------
+
+const MONTHS_PT = [
+  "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+  "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+];
+
+function mondayOfWeek(iso) {
+  const [y, m, d] = iso.split("-").map(Number);
+  const date = new Date(y, m - 1, d);
+  const dow = date.getDay();
+  const offset = dow === 0 ? -6 : (1 - dow);
+  date.setDate(date.getDate() + offset);
+  return toISO(date);
+}
+
+function fmtWeekRange(startISO) {
+  const [sy, sm, sd] = startISO.split("-").map(Number);
+  const start = new Date(sy, sm - 1, sd);
+  const end = new Date(start);
+  end.setDate(end.getDate() + 6);
+  const dm = (d) => `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}`;
+  return `${dm(start)} – ${dm(end)}/${end.getFullYear()}`;
+}
+
+function fmtMonth(yyyyMm) {
+  const [y, m] = yyyyMm.split("-").map(Number);
+  return `${MONTHS_PT[m - 1]} ${y}`;
+}
+
+function getBestDay(userDays) {
+  let best = null;
+  for (const d of userDays) {
+    const { lines, total } = breakdownForDays([d]);
+    if (lines.length === 0) continue;
+    if (!best || total > best.total) {
+      best = { date: d.date, total, lines };
+    }
+  }
+  return best;
+}
+
+function getBestWeek(userDays) {
+  const weeks = new Map();
+  for (const d of userDays) {
+    const wk = mondayOfWeek(d.date);
+    if (!weeks.has(wk)) weeks.set(wk, []);
+    weeks.get(wk).push(d);
+  }
+  let best = null;
+  for (const [wkStart, days] of weeks) {
+    const { lines, total } = breakdownForDays(days);
+    if (lines.length === 0) continue;
+    if (!best || total > best.total) {
+      best = { weekStart: wkStart, total, lines };
+    }
+  }
+  return best;
+}
+
+function getBestMonth(userDays) {
+  const months = new Map();
+  for (const d of userDays) {
+    const key = d.date.slice(0, 7); // YYYY-MM
+    if (!months.has(key)) months.set(key, []);
+    months.get(key).push(d);
+  }
+  let best = null;
+  for (const [key, days] of months) {
+    const { lines, total } = breakdownForDays(days);
+    if (lines.length === 0) continue;
+    if (!best || total > best.total) {
+      best = { monthKey: key, total, lines };
+    }
+  }
+  return best;
+}
+
 // Quebra os dias em blocos individuais com o breakdown de cada um
 function breakdownByDay(days) {
   return [...days]
@@ -313,6 +391,77 @@ function renderBreakdown(dataByUser, period) {
   `;
 }
 
+// --- render: recordes -----------------------------------------------
+function renderRecordCard(label, pts, whenLabel, lines) {
+  const ptsKlass = pts < 0 ? "is-bad" : (pts > 0 ? "is-good" : "");
+  const rows = lines.length === 0
+    ? `<div class="rec-empty muted">sem itens</div>`
+    : lines.map(l => `
+        <div class="bd-row bd-row--${l.kind}">
+          <span class="bd-label">${l.label}${l.count > 1 ? ` ×${l.count}` : ""}</span>
+          <span class="bd-pts">${fmtPts(l.pts)}</span>
+        </div>
+      `).join("");
+  return `
+    <div class="rec-card">
+      <div class="rec-head">
+        <span class="rec-label">${label}</span>
+        <span class="rec-pts ${ptsKlass}">${fmtPts(pts)} pts</span>
+      </div>
+      <div class="rec-when">${whenLabel}</div>
+      <div class="rec-rows">${rows}</div>
+    </div>
+  `;
+}
+
+function renderEmptyRecord(label) {
+  return `
+    <div class="rec-card rec-card--empty">
+      <div class="rec-head">
+        <span class="rec-label">${label}</span>
+        <span class="rec-pts muted">—</span>
+      </div>
+      <div class="rec-empty muted">sem dados ainda</div>
+    </div>
+  `;
+}
+
+function renderRecords(dataByUser) {
+  const el = document.getElementById("records");
+  if (!el) return;
+
+  const cols = USERS.map(u => {
+    const days = dataByUser[u];
+    const bestDay   = getBestDay(days);
+    const bestWeek  = getBestWeek(days);
+    const bestMonth = getBestMonth(days);
+
+    const dayCard = bestDay
+      ? renderRecordCard("Melhor dia", bestDay.total, fmtDayFull(bestDay.date), bestDay.lines)
+      : renderEmptyRecord("Melhor dia");
+    const weekCard = bestWeek
+      ? renderRecordCard("Melhor semana", bestWeek.total, fmtWeekRange(bestWeek.weekStart), bestWeek.lines)
+      : renderEmptyRecord("Melhor semana");
+    const monthCard = bestMonth
+      ? renderRecordCard("Melhor mês", bestMonth.total, fmtMonth(bestMonth.monthKey), bestMonth.lines)
+      : renderEmptyRecord("Melhor mês");
+
+    return `
+      <div class="rec-col" data-user="${u}">
+        <div class="rec-col-head">
+          <span class="avatar ${AVATAR_CLASS[u]} avatar--sm">V</span>
+          <span class="rec-col-name">${NAMES[u]}</span>
+        </div>
+        ${dayCard}
+        ${weekCard}
+        ${monthCard}
+      </div>
+    `;
+  }).join("");
+
+  el.innerHTML = cols;
+}
+
 // --- render: prêmios ------------------------------------------------
 function renderRewards(dataByUser) {
   const el = document.getElementById("rewards");
@@ -377,6 +526,7 @@ async function initPointsPage(user) {
     renderTotals(data);
     renderBreakdown(data, "weekly");
     renderRewards(data);
+    renderRecords(data);
 
     document.getElementById("breakdown-period").addEventListener("change", (e) => {
       renderBreakdown(data, e.target.value);

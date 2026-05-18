@@ -825,6 +825,71 @@ input, select { font: inherit; color: inherit; }
 }
 .bd-combined-card.is-bad .bd-combined-value { color: var(--bad); }
 
+/* === RECORDES === */
+.rec-col {
+  display: flex; flex-direction: column; gap: 10px;
+}
+.rec-col-head {
+  display: flex; align-items: center; gap: 8px;
+  font-weight: 700; font-size: 14px;
+  padding: 0 2px 4px;
+}
+.rec-col-name { font-weight: 700; font-size: 14px; }
+
+.rec-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 10px;
+  box-shadow: var(--shadow);
+  position: relative;
+}
+.rec-col[data-user="vinicius"] .rec-card { border-top: 3px solid var(--vini); }
+.rec-col[data-user="victoria"] .rec-card { border-top: 3px solid var(--vic); }
+
+.rec-card--empty {
+  opacity: 0.6;
+}
+
+.rec-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+.rec-label {
+  font-size: 11px; color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+.rec-pts {
+  font-size: 20px; font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.rec-pts.is-good { color: var(--good); }
+.rec-pts.is-bad  { color: var(--bad); }
+
+.rec-when {
+  font-size: 11px;
+  color: var(--accent);
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px dashed var(--border);
+  font-weight: 600;
+}
+
+.rec-rows {
+  display: flex; flex-direction: column; gap: 3px;
+}
+
+.rec-empty {
+  font-size: 11px;
+  text-align: center;
+  padding: 6px 0;
+  font-style: italic;
+}
+
 .rewards-list {
   display: flex; flex-direction: column; gap: 10px;
 }
