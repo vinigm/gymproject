@@ -11,6 +11,13 @@
   <link rel="manifest" href="./manifest.webmanifest" />
   <link rel="icon" type="image/svg+xml" href="./icons/icon.svg" />
   <link rel="stylesheet" href="./css/style.css" />
+  <script>
+    try {
+      if (localStorage.getItem("habitos-auth-uid")) {
+        document.documentElement.classList.add("auth-hidden");
+      }
+    } catch (e) {}
+  </script>
 </head>
 <body>
   <div id="auth-gate" class="auth-gate">

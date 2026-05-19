@@ -583,7 +583,8 @@ input, select { font: inherit; color: inherit; }
   padding-top: calc(24px + var(--safe-top));
   padding-bottom: calc(24px + var(--safe-bottom));
 }
-.auth-gate.is-hidden { display: none; }
+.auth-gate.is-hidden,
+html.auth-hidden .auth-gate { display: none; }
 .auth-card {
   background: var(--card);
   border: 1px solid var(--border);

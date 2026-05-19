@@ -29,6 +29,10 @@ function setCachedAuthUid(uid) {
     if (uid) localStorage.setItem(AUTH_CACHE_KEY, uid);
     else localStorage.removeItem(AUTH_CACHE_KEY);
   } catch {}
+  // Sincroniza a classe no <html> usada pelo inline script de cada page
+  if (typeof document !== "undefined") {
+    document.documentElement.classList.toggle("auth-hidden", !!uid);
+  }
 }
 
 const provider = auth ? new GoogleAuthProvider() : null;
