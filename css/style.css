@@ -1197,6 +1197,126 @@ input, select { font: inherit; color: inherit; }
 }
 .vic-h-undo { font-size: 11px; }
 
+/* === CALENDÁRIO DINÂMICO (points.html) === */
+.dcal-nav {
+  display: flex; align-items: center; gap: 6px;
+}
+.dcal-month-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+  min-width: 80px;
+  text-align: center;
+  text-transform: lowercase;
+}
+.dcal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+.dcal-head {
+  text-align: center;
+  font-size: 9px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+  padding: 4px 0;
+}
+.dcal-cell {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  padding: 3px 2px;
+  border-radius: 8px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 1px;
+  cursor: pointer;
+  transition: transform 0.08s, border-color 0.15s;
+  overflow: hidden;
+}
+.dcal-cell:active { transform: scale(0.94); }
+.dcal-cell:hover { border-color: var(--accent); }
+.dcal-cell.is-empty {
+  background: transparent;
+  border-color: transparent;
+  cursor: default;
+}
+.dcal-cell.is-disabled {
+  opacity: 0.3;
+  cursor: default;
+  pointer-events: none;
+}
+.dcal-cell.is-today {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+.dcal-cell.is-selected {
+  background: rgba(110, 168, 255, 0.22);
+  border-color: var(--accent);
+}
+.dcal-cell.has-bonus {
+  background: linear-gradient(180deg, rgba(52, 211, 153, 0.18), var(--card));
+  border-color: rgba(52, 211, 153, 0.4);
+}
+.dcal-cell.has-penalty {
+  background: linear-gradient(180deg, rgba(248, 113, 113, 0.18), var(--card));
+  border-color: rgba(248, 113, 113, 0.4);
+}
+.dcal-cell.is-selected.has-bonus,
+.dcal-cell.is-selected.has-penalty {
+  background: rgba(110, 168, 255, 0.22);
+  border-color: var(--accent);
+}
+.dcal-day-num {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1;
+  margin-top: 2px;
+}
+.dcal-scores {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0px;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.dcal-pts {
+  font-size: 9px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.dcal-pts--vini { color: var(--vini); }
+.dcal-pts--vic  { color: var(--vic); }
+
+.dcal-legend {
+  display: flex; flex-wrap: wrap; gap: 6px 12px;
+  margin-top: 12px;
+  font-size: 11px;
+}
+.dcal-legend > span { display: inline-flex; align-items: center; gap: 5px; }
+.dcal-swatch {
+  width: 12px; height: 12px;
+  border-radius: 3px;
+  display: inline-block;
+}
+.dcal-swatch--good {
+  background: linear-gradient(180deg, rgba(52, 211, 153, 0.6), rgba(52, 211, 153, 0.1));
+  border: 1px solid rgba(52, 211, 153, 0.5);
+}
+.dcal-swatch--bad {
+  background: linear-gradient(180deg, rgba(248, 113, 113, 0.6), rgba(248, 113, 113, 0.1));
+  border: 1px solid rgba(248, 113, 113, 0.5);
+}
+.pts-vini-label { color: var(--vini); font-weight: 600; }
+.pts-vic-label  { color: var(--vic); font-weight: 600; }
+
 /* === CARTEIRA DO CASAL === */
 .casal-balance-card {
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.18), rgba(236, 72, 153, 0.18));
