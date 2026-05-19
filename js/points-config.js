@@ -1,3 +1,28 @@
+// ─────────────────────────────────────────────────────────────────────
+//  METADADOS DOS "OUTROS HÁBITOS"
+// ---------------------------------------------------------------------
+//  Lista de hábitos extras (chave + label + ícone). É a fonte de verdade
+//  pra renderizar os chips dinamicamente. Usuário pode adicionar customs
+//  pela página /config.html (vão pra coleção config/points como
+//  `extras_custom`).
+// ─────────────────────────────────────────────────────────────────────
+export const DEFAULT_EXTRAS_META = [
+  { key: "marmita",    label: "Marmita",     icon: "🍱" },
+  { key: "vegetais",   label: "Vegetais",    icon: "🥗" },
+  { key: "fruta",      label: "Fruta",       icon: "🍎" },
+  { key: "cafe",       label: "Café manhã",  icon: "☕" },
+  { key: "mercado",    label: "Mercado",     icon: "🛒" },
+  { key: "escada",     label: "Escada",      icon: "🪜" },
+  { key: "leitura",    label: "Leitura",     icon: "📚" },
+  { key: "conversa",   label: "Conversa",    icon: "💬" },
+  { key: "skincare",   label: "Skincare",    icon: "✨" },
+  { key: "suplemento", label: "Suplemento",  icon: "💊" },
+];
+
+// Runtime mutável — começa como cópia dos defaults; applyExtrasCustom
+// adiciona/atualiza com customs do usuário.
+export const EXTRAS_META = JSON.parse(JSON.stringify(DEFAULT_EXTRAS_META));
+
 // =====================================================================
 //  CONFIGURAÇÃO DA GAMIFICAÇÃO
 // ---------------------------------------------------------------------
@@ -103,6 +128,42 @@ export function applyPoints(override) {
 export function resetPoints() {
   for (const k of Object.keys(POINTS)) delete POINTS[k];
   applyAtPath(POINTS, deepClone(DEFAULT_POINTS));
+}
+
+// Aplica customs do usuário (lista com { key, label, icon, points }).
+// Pra cada item: atualiza EXTRAS_META (label/icon) e POINTS.extras (points).
+export function applyExtrasCustom(customArr) {
+  if (!Array.isArray(customArr)) return;
+  for (const c of customArr) {
+    if (!c || !c.key) continue;
+    const idx = EXTRAS_META.findIndex(e => e.key === c.key);
+    if (idx >= 0) {
+      EXTRAS_META[idx] = {
+        ...EXTRAS_META[idx],
+        ...(c.label ? { label: c.label } : {}),
+        ...(c.icon ? { icon: c.icon } : {}),
+        custom: true,
+      };
+    } else {
+      EXTRAS_META.push({
+        key: c.key,
+        label: c.label || c.key,
+        icon: c.icon || "✨",
+        custom: true,
+      });
+    }
+    if (typeof c.points === "number") {
+      POINTS.extras[c.key] = c.points;
+    }
+  }
+}
+
+// Restaura EXTRAS_META pros defaults (chamada antes de aplicar override)
+export function resetExtrasMeta() {
+  EXTRAS_META.length = 0;
+  for (const e of DEFAULT_EXTRAS_META) {
+    EXTRAS_META.push({ ...e });
+  }
 }
 
 

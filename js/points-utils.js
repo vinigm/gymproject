@@ -1,15 +1,31 @@
 // Helpers compartilhados entre páginas (pontos, recordes, placares, vic).
 // Tudo aqui é puro — não toca DOM, não inicia nada.
 
-import { POINTS, applyPoints } from "./points-config.js";
+import { POINTS, applyPoints, applyExtrasCustom, resetExtrasMeta, resetPoints, EXTRAS_META } from "./points-config.js";
 import { pointsForDay } from "./points-engine.js";
 import { todayISO, USERS, APP_START_DATE } from "./app.js";
 import { loadConfigOverrides } from "./storage.js";
 
-// Chamar antes de renderizar — aplica overrides do Firestore por cima dos defaults
+// Chamar antes de renderizar — reseta tudo aos defaults e aplica overrides do Firestore
 export async function loadAndApplyConfig() {
+  // Reseta antes pra não acumular extras antigos em re-renderizações
+  resetPoints();
+  resetExtrasMeta();
   const override = await loadConfigOverrides();
-  if (override) applyPoints(override);
+  if (override) {
+    applyPoints(override);
+    applyExtrasCustom(override.extras_custom || []);
+  }
+}
+
+// Lookup dinâmico do label/icon de um hábito extra (default ou custom)
+export function extraLabel(key) {
+  const meta = EXTRAS_META.find(e => e.key === key);
+  return meta?.label || key;
+}
+export function extraIcon(key) {
+  const meta = EXTRAS_META.find(e => e.key === key);
+  return meta?.icon || "✨";
 }
 
 // --- formatadores genéricos -----------------------------------------
@@ -89,12 +105,7 @@ const EX_LABELS = {
   academia: "Academia", corrida: "Corrida", yoga: "Yoga",
   jiujitsu: "Jiu Jitsu", bicicleta: "Bicicleta",
 };
-const EXTRA_LABELS = {
-  marmita: "Marmita", vegetais: "Vegetais", fruta: "Fruta",
-  cafe: "Café manhã", mercado: "Mercado", escada: "Escada",
-  leitura: "Leitura", conversa: "Conversa", skincare: "Skincare",
-  suplemento: "Suplemento",
-};
+// labels dos "Outros hábitos" agora vêm de EXTRAS_META (runtime, suporta customs)
 
 export function breakdownForDays(days) {
   const exerciseCounts = {};
@@ -161,7 +172,7 @@ export function breakdownForDays(days) {
   for (const [key, count] of Object.entries(extrasCounts)) {
     const ptsPer = POINTS.extras?.[key] || 0;
     if (count > 0 && ptsPer !== 0) {
-      lines.push({ label: EXTRA_LABELS[key] || key, count, pts: ptsPer * count, kind: ptsPer > 0 ? "good" : "bad" });
+      lines.push({ label: extraLabel(key), count, pts: ptsPer * count, kind: ptsPer > 0 ? "good" : "bad" });
     }
   }
   lines.sort((a, b) => {

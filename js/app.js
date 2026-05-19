@@ -6,6 +6,7 @@ import { renderCalendar } from "./calendar.js";
 import { pointsForDay } from "./points-engine.js";
 import { setupAuthGate, renderAuthFooter } from "./auth.js";
 import { loadAndApplyConfig } from "./points-utils.js";
+import { EXTRAS_META } from "./points-config.js";
 
 export const USERS = ["vinicius", "victoria"];
 
@@ -38,6 +39,18 @@ function paintDateUI() {
   document.getElementById("topbar-date").textContent = fmtDateBR(state.date);
   document.getElementById("date-input").value = state.date;
   document.getElementById("btn-today").hidden = isToday;
+}
+
+// Renderiza os chips de "Outros hábitos" dinamicamente em ambos os cards.
+// Chamada após loadAndApplyConfig (que populou EXTRAS_META).
+function renderExtrasChips() {
+  USERS.forEach(userId => {
+    const grid = document.querySelector(`.person-card[data-user="${userId}"] .chip-grid[data-group="extras"]`);
+    if (!grid) return;
+    grid.innerHTML = EXTRAS_META
+      .map(e => `<button class="chip" data-value="${e.key}">${e.icon} ${e.label}</button>`)
+      .join("");
+  });
 }
 
 async function refreshPointsBadge() {
@@ -126,8 +139,9 @@ async function initApp(user) {
     }
   });
 
-  initTracker();
   await loadAndApplyConfig();
+  renderExtrasChips();
+  initTracker();
   await refreshAllTrackers();
   await renderStats();
   await renderHistory();

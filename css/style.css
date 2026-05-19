@@ -1295,6 +1295,95 @@ input, select { font: inherit; color: inherit; }
 .config-status[data-kind="err"]  { color: var(--bad); border-color: var(--bad); }
 .config-status[data-kind="info"] { color: var(--muted); }
 
+/* === EXTRAS na config === */
+.extra-row {
+  grid-template-columns: 1fr 80px auto;
+}
+.extra-meta {
+  display: flex; align-items: center; gap: 8px;
+  min-width: 0;
+}
+.extra-icon {
+  font-size: 18px;
+  min-width: 24px;
+  text-align: center;
+}
+.extra-label-text {
+  font-size: 14px;
+  color: var(--text);
+}
+.extra-icon-input,
+.extra-label-input {
+  background: var(--card-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 8px;
+  color: var(--text);
+  font-size: 13px;
+}
+.extra-icon-input {
+  width: 44px;
+  text-align: center;
+  font-size: 16px;
+}
+.extra-label-input { flex: 1; min-width: 0; }
+.extra-pts-input {
+  width: 100%;
+  /* shared style with .config-input above */
+}
+
+.extra-row.is-extra-custom {
+  background: rgba(110, 168, 255, 0.04);
+  border-bottom-color: rgba(110, 168, 255, 0.15);
+}
+
+.extra-del-btn {
+  background: rgba(248, 113, 113, 0.12);
+  border: 1px solid rgba(248, 113, 113, 0.4);
+  color: var(--bad);
+  width: 28px; height: 28px;
+  border-radius: 6px;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.08s;
+  font-weight: 700;
+  padding: 0;
+}
+.extra-del-btn:hover { background: rgba(248, 113, 113, 0.2); }
+.extra-del-btn:active { transform: scale(0.92); }
+
+.extra-new {
+  display: grid;
+  grid-template-columns: 44px 1fr 80px auto;
+  gap: 8px;
+  align-items: center;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--accent);
+}
+@media (max-width: 420px) {
+  .extra-new {
+    grid-template-columns: 44px 1fr 70px;
+  }
+  .extra-add-btn {
+    grid-column: 1 / -1;
+  }
+}
+.extra-add-btn {
+  background: linear-gradient(135deg, var(--accent), #6366f1);
+  color: #fff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform 0.08s;
+}
+.extra-add-btn:active { transform: scale(0.96); }
+
 .rewards-list {
   display: flex; flex-direction: column; gap: 10px;
 }

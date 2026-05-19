@@ -6,16 +6,16 @@ const MONTHS_PT = [
   "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
 ];
 const DOW_PT = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"];
+import { EXTRAS_META } from "./points-config.js";
+
 const EX_LABELS = {
   academia: "Academia", corrida: "Corrida", yoga: "Yoga",
   jiujitsu: "Jiu Jitsu", bicicleta: "Bicicleta"
 };
-const EXTRA_LABELS = {
-  marmita: "Marmita", vegetais: "Vegetais", fruta: "Fruta",
-  cafe: "Café manhã", mercado: "Mercado", escada: "Escada",
-  leitura: "Leitura", conversa: "Conversa", skincare: "Skincare",
-  suplemento: "Suplemento"
-};
+function extraLabel(key) {
+  const meta = EXTRAS_META.find(e => e.key === key);
+  return meta?.label || key;
+}
 
 const calState = {
   year: null, month: null,
@@ -41,7 +41,7 @@ function renderDetail(day) {
     ? day.exercises.map(e => EX_LABELS[e] || e).join(", ")
     : "—";
   const extras = (day.extras && day.extras.length)
-    ? day.extras.map(e => EXTRA_LABELS[e] || e).join(", ")
+    ? day.extras.map(e => extraLabel(e)).join(", ")
     : "—";
   const yesNo = (v) => v === "sim" ? "Sim" : v === "nao" ? "Não" : "—";
   el.hidden = false;
