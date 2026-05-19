@@ -2,6 +2,7 @@ import { USERS } from "./app.js";
 import { setupAuthGate, renderAuthFooter } from "./auth.js";
 import {
   loadAllData,
+  loadAndApplyConfig,
   getBestDay, getBestWeek, getBestMonth,
   fmtDayFull, fmtWeekRange, fmtMonth, fmtPts,
 } from "./points-utils.js";
@@ -138,6 +139,7 @@ function renderRecords(allRecords) {
 async function initRecordsPage(user) {
   renderAuthFooter(user);
   try {
+    await loadAndApplyConfig();
     const data = await loadAllData();
     const allRecords = computeAllRecords(data);
     renderRecordsBanner(allRecords);

@@ -159,6 +159,43 @@ export async function getTransactions({ scope } = {}) {
     .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 }
 
+// ===== Config (overrides da tabela POINTS) =====
+// Doc único em config/points com os overrides do usuário.
+// Estrutura: mesma do POINTS (parcial — só campos que foram editados).
+const CONFIG_COL = "config";
+const CONFIG_POINTS_DOC = "points";
+const LS_CFG_KEY = "habitos-config-points-v1";
+
+export async function loadConfigOverrides() {
+  if (isConfigured) {
+    try {
+      const snap = await getDoc(doc(db, CONFIG_COL, CONFIG_POINTS_DOC));
+      return snap.exists() ? snap.data() : null;
+    } catch (err) {
+      console.warn("loadConfigOverrides falhou:", err);
+      return null;
+    }
+  }
+  try { return JSON.parse(localStorage.getItem(LS_CFG_KEY)) || null; }
+  catch { return null; }
+}
+
+export async function saveConfigOverrides(data) {
+  if (isConfigured) {
+    await setDoc(doc(db, CONFIG_COL, CONFIG_POINTS_DOC), data);
+    return;
+  }
+  localStorage.setItem(LS_CFG_KEY, JSON.stringify(data));
+}
+
+export async function clearConfigOverrides() {
+  if (isConfigured) {
+    await setDoc(doc(db, CONFIG_COL, CONFIG_POINTS_DOC), {});
+    return;
+  }
+  localStorage.removeItem(LS_CFG_KEY);
+}
+
 export async function deleteTransaction(id) {
   if (isConfigured) {
     await deleteDoc(doc(db, TX_COL, id));

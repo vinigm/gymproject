@@ -3,6 +3,7 @@ import { setupAuthGate, renderAuthFooter } from "./auth.js";
 import { pointsForDay } from "./points-engine.js";
 import {
   loadAllData,
+  loadAndApplyConfig,
   aggregateByWeek, aggregateByMonth,
 } from "./points-utils.js";
 
@@ -98,6 +99,7 @@ function renderScoreboards(scores) {
 async function initPlacaresPage(user) {
   renderAuthFooter(user);
   try {
+    await loadAndApplyConfig();
     const data = await loadAllData();
     renderScoreboards(computeScores(data));
   } catch (err) {

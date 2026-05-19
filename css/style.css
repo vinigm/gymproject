@@ -1054,11 +1054,14 @@ input, select { font: inherit; color: inherit; }
 /* === MENU PRINCIPAL (index.html) === */
 .main-menu {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 8px;
   margin: 0 0 18px;
 }
-@media (max-width: 480px) {
+@media (max-width: 640px) {
+  .main-menu { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 380px) {
   .main-menu { grid-template-columns: repeat(2, 1fr); }
 }
 .menu-pill {
@@ -1088,6 +1091,7 @@ input, select { font: inherit; color: inherit; }
 .menu-pill[data-color="silver"]::before { background: linear-gradient(90deg, #94a3b8, #cbd5e1); }
 .menu-pill[data-color="vic"]::before    { background: linear-gradient(90deg, var(--vic), #f9a8d4); }
 .menu-pill[data-color="accent"]::before { background: linear-gradient(90deg, var(--vini), var(--accent)); }
+.menu-pill[data-color="config"]::before { background: linear-gradient(90deg, #64748b, #94a3b8); }
 
 .menu-pill:active { transform: scale(0.96); }
 .menu-pill:hover { border-color: var(--accent); }
@@ -1198,6 +1202,98 @@ input, select { font: inherit; color: inherit; }
   font-variant-numeric: tabular-nums;
 }
 .vic-h-undo { font-size: 11px; }
+
+/* === PÁGINA DE CONFIGURAÇÃO === */
+.config-form {
+  display: flex; flex-direction: column; gap: 12px;
+}
+.config-section {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  box-shadow: var(--shadow);
+}
+.config-legend {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  padding: 0 6px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.config-note {
+  font-size: 11px;
+  margin: 6px 0 8px;
+}
+.config-row {
+  display: grid;
+  grid-template-columns: 1fr 90px;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+  border-bottom: 1px dashed var(--border);
+}
+.config-row:last-child { border-bottom: none; }
+.config-label {
+  font-size: 14px;
+  color: var(--text);
+}
+.config-default {
+  font-size: 10px;
+  color: var(--muted);
+  grid-column: 1 / 2;
+  margin-top: -2px;
+}
+.config-row.is-custom .config-default {
+  color: var(--accent);
+}
+.config-row.is-custom .config-default::after {
+  content: " · personalizado";
+  font-weight: 700;
+}
+.config-input {
+  width: 100%;
+  padding: 8px 10px;
+  background: var(--card-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  grid-column: 2 / 3;
+  grid-row: 1 / 3;
+}
+.config-input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+.config-row.is-custom .config-input {
+  border-color: var(--accent);
+  background: rgba(110, 168, 255, 0.06);
+}
+
+.config-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+.config-actions .save-btn { flex: 1; }
+.config-status {
+  text-align: center;
+  font-size: 13px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--card-2);
+  border: 1px solid var(--border);
+}
+.config-status[data-kind="ok"]   { color: var(--good); border-color: var(--good); }
+.config-status[data-kind="err"]  { color: var(--bad); border-color: var(--bad); }
+.config-status[data-kind="info"] { color: var(--muted); }
 
 .rewards-list {
   display: flex; flex-direction: column; gap: 10px;

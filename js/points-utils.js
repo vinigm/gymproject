@@ -1,9 +1,16 @@
 // Helpers compartilhados entre páginas (pontos, recordes, placares, vic).
 // Tudo aqui é puro — não toca DOM, não inicia nada.
 
-import { POINTS } from "./points-config.js";
+import { POINTS, applyPoints } from "./points-config.js";
 import { pointsForDay } from "./points-engine.js";
 import { todayISO, USERS, APP_START_DATE } from "./app.js";
+import { loadConfigOverrides } from "./storage.js";
+
+// Chamar antes de renderizar — aplica overrides do Firestore por cima dos defaults
+export async function loadAndApplyConfig() {
+  const override = await loadConfigOverrides();
+  if (override) applyPoints(override);
+}
 
 // --- formatadores genéricos -----------------------------------------
 export const pad = (n) => String(n).padStart(2, "0");

@@ -5,6 +5,7 @@ import { renderHistory } from "./history.js";
 import { renderCalendar } from "./calendar.js";
 import { pointsForDay } from "./points-engine.js";
 import { setupAuthGate, renderAuthFooter } from "./auth.js";
+import { loadAndApplyConfig } from "./points-utils.js";
 
 export const USERS = ["vinicius", "victoria"];
 
@@ -126,6 +127,7 @@ async function initApp(user) {
   });
 
   initTracker();
+  await loadAndApplyConfig();
   await refreshAllTrackers();
   await renderStats();
   await renderHistory();

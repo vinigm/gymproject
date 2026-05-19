@@ -8,12 +8,13 @@
 
 
 // ─────────────────────────────────────────────────────────────────────
-//  1) PONTOS POR HÁBITO
+//  1) PONTOS POR HÁBITO (DEFAULTS)
 // ─────────────────────────────────────────────────────────────────────
-//  Cada chip clicado/marcado em um dia soma (ou subtrai) pontos.
-//  Use números negativos pra penalizar.
+//  Esses valores são os "padrões". A página /config.html permite
+//  sobrescrever ao vivo (salvo no Firestore em config/points).
+//  Restaurar padrão na UI = volta pros valores abaixo.
 // ─────────────────────────────────────────────────────────────────────
-export const POINTS = {
+export const DEFAULT_POINTS = {
 
   // Pontos por TIPO de exercício feito (cada exercício marcado soma).
   exercises: {
@@ -71,6 +72,38 @@ export const POINTS = {
     suplemento: 30,   // tomou suplemento
   },
 };
+
+// ─────────────────────────────────────────────────────────────────────
+//  POINTS em runtime — começa como cópia profunda dos defaults.
+//  applyPoints(override) faz merge sobrescrevendo só os campos do override.
+//  A referência de POINTS NÃO muda — sempre é o mesmo objeto que outros
+//  módulos importaram. Mutação no lugar.
+// ─────────────────────────────────────────────────────────────────────
+function deepClone(o) { return JSON.parse(JSON.stringify(o)); }
+
+export const POINTS = deepClone(DEFAULT_POINTS);
+
+function applyAtPath(target, source) {
+  for (const key of Object.keys(source || {})) {
+    const v = source[key];
+    if (v !== null && typeof v === "object" && !Array.isArray(v)) {
+      if (!target[key] || typeof target[key] !== "object") target[key] = {};
+      applyAtPath(target[key], v);
+    } else if (typeof v === "number") {
+      target[key] = v;
+    }
+  }
+}
+
+export function applyPoints(override) {
+  if (!override || typeof override !== "object") return;
+  applyAtPath(POINTS, override);
+}
+
+export function resetPoints() {
+  for (const k of Object.keys(POINTS)) delete POINTS[k];
+  applyAtPath(POINTS, deepClone(DEFAULT_POINTS));
+}
 
 
 // ─────────────────────────────────────────────────────────────────────

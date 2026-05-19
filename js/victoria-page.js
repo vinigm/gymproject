@@ -4,6 +4,7 @@ import { getRange, addTransaction, getTransactions, deleteTransaction } from "./
 import { REWARDS_VICTORIA } from "./points-config.js";
 import {
   totalEarnedByUser, pointsInPeriod, fmtPts, fmtDayShort,
+  loadAndApplyConfig,
 } from "./points-utils.js";
 
 const SCOPE = "personal-victoria";
@@ -166,6 +167,7 @@ async function refreshAll() {
 async function initVictoriaPage(user) {
   renderAuthFooter(user);
   try {
+    await loadAndApplyConfig();
     await refreshAll();
   } catch (err) {
     console.error(err);

@@ -7,6 +7,7 @@ import { POINTS, REWARDS } from "./points-config.js";
 import { setupAuthGate, renderAuthFooter } from "./auth.js";
 import {
   loadAllData,
+  loadAndApplyConfig,
   pointsInPeriod,
   breakdownForDays, breakdownByDay,
   fmtPts, fmtDayFull, fmtDayShort,
@@ -162,6 +163,7 @@ async function initPointsPage(user) {
   renderAuthFooter(user);
   try {
     renderHeaderPeriod();
+    await loadAndApplyConfig();
     const data = await loadAllData();
     renderTotals(data);
     renderBreakdown(data, "weekly");
