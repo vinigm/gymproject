@@ -1542,6 +1542,14 @@ input, select { font: inherit; color: inherit; }
 .is-achieved .reward-progress > i {
   background: var(--good);
 }
+
+/* Vic store: barras em tom rosa */
+#vic-store .reward-progress > i {
+  background: linear-gradient(90deg, var(--vic), #f9a8d4);
+}
+#vic-store .reward-card.is-achieved .reward-progress > i {
+  background: var(--good);
+}
 .reward-stats {
   display: flex; justify-content: space-between; align-items: center;
   margin-top: 6px;

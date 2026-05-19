@@ -69,8 +69,10 @@ function renderStore() {
   }
   el.innerHTML = REWARDS_VICTORIA.map((r, idx) => {
     const canAfford = _state.balance >= r.price;
+    const pct = Math.max(0, Math.min(100, Math.round((_state.balance / Math.max(1, r.price)) * 100)));
+    const cappedCurrent = Math.max(0, Math.min(_state.balance, r.price));
     return `
-      <div class="reward-card vic-reward-card${canAfford ? " is-buyable" : ""}">
+      <div class="reward-card vic-reward-card${canAfford ? " is-buyable is-achieved" : ""}">
         <div class="reward-header">
           <span class="reward-icon">${r.icon || "🎁"}</span>
           <div class="reward-name-wrap">
@@ -79,9 +81,18 @@ function renderStore() {
           </div>
           <span class="reward-period">${r.price} pts</span>
         </div>
+        <div class="reward-progress" aria-hidden="true">
+          <i style="width:${pct}%"></i>
+        </div>
+        <div class="reward-stats">
+          <span><span class="pts-current">${cappedCurrent}</span> / ${r.price} pts</span>
+          ${canAfford
+            ? '<span class="reward-status reward-status--good">✓ pode comprar</span>'
+            : `<span class="reward-status">faltam ${r.price - _state.balance}</span>`}
+        </div>
         <div class="vic-buy-row">
           <button class="buy-btn ${canAfford ? "" : "is-disabled"}" data-idx="${idx}" ${canAfford ? "" : "disabled"}>
-            ${canAfford ? "Comprar" : `faltam ${r.price - _state.balance}`}
+            ${canAfford ? "Comprar" : "saldo insuficiente"}
           </button>
         </div>
       </div>
