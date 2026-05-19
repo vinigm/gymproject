@@ -1,5 +1,6 @@
 import { USERS } from "./app.js";
 import { setupAuthGate, renderAuthFooter } from "./auth.js";
+import { mountNavMenu } from "./nav-menu.js";
 import { pointsForDay } from "./points-engine.js";
 import {
   loadAllData,
@@ -110,5 +111,6 @@ async function initPlacaresPage(user) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  mountNavMenu();
   setupAuthGate({ onAuthorized: (user) => initPlacaresPage(user) });
 });

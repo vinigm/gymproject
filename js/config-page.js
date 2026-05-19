@@ -14,6 +14,7 @@ import {
   applyRewardsFromOverride, resetRewards,
 } from "./points-config.js";
 import { setupAuthGate, renderAuthFooter } from "./auth.js";
+import { mountNavMenu } from "./nav-menu.js";
 import { loadConfigOverrides, saveConfigOverrides, clearConfigOverrides } from "./storage.js";
 
 const SECTIONS = [
@@ -558,5 +559,6 @@ async function initConfigPage(user) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  mountNavMenu();
   setupAuthGate({ onAuthorized: (user) => initConfigPage(user) });
 });

@@ -5,6 +5,7 @@
 import { todayISO, USERS, APP_START_DATE } from "./app.js";
 import { POINTS, REWARDS } from "./points-config.js";
 import { setupAuthGate, renderAuthFooter } from "./auth.js";
+import { mountNavMenu } from "./nav-menu.js";
 import {
   loadAllData,
   loadAndApplyConfig,
@@ -180,5 +181,6 @@ async function initPointsPage(user) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  mountNavMenu();
   setupAuthGate({ onAuthorized: (user) => initPointsPage(user) });
 });

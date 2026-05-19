@@ -1,5 +1,6 @@
 import { USERS } from "./app.js";
 import { setupAuthGate, renderAuthFooter } from "./auth.js";
+import { mountNavMenu } from "./nav-menu.js";
 import {
   loadAllData,
   loadAndApplyConfig,
@@ -152,5 +153,6 @@ async function initRecordsPage(user) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  mountNavMenu();
   setupAuthGate({ onAuthorized: (user) => initRecordsPage(user) });
 });

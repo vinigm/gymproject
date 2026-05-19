@@ -7,6 +7,7 @@ import { pointsForDay } from "./points-engine.js";
 import { setupAuthGate, renderAuthFooter } from "./auth.js";
 import { loadAndApplyConfig } from "./points-utils.js";
 import { EXTRAS_META } from "./points-config.js";
+import { mountNavMenu } from "./nav-menu.js";
 
 export const USERS = ["vinicius", "victoria"];
 
@@ -150,10 +151,11 @@ async function initApp(user) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  // app.js também é importado pela points-page (que reusa APP_START_DATE / USERS /
-  // todayISO). Se não estamos na página principal, não há nada pra inicializar.
+  // app.js também é importado por outras páginas (pra reusar APP_START_DATE etc.).
+  // Se não estamos na página principal, não há nada pra inicializar.
   if (!document.getElementById("date-input")) return;
 
+  mountNavMenu();
   // Espera o auth confirmar antes de carregar qualquer coisa do banco
   setupAuthGate({
     onAuthorized: (user) => { initApp(user); }

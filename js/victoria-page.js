@@ -1,5 +1,6 @@
 import { todayISO, APP_START_DATE } from "./app.js";
 import { setupAuthGate, renderAuthFooter } from "./auth.js";
+import { mountNavMenu } from "./nav-menu.js";
 import { getRange, addTransaction, getTransactions, deleteTransaction } from "./storage.js";
 import { REWARDS_VICTORIA } from "./points-config.js";
 import {
@@ -177,5 +178,6 @@ async function initVictoriaPage(user) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  mountNavMenu();
   setupAuthGate({ onAuthorized: (user) => initVictoriaPage(user) });
 });
