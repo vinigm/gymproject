@@ -112,43 +112,6 @@ function renderBreakdown(dataByUser, period) {
   `;
 }
 
-// --- render: prêmios conjuntos --------------------------------------
-function renderRewards(dataByUser) {
-  const el = document.getElementById("rewards");
-  if (!REWARDS || REWARDS.length === 0) {
-    el.innerHTML = `<p class="muted" style="padding:8px">nenhum prêmio configurado. edite <code>js/points-config.js</code>.</p>`;
-    return;
-  }
-  // Por enquanto cada prêmio mede o acumulado de todo histórico (sem desconto).
-  const cards = REWARDS.map(r => {
-    const combined = USERS.reduce((sum, u) => sum + pointsInPeriod(dataByUser[u], "all"), 0);
-    const price = Math.max(1, r.price ?? r.target ?? 1);
-    const pct = Math.max(0, Math.min(100, Math.round((combined / price) * 100)));
-    const achieved = combined >= price;
-    const missing = Math.max(0, price - combined);
-    return `
-      <div class="reward-card${achieved ? " is-achieved" : ""}">
-        <div class="reward-header">
-          <span class="reward-icon">${r.icon || "🎁"}</span>
-          <div class="reward-name-wrap">
-            <div class="reward-name">${r.name}</div>
-            ${r.description ? `<div class="reward-desc">${r.description}</div>` : ""}
-          </div>
-          <span class="reward-period">${price} pts</span>
-        </div>
-        <div class="reward-progress" aria-hidden="true"><i style="width:${pct}%"></i></div>
-        <div class="reward-stats">
-          <span><span class="pts-current">${combined}</span> / ${price} pts</span>
-          ${achieved
-            ? `<span class="reward-status reward-status--good">✓ pode comprar</span>`
-            : `<span class="reward-status">faltam ${missing}</span>`}
-        </div>
-      </div>
-    `;
-  }).join("");
-  el.innerHTML = cards;
-}
-
 function fmtDayMonthBR(iso) {
   const [y, m, d] = iso.split("-").map(Number);
   return new Date(y, m - 1, d).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
@@ -168,7 +131,6 @@ async function initPointsPage(user) {
     const data = await loadAllData();
     renderTotals(data);
     renderBreakdown(data, "weekly");
-    renderRewards(data);
     document.getElementById("breakdown-period").addEventListener("change", (e) => {
       renderBreakdown(data, e.target.value);
     });
@@ -176,7 +138,6 @@ async function initPointsPage(user) {
     console.error(err);
     document.getElementById("totals").innerHTML =
       `<p class="muted" style="padding:8px">erro ao carregar: ${err.message}</p>`;
-    document.getElementById("rewards").innerHTML = "";
   }
 }
 

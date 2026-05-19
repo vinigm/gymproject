@@ -5,6 +5,7 @@
 const NAV_ITEMS = [
   { href: "./",              icon: "🏠", label: "Hábitos",  match: ["", "index.html"] },
   { href: "./points.html",   icon: "🏆", label: "Pontos",   match: ["points.html"] },
+  { href: "./casal.html",    icon: "🎁", label: "Prêmios",  match: ["casal.html"] },
   { href: "./recordes.html", icon: "⭐", label: "Recordes", match: ["recordes.html"] },
   { href: "./placares.html", icon: "🏅", label: "Placares", match: ["placares.html"] },
   { href: "./victoria.html", icon: "💖", label: "Vic",      match: ["victoria.html"] },

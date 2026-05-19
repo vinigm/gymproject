@@ -6,14 +6,13 @@
   <meta name="theme-color" content="#0f172a" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Pontos" />
-  <title>Pontuação · Hábitos</title>
+  <meta name="apple-mobile-web-app-title" content="Prêmios" />
+  <title>Prêmios · Hábitos</title>
   <link rel="manifest" href="./manifest.webmanifest" />
   <link rel="icon" type="image/svg+xml" href="./icons/icon.svg" />
   <link rel="stylesheet" href="./css/style.css" />
 </head>
 <body>
-  <!-- Tela de login (sobreposta a tudo até autenticar) -->
   <div id="auth-gate" class="auth-gate">
     <div class="auth-card">
       <h1 class="auth-title">Hábitos</h1>
@@ -33,49 +32,46 @@
   </div>
 
   <header class="topbar">
-    <a href="./" class="ghost-btn" aria-label="Voltar">‹ voltar</a>
-    <h1 class="brand">Pontuação</h1>
-    <span class="topbar-date" id="period-info"></span>
+    <a href="./" class="ghost-btn">‹ voltar</a>
+    <h1 class="brand">Prêmios</h1>
+    <span></span>
   </header>
 
   <nav id="nav-menu"></nav>
 
   <main class="page">
     <section class="block">
-      <div class="block-head">
-        <h2>Pontos atuais</h2>
-      </div>
-      <div id="totals" class="totals-grid">
+      <div id="casal-wallet" class="vic-wallet">
         <p class="muted" style="padding:8px">carregando…</p>
       </div>
     </section>
 
     <section class="block">
       <div class="block-head">
-        <h2>Detalhamento por pessoa</h2>
-        <select id="breakdown-period" class="select">
-          <option value="weekly" selected>semana</option>
-          <option value="monthly">mês</option>
-          <option value="all">total</option>
-        </select>
+        <h2>Loja do casal</h2>
+        <span class="muted" style="font-size:11px">soma dos dois · gasto compartilhado</span>
       </div>
-      <div id="breakdown" class="two-col">
+      <div id="casal-store" class="rewards-list">
         <p class="muted" style="padding:8px">carregando…</p>
       </div>
-      <div id="breakdown-combined" class="breakdown-combined"></div>
     </section>
 
-    <p class="muted" style="text-align:center;font-size:12px;margin:16px 0 8px">
-      pra comprar prêmios do casal, vai na aba <a href="./casal.html">Prêmios</a>
-    </p>
+    <section class="block">
+      <div class="block-head">
+        <h2>Histórico de compras</h2>
+      </div>
+      <div id="casal-history" class="vic-history">
+        <p class="muted" style="padding:8px">carregando…</p>
+      </div>
+    </section>
 
     <footer class="footer">
-      <span class="muted">edite <code>js/points-config.js</code> pra mudar pontos e prêmios</span>
+      <span class="muted">edite <code>js/points-config.js</code> ou <a href="./config.html">a config</a> pra mexer nos prêmios</span>
       <span id="auth-info" class="muted"></span>
     </footer>
   </main>
 
-  <script type="module" src="./js/points-page.js"></script>
+  <script type="module" src="./js/casal-page.js"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {

@@ -1197,6 +1197,58 @@ input, select { font: inherit; color: inherit; }
 }
 .vic-h-undo { font-size: 11px; }
 
+/* === CARTEIRA DO CASAL === */
+.casal-balance-card {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.18), rgba(236, 72, 153, 0.18));
+  border: 1px solid var(--accent);
+  border-radius: 16px;
+  padding: 18px 18px 16px;
+  box-shadow: 0 8px 28px rgba(110, 168, 255, 0.18);
+}
+.casal-balance-header {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 8px;
+}
+.casal-avatars {
+  display: flex; align-items: center;
+}
+.casal-avatars .avatar + .avatar {
+  margin-left: -10px;
+  border: 2px solid var(--bg);
+}
+.casal-balance-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.casal-balance-value {
+  font-size: 44px;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.casal-balance-value.is-good { color: var(--good); }
+.casal-balance-value.is-bad  { color: var(--bad); }
+.casal-balance-unit {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--muted);
+  margin-left: 4px;
+}
+.casal-balance-meta,
+.casal-balance-extra {
+  display: flex; gap: 8px; flex-wrap: wrap;
+  font-size: 12px; color: var(--muted);
+  margin-top: 6px;
+}
+.casal-balance-meta b,
+.casal-balance-extra b {
+  color: var(--text);
+  font-weight: 700;
+}
+
 /* === PÁGINA DE CONFIGURAÇÃO === */
 .config-form {
   display: flex; flex-direction: column; gap: 12px;
