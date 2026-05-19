@@ -1686,7 +1686,7 @@ body.is-loading::after {
   background: var(--good);
 }
 
-/* Vic store: barras em tom rosa */
+/* Vivi store: barras em tom rosa */
 #vic-store .reward-progress > i {
   background: linear-gradient(90deg, var(--vic), #f9a8d4);
 }

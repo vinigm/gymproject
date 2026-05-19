@@ -103,7 +103,7 @@ export const storageMode = isConfigured ? "firebase" : "local";
 // Cada doc representa um resgate de recompensa.
 // scope:
 //   "shared"            → desconta do saldo conjunto (futuro)
-//   "personal-victoria" → desconta só do saldo pessoal da Vic
+//   "personal-victoria" → desconta só do saldo pessoal da Vivi (chave fica como está)
 //   "personal-vinicius" → idem pro Vini (futuro)
 //
 // Estrutura:

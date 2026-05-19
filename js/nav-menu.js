@@ -8,7 +8,7 @@ const NAV_ITEMS = [
   { href: "./casal.html",    icon: "🎁", label: "Prêmios",  match: ["casal.html"] },
   { href: "./recordes.html", icon: "⭐", label: "Recordes", match: ["recordes.html"] },
   { href: "./placares.html", icon: "🏅", label: "Placares", match: ["placares.html"] },
-  { href: "./victoria.html", icon: "💖", label: "Vic",      match: ["victoria.html"] },
+  { href: "./victoria.html", icon: "💖", label: "Vivi",     match: ["victoria.html"] },
   { href: "./config.html",   icon: "⚙️", label: "Config",   match: ["config.html"] },
 ];
 

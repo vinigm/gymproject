@@ -8,7 +8,7 @@ import {
 import { mountNavMenu } from "./nav-menu.js";
 
 const SCOPE = "shared";
-const NAMES = { vinicius: "Vinicius", victoria: "Victoria" };
+const NAMES = { vinicius: "Vinicius", victoria: "Vivi" };
 const AVATAR_CLASS = { vinicius: "avatar--vini", victoria: "avatar--vic" };
 
 let _state = {
@@ -55,7 +55,7 @@ function renderWallet() {
       <div class="casal-balance-meta">
         <span>Vini <b>${earnedVini}</b></span>
         <span>·</span>
-        <span>Vic <b>${earnedVic}</b></span>
+        <span>Vivi <b>${earnedVic}</b></span>
         <span>·</span>
         <span>gasto <b>${spent}</b></span>
       </div>
@@ -112,7 +112,7 @@ function renderStore() {
       const idx = Number(btn.dataset.idx);
       const reward = REWARDS[idx];
       if (!reward) return;
-      const ok = confirm(`Comprar "${reward.name}" por ${reward.price} pts?\n\nVai descontar do saldo do casal.\n(Não afeta o saldo pessoal da Vic.)`);
+      const ok = confirm(`Comprar "${reward.name}" por ${reward.price} pts?\n\nVai descontar do saldo do casal.\n(Não afeta o saldo pessoal da Vivi.)`);
       if (!ok) return;
       btn.disabled = true;
       btn.textContent = "comprando…";

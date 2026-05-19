@@ -68,7 +68,7 @@ function renderScoreboards(scores) {
       leaderData = `data-leader="victoria"`;
       headline = `
         <span class="avatar avatar--vic avatar--sm">V</span>
-        <span class="sb-headline sb-headline--vic">Victoria ganhando por ${diff} ${diff === 1 ? sing : plur}</span>
+        <span class="sb-headline sb-headline--vic">Vivi ganhando por ${diff} ${diff === 1 ? sing : plur}</span>
       `;
     }
 
@@ -88,7 +88,7 @@ function renderScoreboards(scores) {
           <span class="sb-x">×</span>
           <span class="sb-side sb-side--vic${vicLeading ? " is-winning" : ""}">
             <span class="sb-side-num">${vic}</span>
-            <span class="sb-side-name">Vic</span>
+            <span class="sb-side-name">Vivi</span>
             <span class="avatar avatar--vic avatar--xs">V</span>
           </span>
         </div>

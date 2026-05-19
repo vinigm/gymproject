@@ -43,7 +43,7 @@ function renderWallet() {
     <div class="vic-balance-card">
       <div class="vic-balance-header">
         <span class="avatar avatar--vic avatar--md">V</span>
-        <span class="vic-balance-name">Carteira pessoal · Vic</span>
+        <span class="vic-balance-name">Carteira pessoal · Vivi</span>
       </div>
       <div class="vic-balance-value ${klass}">${balance} <span class="vic-balance-unit">pts</span></div>
       <div class="vic-balance-meta">

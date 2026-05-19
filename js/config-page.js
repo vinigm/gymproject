@@ -244,7 +244,7 @@ function renderRewardsSection() {
   return `
     <fieldset class="config-section">
       <legend class="config-legend">🎁 Recompensas</legend>
-      <p class="config-note muted">edite preços · adicione novas · escolha o escopo (todos ou só Vic)</p>
+      <p class="config-note muted">edite preços · adicione novas · escolha o escopo (todos ou só Vivi)</p>
 
       <div class="reward-subsection">
         <div class="reward-subsection-title">Compartilhadas</div>
@@ -252,14 +252,14 @@ function renderRewardsSection() {
       </div>
 
       <div class="reward-subsection">
-        <div class="reward-subsection-title">Pessoais · Vic</div>
+        <div class="reward-subsection-title">Pessoais · Vivi</div>
         ${vicRows || `<p class="muted" style="font-size:12px;padding:4px">nenhuma</p>`}
       </div>
 
       <div class="reward-new">
         <select id="new-reward-scope" class="reward-scope-select" aria-label="Escopo">
           <option value="shared">Compartilhada</option>
-          <option value="victoria">Pessoal · Vic</option>
+          <option value="victoria">Pessoal · Vivi</option>
         </select>
         <input type="text" id="new-reward-icon" maxlength="3" placeholder="🎯" class="extra-icon-input" aria-label="Ícone" />
         <input type="text" id="new-reward-name" placeholder="nome do prêmio" class="extra-label-input" aria-label="Nome" />

@@ -245,10 +245,12 @@ export const DEFAULT_REWARDS = [
 
 
 // ─────────────────────────────────────────────────────────────────────
-//  3) RECOMPENSAS PESSOAIS DA VICTORIA (defaults)
+//  3) RECOMPENSAS PESSOAIS DA VIVI (defaults)
 // ─────────────────────────────────────────────────────────────────────
-//  Itens que SÓ descontam da carteira pessoal da Vic.
+//  Itens que SÓ descontam da carteira pessoal da Vivi.
 //  Mesma lógica: defaults aqui, customs em config/points (rewards_victoria).
+//  Obs: as chaves internas (`victoria`, `personal-victoria`) ficam como
+//  estão pra não invalidar dados antigos no Firestore.
 // ─────────────────────────────────────────────────────────────────────
 export const DEFAULT_REWARDS_VICTORIA = [
   {

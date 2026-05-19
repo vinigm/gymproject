@@ -1,6 +1,6 @@
 // Página de pontuação (geral) — totais, detalhamento por pessoa e loja conjunta.
 // Recordes e Placares migraram pra páginas próprias (recordes.html, placares.html).
-// Loja pessoal da Vic está em victoria.html.
+// Loja pessoal da Vivi está em victoria.html.
 
 import { todayISO, USERS, APP_START_DATE } from "./app.js";
 import { POINTS, REWARDS } from "./points-config.js";
@@ -16,7 +16,7 @@ import {
   PERIOD_LABELS, periodRange,
 } from "./points-utils.js";
 
-const NAMES = { vinicius: "Vinicius", victoria: "Victoria" };
+const NAMES = { vinicius: "Vinicius", victoria: "Vivi" };
 const AVATAR_CLASS = { vinicius: "avatar--vini", victoria: "avatar--vic" };
 
 const MONTHS_PT = [

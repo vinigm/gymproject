@@ -5,7 +5,7 @@ const EX_LABELS = {
   academia: "Academia", corrida: "Corrida", yoga: "Yoga",
   jiujitsu: "Jiu Jitsu", bicicleta: "Bicicleta"
 };
-const NAMES = { vinicius: "Vinicius", victoria: "Victoria" };
+const NAMES = { vinicius: "Vinicius", victoria: "Vivi" };
 const AVATAR_CLASS = { vinicius: "avatar--vini", victoria: "avatar--vic" };
 
 function shiftISO(iso, deltaDays) {

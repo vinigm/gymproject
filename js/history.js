@@ -1,7 +1,7 @@
 import { getRange } from "./storage.js";
 import { todayISO, USERS, APP_START_DATE } from "./app.js";
 
-const NAMES = { vinicius: "Vinicius", victoria: "Victoria" };
+const NAMES = { vinicius: "Vinicius", victoria: "Vivi" };
 const AVATAR_CLASS = { vinicius: "avatar--vini", victoria: "avatar--vic" };
 
 const pad = (n) => String(n).padStart(2, "0");

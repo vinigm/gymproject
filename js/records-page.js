@@ -8,7 +8,7 @@ import {
   fmtDayFull, fmtWeekRange, fmtMonth, fmtPts,
 } from "./points-utils.js";
 
-const NAMES = { vinicius: "Vinicius", victoria: "Victoria" };
+const NAMES = { vinicius: "Vinicius", victoria: "Vivi" };
 const AVATAR_CLASS = { vinicius: "avatar--vini", victoria: "avatar--vic" };
 
 function computeAllRecords(dataByUser) {

@@ -1,4 +1,4 @@
-# Hábitos · Vini & Vic
+# Hábitos · Vini & Vivi
 
 App web (PWA) pra registrar diariamente exercícios e alimentação. Pensado pra ser
 instalado na tela inicial do celular e usado como se fosse um app nativo.
