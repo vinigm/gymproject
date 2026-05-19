@@ -1384,6 +1384,70 @@ input, select { font: inherit; color: inherit; }
 }
 .extra-add-btn:active { transform: scale(0.96); }
 
+/* === RECOMPENSAS na config === */
+.reward-subsection {
+  margin: 12px 0;
+  padding: 8px 0 4px;
+  border-top: 1px dashed var(--border);
+}
+.reward-subsection:first-of-type { border-top: none; padding-top: 0; }
+.reward-subsection-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 6px;
+  padding: 0 2px;
+}
+.reward-row {
+  grid-template-columns: 1fr 80px auto;
+}
+.reward-name-text {
+  display: flex; flex-direction: column;
+}
+.reward-row-desc {
+  font-size: 10px;
+  color: var(--muted);
+  font-weight: 400;
+  margin-top: 2px;
+  line-height: 1.2;
+}
+
+.reward-new {
+  display: grid;
+  grid-template-columns: 1fr 44px 1fr 80px auto;
+  gap: 6px;
+  align-items: center;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--accent);
+}
+@media (max-width: 480px) {
+  .reward-new {
+    grid-template-columns: 1fr 44px 80px;
+    grid-template-areas:
+      "scope scope scope"
+      "icon name price"
+      "btn btn btn";
+    gap: 8px;
+  }
+  .reward-new .reward-scope-select { grid-area: scope; }
+  .reward-new #new-reward-icon { grid-area: icon; }
+  .reward-new #new-reward-name { grid-area: name; }
+  .reward-new #new-reward-price { grid-area: price; }
+  .reward-new #btn-new-reward { grid-area: btn; }
+}
+.reward-scope-select {
+  background: var(--card-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 8px;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+}
+
 .rewards-list {
   display: flex; flex-direction: column; gap: 10px;
 }

@@ -168,19 +168,19 @@ export function resetExtrasMeta() {
 
 
 // ─────────────────────────────────────────────────────────────────────
-//  2) PRÊMIOS / LOJINHA
+//  2) PRÊMIOS / LOJINHA (defaults)
 // ─────────────────────────────────────────────────────────────────────
 //  Cada prêmio tem:
 //    name        → nome que aparece no card
 //    icon        → emoji
-//    price       → custo em pontos (NOTA: por enquanto a página mostra
-//                  como meta acumulada. O modelo de carteira/loja com
-//                  botão de comprar vai vir numa próxima atualização.)
+//    price       → custo em pontos
 //    description → texto opcional, aparece em cinza
 //
-//  Pra desativar um prêmio temporariamente, comenta a linha com `//`.
+//  Lista padrão (do código). A página /config.html permite editar preços,
+//  adicionar novos prêmios e remover customs. Customizações ficam em
+//  config/points como rewards_shared / rewards_victoria.
 // ─────────────────────────────────────────────────────────────────────
-export const REWARDS = [
+export const DEFAULT_REWARDS = [
   {
     name: "Date romântico",
     icon: "❤️",
@@ -245,14 +245,12 @@ export const REWARDS = [
 
 
 // ─────────────────────────────────────────────────────────────────────
-//  3) RECOMPENSAS PESSOAIS DA VICTORIA
+//  3) RECOMPENSAS PESSOAIS DA VICTORIA (defaults)
 // ─────────────────────────────────────────────────────────────────────
 //  Itens que SÓ descontam da carteira pessoal da Vic.
-//  Os pontos ganhos por ela contam pro saldo pessoal E pro saldo conjunto
-//  (futuro), mas quando ela compra algo aqui, só o saldo pessoal cai.
-//  Edite essa lista com o que ela quiser comprar.
+//  Mesma lógica: defaults aqui, customs em config/points (rewards_victoria).
 // ─────────────────────────────────────────────────────────────────────
-export const REWARDS_VICTORIA = [
+export const DEFAULT_REWARDS_VICTORIA = [
   {
     name: "Esmalte novo",
     icon: "💅",
@@ -290,3 +288,41 @@ export const REWARDS_VICTORIA = [
     description: "Item maior",
   },
 ];
+
+
+// ─────────────────────────────────────────────────────────────────────
+//  RUNTIME — REWARDS / REWARDS_VICTORIA (mutáveis pela UI de config)
+// ─────────────────────────────────────────────────────────────────────
+//  Começam como cópia dos defaults. A página /config.html permite editar
+//  o preço dos defaults e adicionar/remover customs. As mudanças vão
+//  pro Firestore em config/points como rewards_shared / rewards_victoria.
+// ─────────────────────────────────────────────────────────────────────
+export const REWARDS = JSON.parse(JSON.stringify(DEFAULT_REWARDS));
+export const REWARDS_VICTORIA = JSON.parse(JSON.stringify(DEFAULT_REWARDS_VICTORIA));
+
+function applyRewardsScope(runtime, defaults, savedList) {
+  runtime.length = 0;
+  const overrideByName = new Map();
+  for (const item of (savedList || [])) {
+    if (item && !item.custom) overrideByName.set(item.name, item);
+  }
+  for (const def of defaults) {
+    const ov = overrideByName.get(def.name);
+    runtime.push(ov ? { ...def, ...ov } : { ...def });
+  }
+  for (const item of (savedList || [])) {
+    if (item?.custom) runtime.push({ ...item });
+  }
+}
+
+// override é o objeto completo carregado do Firestore.
+// Lê rewards_shared e rewards_victoria.
+export function applyRewardsFromOverride(override) {
+  applyRewardsScope(REWARDS, DEFAULT_REWARDS, override?.rewards_shared);
+  applyRewardsScope(REWARDS_VICTORIA, DEFAULT_REWARDS_VICTORIA, override?.rewards_victoria);
+}
+
+export function resetRewards() {
+  applyRewardsScope(REWARDS, DEFAULT_REWARDS, []);
+  applyRewardsScope(REWARDS_VICTORIA, DEFAULT_REWARDS_VICTORIA, []);
+}

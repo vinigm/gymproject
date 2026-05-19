@@ -1,20 +1,23 @@
 // Helpers compartilhados entre páginas (pontos, recordes, placares, vic).
 // Tudo aqui é puro — não toca DOM, não inicia nada.
 
-import { POINTS, applyPoints, applyExtrasCustom, resetExtrasMeta, resetPoints, EXTRAS_META } from "./points-config.js";
+import { POINTS, applyPoints, applyExtrasCustom, resetExtrasMeta, resetPoints, EXTRAS_META,
+  applyRewardsFromOverride, resetRewards } from "./points-config.js";
 import { pointsForDay } from "./points-engine.js";
 import { todayISO, USERS, APP_START_DATE } from "./app.js";
 import { loadConfigOverrides } from "./storage.js";
 
 // Chamar antes de renderizar — reseta tudo aos defaults e aplica overrides do Firestore
 export async function loadAndApplyConfig() {
-  // Reseta antes pra não acumular extras antigos em re-renderizações
+  // Reseta antes pra não acumular customs antigos em re-renderizações
   resetPoints();
   resetExtrasMeta();
+  resetRewards();
   const override = await loadConfigOverrides();
   if (override) {
     applyPoints(override);
     applyExtrasCustom(override.extras_custom || []);
+    applyRewardsFromOverride(override);
   }
 }
 
