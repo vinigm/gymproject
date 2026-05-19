@@ -140,14 +140,18 @@ async function initApp(user) {
     }
   });
 
-  await loadAndApplyConfig();
-  renderExtrasChips();
-  initTracker();
-  await refreshAllTrackers();
-  await renderStats();
-  await renderHistory();
-  await renderCalendar();
-  await refreshPointsBadge();
+  try {
+    await loadAndApplyConfig();
+    renderExtrasChips();
+    initTracker();
+    await refreshAllTrackers();
+    await renderStats();
+    await renderHistory();
+    await renderCalendar();
+    await refreshPointsBadge();
+  } finally {
+    document.body.classList.remove("is-loading");
+  }
 }
 
 document.addEventListener("DOMContentLoaded", () => {

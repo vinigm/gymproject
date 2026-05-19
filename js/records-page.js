@@ -149,6 +149,8 @@ async function initRecordsPage(user) {
     console.error(err);
     document.getElementById("records").innerHTML =
       `<p class="muted" style="padding:8px">erro ao carregar: ${err.message}</p>`;
+  } finally {
+    document.body.classList.remove("is-loading");
   }
 }
 
