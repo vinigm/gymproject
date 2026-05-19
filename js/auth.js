@@ -17,6 +17,20 @@ export function isAuthorizedEmail(email) {
   return AUTHORIZED_EMAILS.includes(email.toLowerCase());
 }
 
+// Cache otimista: marca que o usuário JÁ logou nesse browser, pra esconder
+// a tela de login imediatamente em navegações subsequentes. O Firebase Auth
+// confirma de fato em ~100ms; se contradisser, mostramos a tela de novo.
+const AUTH_CACHE_KEY = "habitos-auth-uid";
+function getCachedAuthUid() {
+  try { return localStorage.getItem(AUTH_CACHE_KEY); } catch { return null; }
+}
+function setCachedAuthUid(uid) {
+  try {
+    if (uid) localStorage.setItem(AUTH_CACHE_KEY, uid);
+    else localStorage.removeItem(AUTH_CACHE_KEY);
+  } catch {}
+}
+
 const provider = auth ? new GoogleAuthProvider() : null;
 if (provider) provider.setCustomParameters({ prompt: "select_account" });
 
@@ -54,6 +68,7 @@ export async function signInWithGoogle() {
 
 export async function signOutUser() {
   if (!auth) return;
+  setCachedAuthUid(null);
   await signOut(auth);
   // Recarrega pra limpar todo o estado em memória
   location.reload();
@@ -106,14 +121,22 @@ export function setupAuthGate({ onAuthorized }) {
     return;
   }
 
+  // Esconde a tela imediatamente se temos cache de auth anterior — evita
+  // flash do login em navegações entre páginas.
+  if (getCachedAuthUid()) {
+    gate.classList.add("is-hidden");
+  }
+
   let initialized = false;
   onAuthStateChanged(auth, (user) => {
     if (!user) {
+      setCachedAuthUid(null);
       showLogin();
       gate.classList.remove("is-hidden");
       return;
     }
     if (!isAuthorizedEmail(user.email)) {
+      setCachedAuthUid(null);
       showError(`
         <strong>Acesso negado</strong>
         <p>Esta conta (<code>${user.email}</code>) não tem permissão.</p>
@@ -125,6 +148,7 @@ export function setupAuthGate({ onAuthorized }) {
       return;
     }
     // Autorizado
+    setCachedAuthUid(user.uid);
     gate.classList.add("is-hidden");
     if (!initialized) {
       initialized = true;
