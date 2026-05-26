@@ -6,8 +6,8 @@
   <meta name="theme-color" content="#0f172a" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Vivi Stats" />
-  <title>Vivi Stats</title>
+  <meta name="apple-mobile-web-app-title" content="Stats" />
+  <title>Stats · Hábitos</title>
   <link rel="manifest" href="./manifest.webmanifest" />
   <link rel="icon" type="image/svg+xml" href="./icons/icon.svg" />
   <link rel="stylesheet" href="./css/style.css" />
@@ -19,7 +19,7 @@
     } catch (e) {}
   </script>
 </head>
-<body class="is-loading" data-stats-user="victoria">
+<body class="is-loading">
   <div id="auth-gate" class="auth-gate">
     <div class="auth-card">
       <h1 class="auth-title">Hábitos</h1>
@@ -40,7 +40,7 @@
 
   <header class="topbar">
     <a href="./" class="ghost-btn">‹ voltar</a>
-    <h1 class="brand">Vivi Stats</h1>
+    <h1 class="brand">Stats</h1>
     <select id="vstat-range" class="select">
       <option value="7">7 dias</option>
       <option value="30" selected>30 dias</option>
@@ -51,6 +51,11 @@
   <nav id="nav-menu"></nav>
 
   <main class="page">
+    <div class="seg stats-user-seg" id="stats-user-seg">
+      <button data-user="vinicius" class="seg-btn is-on">💙 Vini</button>
+      <button data-user="victoria" class="seg-btn">💗 Vivi</button>
+    </div>
+
     <div id="vstat-content">
       <p class="muted" style="padding:8px">carregando…</p>
     </div>

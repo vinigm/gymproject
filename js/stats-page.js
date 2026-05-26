@@ -1,8 +1,6 @@
-// Página de estatísticas pessoais (Vini ou Vivi).
-// O usuário vem de <body data-stats-user="vinicius|victoria">.
-// Mesmo arquivo serve as duas páginas (vinicius.html e vivi-stats.html).
+// Página de estatísticas — Vini e Vivi numa página só, com toggle no topo.
 
-import { todayISO, APP_START_DATE } from "./app.js";
+import { todayISO, APP_START_DATE, USERS } from "./app.js";
 import { setupAuthGate, renderAuthFooter } from "./auth.js";
 import { getRange } from "./storage.js";
 import { pointsForDay } from "./points-engine.js";
@@ -14,15 +12,16 @@ import {
 } from "./points-utils.js";
 import { mountNavMenu } from "./nav-menu.js";
 
-const USER = document.body.dataset.statsUser === "victoria" ? "victoria" : "vinicius";
-const NAME = USER === "vinicius" ? "Vini" : "Vivi";
-const ACCENT = USER === "vinicius" ? "var(--vini)" : "var(--vic)";
+const NAMES = { vinicius: "Vini", victoria: "Vivi" };
+const ACCENTS = { vinicius: "var(--vini)", victoria: "var(--vic)" };
 const EX_LABELS = {
   academia: "Academia", corrida: "Corrida", yoga: "Yoga",
   jiujitsu: "Jiu Jitsu", bicicleta: "Bicicleta",
 };
 
-let _days = [];
+let _daysByUser = { vinicius: [], victoria: [] };
+let _currentUser = "vinicius";
+let _currentRange = "30";
 
 const pad = (n) => String(n).padStart(2, "0");
 function shiftISO(iso, delta) {
@@ -123,9 +122,12 @@ function kpiRow(value, label, suffix = "") {
   `;
 }
 
-function render(rangeDays) {
+function render() {
+  const USER = _currentUser;
+  const ACCENT = ACCENTS[USER];
+  const _days = _daysByUser[USER];
   const el = document.getElementById("vstat-content");
-  const days = Number(rangeDays);
+  const days = Number(_currentRange);
   const end = todayISO();
   let rangeStart = shiftISO(end, -(days - 1));
   if (rangeStart < APP_START_DATE) rangeStart = APP_START_DATE;
@@ -339,17 +341,30 @@ function monthStartClamped() {
   return first < APP_START_DATE ? APP_START_DATE : first;
 }
 
+function setupToggle() {
+  document.querySelectorAll("#stats-user-seg .seg-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      _currentUser = btn.dataset.user;
+      document.querySelectorAll("#stats-user-seg .seg-btn")
+        .forEach(b => b.classList.toggle("is-on", b.dataset.user === _currentUser));
+      render();
+    });
+  });
+}
+
 async function initStatsPage(user) {
   renderAuthFooter(user);
-  // título dinâmico ("Vini Stats" / "Vivi Stats")
-  const brand = document.querySelector(".topbar .brand");
-  if (brand) brand.textContent = `${NAME} Stats`;
+  setupToggle();
+  const select = document.getElementById("vstat-range");
+  select.addEventListener("change", () => { _currentRange = select.value; render(); });
   try {
     await loadAndApplyConfig();
-    _days = await getRange(USER, APP_START_DATE, todayISO());
-    const select = document.getElementById("vstat-range");
-    render(select.value);
-    select.addEventListener("change", () => render(select.value));
+    const results = await Promise.all(
+      USERS.map(u => getRange(u, APP_START_DATE, todayISO()).catch(() => []))
+    );
+    USERS.forEach((u, i) => { _daysByUser[u] = results[i]; });
+    _currentRange = select.value;
+    render();
   } catch (err) {
     console.error(err);
     document.getElementById("vstat-content").innerHTML =

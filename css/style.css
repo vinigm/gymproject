@@ -1220,6 +1220,18 @@ body.is-loading::after {
 }
 .vic-h-undo { font-size: 11px; }
 
+/* === TOGGLE DE USUÁRIO (stats.html) === */
+.stats-user-seg {
+  display: flex;
+  width: 100%;
+  margin-bottom: 16px;
+}
+.stats-user-seg .seg-btn {
+  flex: 1;
+  padding: 10px;
+  font-size: 14px;
+}
+
 /* === CALENDÁRIO DINÂMICO (points.html) === */
 .dcal-nav {
   display: flex; align-items: center; gap: 6px;
