@@ -7,10 +7,11 @@ const NAV_ITEMS = [
   { href: "./points.html",   icon: "🏆", label: "Pontos",   match: ["points.html"] },
   { href: "./casal.html",    icon: "🎁", label: "Prêmios",  match: ["casal.html"] },
   { href: "./recordes.html", icon: "⭐", label: "Recordes", match: ["recordes.html"] },
-  { href: "./placares.html", icon: "🏅", label: "Placares", match: ["placares.html"] },
-  { href: "./vinicius.html", icon: "💙", label: "Vini",     match: ["vinicius.html"] },
-  { href: "./victoria.html", icon: "💖", label: "Vivi",     match: ["victoria.html"] },
-  { href: "./config.html",   icon: "⚙️", label: "Config",   match: ["config.html"] },
+  { href: "./placares.html",  icon: "🏅", label: "Placares",   match: ["placares.html"] },
+  { href: "./vinicius.html",  icon: "💙", label: "Vini Stats", match: ["vinicius.html"] },
+  { href: "./vivi-stats.html", icon: "💗", label: "Vivi Stats", match: ["vivi-stats.html"] },
+  { href: "./victoria.html",  icon: "💖", label: "Vivi",       match: ["victoria.html"] },
+  { href: "./config.html",    icon: "⚙️", label: "Config",     match: ["config.html"] },
 ];
 
 function currentFile() {

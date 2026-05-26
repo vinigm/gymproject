@@ -1,5 +1,6 @@
-// Página de estatísticas pessoais do Vini.
-// Reúne tudo que já temos + várias estatísticas extras.
+// Página de estatísticas pessoais (Vini ou Vivi).
+// O usuário vem de <body data-stats-user="vinicius|victoria">.
+// Mesmo arquivo serve as duas páginas (vinicius.html e vivi-stats.html).
 
 import { todayISO, APP_START_DATE } from "./app.js";
 import { setupAuthGate, renderAuthFooter } from "./auth.js";
@@ -13,7 +14,9 @@ import {
 } from "./points-utils.js";
 import { mountNavMenu } from "./nav-menu.js";
 
-const USER = "vinicius";
+const USER = document.body.dataset.statsUser === "victoria" ? "victoria" : "vinicius";
+const NAME = USER === "vinicius" ? "Vini" : "Vivi";
+const ACCENT = USER === "vinicius" ? "var(--vini)" : "var(--vic)";
 const EX_LABELS = {
   academia: "Academia", corrida: "Corrida", yoga: "Yoga",
   jiujitsu: "Jiu Jitsu", bicicleta: "Bicicleta",
@@ -154,10 +157,18 @@ function render(rangeDays) {
   // ----- desde o início (all-time) -----
   const totalCigAll = _days.reduce((s, d) => s + ((d.cigarettes != null && d.cigarettes !== "") ? Number(d.cigarettes) : 0), 0);
   const waterAll = _days.reduce((s, d) => s + waterLitres(d.water), 0);
+  const activeDaysAll = _days.filter(hasData).length;
   const marmitas = _days.filter(d => (d.extras || []).includes("marmita")).length;
+
+  // denominadores = dias em que aquele hábito foi registrado
+  const cigReg = _days.filter(d => d.cigarettes != null && d.cigarettes !== "").length;
+  const sodaReg = _days.filter(d => d.soda === "sim" || d.soda === "nao").length;
+  const dessertReg = _days.filter(d => d.dessert === "sim" || d.dessert === "nao").length;
+
   const diasSemRefri = _days.filter(d => d.soda === "nao").length;
   const diasComRefri = _days.filter(d => d.soda === "sim").length;
   const diasSemSobremesa = _days.filter(d => d.dessert === "nao").length;
+  const diasComSobremesa = _days.filter(d => d.dessert === "sim").length;
   const diasSemFumarTotal = _days.filter(d => d.cigarettes === "0" || d.cigarettes === 0).length;
   const totalPts = totalEarnedByUser(_days);
   const ptsWeek = pointsInPeriod(_days, "weekly");
@@ -213,7 +224,7 @@ function render(rangeDays) {
   el.innerHTML = `
     <section class="block">
       <div class="block-head"><h2>Pontos</h2></div>
-      <div class="stat-card" style="border-top:3px solid var(--vini)">
+      <div class="stat-card" style="border-top:3px solid ${ACCENT}">
         <div class="kpi-grid">
           <div class="kpi">
             <div class="kpi-value">${totalPts}</div>
@@ -237,7 +248,7 @@ function render(rangeDays) {
 
     <section class="block">
       <div class="block-head"><h2>Resumo do período</h2></div>
-      <div class="stat-card" style="border-top:3px solid var(--vini)">
+      <div class="stat-card" style="border-top:3px solid ${ACCENT}">
         <div class="kpi-list">
           ${kpiRow(activeDays, "dias com algum registro", `/${totalDays}`)}
           ${kpiRow(exDays, "dias com exercício", `/${totalDays}`)}
@@ -250,7 +261,7 @@ function render(rangeDays) {
 
     <section class="block">
       <div class="block-head"><h2>Sequências</h2><span class="muted" style="font-size:11px">atual · recorde</span></div>
-      <div class="stat-card" style="border-top:3px solid var(--vini)">
+      <div class="stat-card" style="border-top:3px solid ${ACCENT}">
         <div class="stat-row">
           <span class="stat-label">🏋️ Exercício</span>
           <span class="stat-value">${exCur} <span class="muted" style="font-weight:500;font-size:12px">· ${exBest}</span></span>
@@ -272,7 +283,7 @@ function render(rangeDays) {
 
     <section class="block">
       <div class="block-head"><h2>Alimentação · mês</h2></div>
-      <div class="stat-card" style="border-top:3px solid var(--vini)">
+      <div class="stat-card" style="border-top:3px solid ${ACCENT}">
         ${(() => {
           const ms = monthStartClamped();
           const monthData = _days.filter(d => d.date >= ms);
@@ -286,33 +297,34 @@ function render(rangeDays) {
     </section>
 
     <section class="block">
-      <div class="block-head"><h2>Totais · desde o início</h2></div>
-      <div class="stat-card" style="border-top:3px solid var(--vini)">
-        <div class="stat-row"><span class="stat-label">🚬 Cigarros fumados</span><span class="stat-value">${totalCigAll}</span></div>
-        <div class="stat-row"><span class="stat-label">🚭 Dias sem fumar</span><span class="stat-value">${diasSemFumarTotal}</span></div>
+      <div class="block-head"><h2>Totais · desde o início</h2><span class="muted" style="font-size:11px">X / dias registrados</span></div>
+      <div class="stat-card" style="border-top:3px solid ${ACCENT}">
+        <div class="stat-row"><span class="stat-label">🚭 Dias sem fumar</span><span class="stat-value">${diasSemFumarTotal}<span class="muted" style="font-weight:500;font-size:12px">/${cigReg}</span></span></div>
+        <div class="stat-row"><span class="stat-label">🥤 Dias sem refrigerante</span><span class="stat-value">${diasSemRefri}<span class="muted" style="font-weight:500;font-size:12px">/${sodaReg}</span></span></div>
+        <div class="stat-row"><span class="stat-label">🥤 Dias com refrigerante</span><span class="stat-value">${diasComRefri}<span class="muted" style="font-weight:500;font-size:12px">/${sodaReg}</span></span></div>
+        <div class="stat-row"><span class="stat-label">🍰 Dias sem sobremesa</span><span class="stat-value">${diasSemSobremesa}<span class="muted" style="font-weight:500;font-size:12px">/${dessertReg}</span></span></div>
+        <div class="stat-row"><span class="stat-label">🍰 Dias com sobremesa</span><span class="stat-value">${diasComSobremesa}<span class="muted" style="font-weight:500;font-size:12px">/${dessertReg}</span></span></div>
+        <div class="stat-row"><span class="stat-label">🍱 Marmitas feitas</span><span class="stat-value">${marmitas}<span class="muted" style="font-weight:500;font-size:12px">/${activeDaysAll}</span></span></div>
+        <div class="stat-row"><span class="stat-label">🚬 Cigarros fumados (total)</span><span class="stat-value">${totalCigAll}</span></div>
         <div class="stat-row"><span class="stat-label">💧 Água total</span><span class="stat-value">${fmtLitres(waterAll)}</span></div>
-        <div class="stat-row"><span class="stat-label">🥤 Dias sem refrigerante</span><span class="stat-value">${diasSemRefri}</span></div>
-        <div class="stat-row"><span class="stat-label">🥤 Dias com refrigerante</span><span class="stat-value">${diasComRefri}</span></div>
-        <div class="stat-row"><span class="stat-label">🍰 Dias sem sobremesa</span><span class="stat-value">${diasSemSobremesa}</span></div>
-        <div class="stat-row"><span class="stat-label">🍱 Marmitas feitas</span><span class="stat-value">${marmitas}</span></div>
       </div>
     </section>
 
     <section class="block">
       <div class="block-head"><h2>Exercícios por modalidade</h2><span class="muted" style="font-size:11px">no período</span></div>
-      <div class="stat-card" style="border-top:3px solid var(--vini)">${modRows}</div>
+      <div class="stat-card" style="border-top:3px solid ${ACCENT}">${modRows}</div>
     </section>
 
     <section class="block">
       <div class="block-head"><h2>Outros hábitos</h2><span class="muted" style="font-size:11px">no período</span></div>
-      <div class="stat-card" style="border-top:3px solid var(--vini)">
+      <div class="stat-card" style="border-top:3px solid ${ACCENT}">
         ${extraRows || `<p class="muted" style="font-size:12px;margin:4px 0">nada marcado no período</p>`}
       </div>
     </section>
 
     <section class="block">
       <div class="block-head"><h2>Recordes</h2></div>
-      <div class="stat-card" style="border-top:3px solid var(--vini)">
+      <div class="stat-card" style="border-top:3px solid ${ACCENT}">
         ${recRow("Melhor dia", bDay, r => fmtDayFull(r.date))}
         ${recRow("Melhor semana", bWeek, r => fmtWeekRange(r.weekStart))}
         ${recRow("Melhor mês", bMonth, r => fmtMonth(r.monthKey))}
@@ -327,8 +339,11 @@ function monthStartClamped() {
   return first < APP_START_DATE ? APP_START_DATE : first;
 }
 
-async function initViniciusPage(user) {
+async function initStatsPage(user) {
   renderAuthFooter(user);
+  // título dinâmico ("Vini Stats" / "Vivi Stats")
+  const brand = document.querySelector(".topbar .brand");
+  if (brand) brand.textContent = `${NAME} Stats`;
   try {
     await loadAndApplyConfig();
     _days = await getRange(USER, APP_START_DATE, todayISO());
@@ -346,5 +361,5 @@ async function initViniciusPage(user) {
 
 document.addEventListener("DOMContentLoaded", () => {
   mountNavMenu();
-  setupAuthGate({ onAuthorized: (user) => initViniciusPage(user) });
+  setupAuthGate({ onAuthorized: (user) => initStatsPage(user) });
 });
