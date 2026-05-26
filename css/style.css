@@ -1221,10 +1221,17 @@ body.is-loading::after {
 .vic-h-undo { font-size: 11px; }
 
 /* === TOGGLE DE USUÁRIO (stats.html) === */
+.stats-toggle-bar {
+  position: sticky;
+  top: var(--stack-top, 100px);
+  z-index: 3;
+  background: var(--bg);
+  padding: 8px 0 10px;
+  margin-bottom: 8px;
+}
 .stats-user-seg {
   display: flex;
   width: 100%;
-  margin-bottom: 16px;
 }
 .stats-user-seg .seg-btn {
   flex: 1;

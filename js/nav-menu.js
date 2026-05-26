@@ -34,4 +34,18 @@ export function mountNavMenu(containerId = "nav-menu") {
       </a>
     `;
   }).join("");
+
+  // Posiciona o nav logo abaixo do topbar (em vez de sobrepor em top:0).
+  // Também expõe a altura combinada via CSS var pra outros elementos sticky.
+  const topbar = document.querySelector(".topbar");
+  if (topbar) {
+    const setOffsets = () => {
+      const tb = topbar.offsetHeight;
+      el.style.top = tb + "px";
+      document.documentElement.style.setProperty("--stack-top", (tb + el.offsetHeight) + "px");
+    };
+    setOffsets();
+    window.addEventListener("resize", setOffsets);
+    setTimeout(setOffsets, 250); // re-mede após layout/fontes assentarem
+  }
 }
