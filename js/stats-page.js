@@ -155,15 +155,98 @@ function activeWeeksMonths(filteredDays) {
 
 // === Academia helpers (grupos musculares) ===
 const GYM_GROUPS = [
-  { key: "costa",      label: "Costa" },
-  { key: "triceps",    label: "Tríceps" },
-  { key: "peito",      label: "Peito" },
-  { key: "biceps",     label: "Bíceps" },
-  { key: "perna",      label: "Perna" },
-  { key: "ombro",      label: "Ombro" },
-  { key: "lombar",     label: "Lombar" },
-  { key: "abdominal",  label: "Abdominal" },
+  { key: "costa",      label: "Costa",     abbr: "Co", color: "#60a5fa" },
+  { key: "triceps",    label: "Tríceps",   abbr: "Tr", color: "#a78bfa" },
+  { key: "peito",      label: "Peito",     abbr: "Pe", color: "#f472b6" },
+  { key: "biceps",     label: "Bíceps",    abbr: "Bi", color: "#f87171" },
+  { key: "perna",      label: "Perna",     abbr: "Pn", color: "#fb923c" },
+  { key: "ombro",      label: "Ombro",     abbr: "Om", color: "#fbbf24" },
+  { key: "lombar",     label: "Lombar",    abbr: "Lb", color: "#34d399" },
+  { key: "abdominal",  label: "Abdominal", abbr: "Ab", color: "#22d3ee" },
 ];
+const GYM_LOOKUP = Object.fromEntries(GYM_GROUPS.map(g => [g.key, g]));
+
+// Bar chart horizontal: cada DOW é uma linha, barra empilhada por grupo muscular.
+function gymDowBars(gymDays) {
+  const counts = Array.from({ length: 7 }, () => ({}));
+  for (const d of gymDays) {
+    const [y, m, day] = d.date.split("-").map(Number);
+    const dow = new Date(y, m - 1, day).getDay();
+    for (const g of (d.gym_groups || [])) {
+      counts[dow][g] = (counts[dow][g] || 0) + 1;
+    }
+  }
+  const totals = counts.map(g => Object.values(g).reduce((s, n) => s + n, 0));
+  const max = Math.max(1, ...totals);
+  return `
+    <div class="gym-dow-bars">
+      ${DOW_PT_SHORT.map((label, i) => {
+        const groupCounts = counts[i];
+        const total = totals[i];
+        const widthPct = (total / max) * 100;
+        const segments = GYM_GROUPS
+          .filter(g => groupCounts[g.key])
+          .map(g => {
+            const c = groupCounts[g.key];
+            const pct = (c / total) * 100;
+            return `<div class="gym-dow-seg" style="width:${pct}%; background:${g.color}" title="${g.label}: ${c}"></div>`;
+          }).join("");
+        return `
+          <div class="gym-dow-row">
+            <span class="gym-dow-label">${label}</span>
+            <div class="gym-dow-track">
+              <div class="gym-dow-bar" style="width:${widthPct}%">${segments}</div>
+            </div>
+            <span class="gym-dow-total">${total}</span>
+          </div>
+        `;
+      }).join("")}
+      <div class="gym-dow-legend">
+        ${GYM_GROUPS.map(g => `
+          <span class="gym-leg-item">
+            <i style="background:${g.color}"></i>${g.label}
+          </span>
+        `).join("")}
+      </div>
+    </div>
+  `;
+}
+
+// Mini-calendário: cada dia mostra badges com os grupos treinados.
+function gymCalendar(gymDays) {
+  const byDate = new Map(gymDays.map(d => [d.date, d]));
+  const t = new Date();
+  const year = t.getFullYear();
+  const month = t.getMonth();
+  const firstDow = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const todayStr = `${year}-${pad(month + 1)}-${pad(t.getDate())}`;
+
+  let cells = DOW_PT_SHORT.map(d => `<div class="gym-cal-head">${d}</div>`).join("");
+  for (let i = 0; i < firstDow; i++) cells += `<div class="gym-cal-cell is-empty"></div>`;
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dateStr = `${year}-${pad(month + 1)}-${pad(day)}`;
+    const dayData = byDate.get(dateStr);
+    const groups = (dayData?.gym_groups || []);
+    const isToday = dateStr === todayStr;
+    const badges = groups.map(g => {
+      const meta = GYM_LOOKUP[g];
+      if (!meta) return "";
+      return `<span class="gym-cal-grp" style="background:${meta.color}" title="${meta.label}">${meta.abbr}</span>`;
+    }).join("");
+    const klass = `gym-cal-cell${groups.length ? " has-training" : ""}${isToday ? " is-today" : ""}`;
+    cells += `
+      <div class="${klass}">
+        <span class="gym-cal-day">${day}</span>
+        ${badges ? `<div class="gym-cal-grps">${badges}</div>` : ""}
+      </div>
+    `;
+  }
+
+  return `
+    <div class="gym-cal-grid">${cells}</div>
+  `;
+}
 
 function computeGymStats(days) {
   const gymDays = days.filter(d => (d.exercises || []).includes("academia"));
@@ -241,6 +324,12 @@ function gymSectionHtml(stats, ACCENT) {
 
           <h3 class="stats-subhead">Treinos por dia da semana</h3>
           ${dowChart(gymDays)}
+
+          <h3 class="stats-subhead">Grupos por dia da semana</h3>
+          ${gymDowBars(gymDays)}
+
+          <h3 class="stats-subhead">Calendário do mês</h3>
+          ${gymCalendar(gymDays)}
         `}
       </div>
     </section>

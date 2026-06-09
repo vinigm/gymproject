@@ -1349,6 +1349,126 @@ body.is-loading::after {
   background: var(--bad);
   border-radius: 4px 4px 0 0;
 }
+
+/* === Bar chart de grupos musculares por DOW === */
+.gym-dow-bars {
+  display: flex; flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+.gym-dow-row {
+  display: grid;
+  grid-template-columns: 32px 1fr 28px;
+  align-items: center;
+  gap: 8px;
+}
+.gym-dow-label {
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: lowercase;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+.gym-dow-track {
+  height: 16px;
+  background: var(--card-2);
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.gym-dow-bar {
+  height: 100%;
+  display: flex;
+  overflow: hidden;
+}
+.gym-dow-seg {
+  height: 100%;
+}
+.gym-dow-total {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.gym-dow-legend {
+  display: flex; flex-wrap: wrap;
+  gap: 4px 10px;
+  margin-top: 10px;
+  font-size: 10px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border);
+}
+.gym-leg-item {
+  display: inline-flex; align-items: center;
+  gap: 5px;
+  color: var(--muted);
+}
+.gym-leg-item i {
+  width: 10px; height: 10px;
+  border-radius: 2px;
+  display: inline-block;
+}
+
+/* === Mini-calendário com grupos musculares === */
+.gym-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+  margin-top: 8px;
+}
+.gym-cal-head {
+  text-align: center;
+  font-size: 9px;
+  color: var(--muted);
+  text-transform: uppercase;
+  font-weight: 700;
+  padding: 2px 0;
+}
+.gym-cal-cell {
+  aspect-ratio: 1 / 1;
+  background: var(--card-2);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 2px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+}
+.gym-cal-cell.is-empty {
+  background: transparent;
+  border-color: transparent;
+}
+.gym-cal-cell.is-today {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+.gym-cal-cell.has-training {
+  background: rgba(110, 168, 255, 0.06);
+}
+.gym-cal-day {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1;
+}
+.gym-cal-grps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1px;
+  justify-content: center;
+  margin-top: 2px;
+}
+.gym-cal-grp {
+  font-size: 7px;
+  font-weight: 700;
+  color: #0b1220;
+  padding: 1px 2px;
+  border-radius: 2px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
 /* Dia sem dados no chart de refeições */
 .meal-empty {
   width: 100%; height: 100%;
