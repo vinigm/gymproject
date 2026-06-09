@@ -213,7 +213,7 @@ function gymDowBars(gymDays) {
 }
 
 // Mini-calendário: cada dia mostra badges com os grupos treinados.
-function gymCalendar(gymDays) {
+function gymCalendar(gymDays, jiuDateSet = new Set()) {
   const byDate = new Map(gymDays.map(d => [d.date, d]));
   const t = new Date();
   const year = t.getFullYear();
@@ -228,13 +228,19 @@ function gymCalendar(gymDays) {
     const dateStr = `${year}-${pad(month + 1)}-${pad(day)}`;
     const dayData = byDate.get(dateStr);
     const groups = (dayData?.gym_groups || []);
+    const hasJiu = jiuDateSet.has(dateStr);
     const isToday = dateStr === todayStr;
-    const badges = groups.map(g => {
+    const groupBadges = groups.map(g => {
       const meta = GYM_LOOKUP[g];
       if (!meta) return "";
       return `<span class="gym-cal-grp" style="background:${meta.color}">${meta.label}</span>`;
     }).join("");
-    const klass = `gym-cal-cell${groups.length ? " has-training" : ""}${isToday ? " is-today" : ""}`;
+    const jiuBadge = hasJiu
+      ? `<span class="gym-cal-jiu">🥋 Jiu Jitsu</span>`
+      : "";
+    const badges = groupBadges + jiuBadge;
+    const hasActivity = groups.length > 0 || hasJiu;
+    const klass = `gym-cal-cell${hasActivity ? " has-training" : ""}${isToday ? " is-today" : ""}`;
     cells += `
       <div class="${klass}">
         <span class="gym-cal-day">${day}</span>
@@ -272,7 +278,7 @@ function computeGymStats(days) {
   };
 }
 
-function gymSectionHtml(stats, ACCENT) {
+function gymSectionHtml(stats, ACCENT, jiuDateSet = new Set()) {
   const {
     total, groupCounts, daysWithoutGroups, gymDays,
     activeWeeks, activeMonths,
@@ -329,7 +335,7 @@ function gymSectionHtml(stats, ACCENT) {
           ${gymDowBars(gymDays)}
 
           <h3 class="stats-subhead">Calendário do mês</h3>
-          ${gymCalendar(gymDays)}
+          ${gymCalendar(gymDays, jiuDateSet)}
         `}
       </div>
     </section>
@@ -731,7 +737,11 @@ function render() {
 
     ${USER === "vinicius" ? jiuSectionHtml(computeJiuStats(_days), ACCENT) : ""}
 
-    ${gymSectionHtml(computeGymStats(_days), ACCENT)}
+    ${gymSectionHtml(
+      computeGymStats(_days),
+      ACCENT,
+      new Set(_days.filter(d => (d.exercises || []).includes("jiujitsu")).map(d => d.date))
+    )}
   `;
 }
 
