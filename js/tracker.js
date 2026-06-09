@@ -36,6 +36,7 @@ function normalize(d) {
     soda: d.soda ?? null,
     jiu_session: d.jiu_session ?? null,
     jiu_spar_min: (d.jiu_spar_min === "" || d.jiu_spar_min == null) ? null : Number(d.jiu_spar_min),
+    stretch_min: (d.stretch_min === "" || d.stretch_min == null) ? null : Number(d.stretch_min),
   };
 }
 
@@ -88,6 +89,9 @@ function paintCard(userId) {
   const hasJiu = (d.exercises || []).includes("jiujitsu");
   root.classList.toggle("has-jiu", hasJiu);
   root.classList.toggle("has-jiu-session", hasJiu && !!d.jiu_session);
+  // visibilidade condicional do bloco Alongamento
+  const hasStretch = (d.exercises || []).includes("alongamento");
+  root.classList.toggle("has-stretch", hasStretch);
 }
 
 function handleChipClick(userId, chip) {
@@ -102,8 +106,9 @@ function handleChipClick(userId, chip) {
     if (i >= 0) d[group].splice(i, 1);
     else d[group].push(v);
   } else {
-    // jiu_spar_min é armazenado como Number; demais como string
-    const next = group === "jiu_spar_min" ? Number(v) : v;
+    // jiu_spar_min e stretch_min armazenados como Number; demais como string
+    const isNum = group === "jiu_spar_min" || group === "stretch_min";
+    const next = isNum ? Number(v) : v;
     const cur = d[group];
     const same = cur != null && String(cur) === v;
     d[group] = same ? null : next;

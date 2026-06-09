@@ -158,9 +158,10 @@ input, select { font: inherit; color: inherit; }
   display: flex; flex-direction: column; gap: 6px;
 }
 
-/* Blocos condicionais (Academia / Jiu) — destaque verde pra chamar atenção */
+/* Blocos condicionais (Academia / Jiu / Alongamento) — destaque verde pra chamar atenção */
 .gym-detail,
-.jiu-detail {
+.jiu-detail,
+.stretch-detail {
   display: none;
   padding: 10px 10px 8px;
   background: rgba(52, 211, 153, 0.10);
@@ -170,8 +171,10 @@ input, select { font: inherit; color: inherit; }
 }
 .person-card.has-gym .gym-detail { display: block; }
 .person-card.has-jiu .jiu-detail { display: block; }
+.person-card.has-stretch .stretch-detail { display: block; }
 .gym-detail .mini-title,
-.jiu-detail .mini-title {
+.jiu-detail .mini-title,
+.stretch-detail .mini-title {
   color: var(--good);
   margin-top: 2px;
 }

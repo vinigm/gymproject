@@ -10,6 +10,11 @@ export function pointsForDay(day) {
   for (const ex of (day.exercises || [])) {
     pts += POINTS.exercises?.[ex] || 0;
   }
+  // Alongamento: pontos vêm da duração (5/10/15 min). Só conta se o
+  // chip "alongamento" estiver marcado nos exercícios.
+  if ((day.exercises || []).includes("alongamento") && day.stretch_min != null) {
+    pts += POINTS.stretch?.[String(day.stretch_min)] || 0;
+  }
   if (day.water && POINTS.water?.[day.water] != null) {
     pts += POINTS.water[day.water];
   }

@@ -26,7 +26,14 @@ const SECTIONS = [
       { path: "exercises.yoga",        label: "Yoga" },
       { path: "exercises.jiujitsu",    label: "Jiu Jitsu" },
       { path: "exercises.bicicleta",   label: "Bicicleta" },
-      { path: "exercises.alongamento", label: "Alongamento" },
+    ],
+  },
+  {
+    title: "🧘 Alongamento (por duração)",
+    fields: [
+      { path: "stretch.5",  label: "5 min" },
+      { path: "stretch.10", label: "10 min" },
+      { path: "stretch.15", label: "15 min" },
     ],
   },
   {

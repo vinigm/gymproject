@@ -61,7 +61,15 @@ export const DEFAULT_POINTS = {
     yoga:        70,
     jiujitsu:    50,
     bicicleta:   50,
-    alongamento: 40,
+    alongamento:  0,  // pontos vêm do bloco stretch (depende da duração)
+  },
+
+  // Pontos por DURAÇÃO de alongamento (só conta se "alongamento" estiver
+  // marcado nos exercícios). Sem duração marcada = 0 pontos.
+  stretch: {
+    "5":  15,
+    "10": 30,
+    "15": 45,
   },
 
   // Pontos pela QUANTIDADE de água marcada no dia.

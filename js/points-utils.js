@@ -119,10 +119,18 @@ export function breakdownForDays(days) {
   let dessertNao = 0, dessertSim = 0;
   let sodaNao = 0, sodaSim = 0;
   const extrasCounts = {};
+  let stretchDays = 0, stretchPts = 0;
 
   for (const d of days) {
     for (const ex of (d.exercises || [])) {
       exerciseCounts[ex] = (exerciseCounts[ex] || 0) + 1;
+    }
+    if ((d.exercises || []).includes("alongamento") && d.stretch_min != null) {
+      const p = POINTS.stretch?.[String(d.stretch_min)] || 0;
+      if (p !== 0) {
+        stretchDays++;
+        stretchPts += p;
+      }
     }
     for (const e of (d.extras || [])) {
       extrasCounts[e] = (extrasCounts[e] || 0) + 1;
@@ -150,6 +158,10 @@ export function breakdownForDays(days) {
     if (count > 0 && ptsPer !== 0) {
       lines.push({ label: EX_LABELS[ex] || ex, count, pts: ptsPer * count, kind: ptsPer > 0 ? "good" : "bad" });
     }
+  }
+  // Alongamento entra com soma dos pontos de duração (sem ptsPer fixo)
+  if (stretchDays > 0 && stretchPts !== 0) {
+    lines.push({ label: "Alongamento", count: stretchDays, pts: stretchPts, kind: stretchPts > 0 ? "good" : "bad" });
   }
   if (waterDays > 0 && waterPts !== 0) {
     lines.push({ label: "Água", count: waterDays, pts: waterPts, kind: waterPts > 0 ? "good" : "bad" });
