@@ -540,6 +540,7 @@ function render() {
           ${kpiRow(pct(cleanRange, cleanRange + dirtyRange), "refeições limpas", "%")}
           ${kpiRow(fmtLitres(avgWaterRange), "média de água por dia")}
           ${kpiRow(totalCigRange, "cigarros fumados no período")}
+          ${kpiRow(fmtN(totalDays > 0 ? totalCigRange / totalDays : 0), "média de cigarros por dia")}
         </div>
       </div>
     </section>
