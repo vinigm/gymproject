@@ -1369,20 +1369,61 @@ body.is-loading::after {
   font-weight: 600;
   letter-spacing: 0.04em;
 }
+.gym-dow-bars {
+  overflow: visible;
+}
+.gym-dow-row {
+  position: relative;
+}
 .gym-dow-track {
   height: 16px;
   background: var(--card-2);
   border-radius: 4px;
-  overflow: hidden;
   border: 1px solid var(--border);
 }
 .gym-dow-bar {
   height: 100%;
   display: flex;
-  overflow: hidden;
+  border-radius: 4px;
 }
 .gym-dow-seg {
   height: 100%;
+  position: relative;
+  cursor: pointer;
+}
+.gym-dow-seg:first-child { border-radius: 4px 0 0 4px; }
+.gym-dow-seg:last-child  { border-radius: 0 4px 4px 0; }
+.gym-dow-seg:first-child:last-child { border-radius: 4px; }
+.gym-dow-seg:hover::after,
+.gym-dow-seg:active::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--card);
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 20;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+}
+.gym-dow-seg:hover::before,
+.gym-dow-seg:active::before {
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: var(--border);
+  pointer-events: none;
+  z-index: 20;
 }
 .gym-dow-total {
   font-size: 11px;
@@ -1426,19 +1467,20 @@ body.is-loading::after {
   padding: 2px 0;
 }
 .gym-cal-cell {
-  aspect-ratio: 1 / 1;
+  min-height: 64px;
   background: var(--card-2);
   border: 1px solid var(--border);
-  border-radius: 5px;
-  padding: 2px;
+  border-radius: 6px;
+  padding: 4px 4px 4px;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   overflow: hidden;
 }
 .gym-cal-cell.is-empty {
   background: transparent;
   border-color: transparent;
+  min-height: 32px;
 }
 .gym-cal-cell.is-today {
   outline: 2px solid var(--accent);
@@ -1448,26 +1490,30 @@ body.is-loading::after {
   background: rgba(110, 168, 255, 0.06);
 }
 .gym-cal-day {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   color: var(--text);
   line-height: 1;
+  text-align: center;
 }
 .gym-cal-grps {
   display: flex;
-  flex-wrap: wrap;
-  gap: 1px;
-  justify-content: center;
-  margin-top: 2px;
+  flex-direction: column;
+  gap: 2px;
+  align-items: stretch;
+  margin-top: 4px;
 }
 .gym-cal-grp {
-  font-size: 7px;
+  font-size: 10px;
   font-weight: 700;
   color: #0b1220;
-  padding: 1px 2px;
-  border-radius: 2px;
+  padding: 2px 4px;
+  border-radius: 3px;
   line-height: 1.2;
+  text-align: center;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 /* Dia sem dados no chart de refeições */
 .meal-empty {

@@ -189,7 +189,7 @@ function gymDowBars(gymDays) {
           .map(g => {
             const c = groupCounts[g.key];
             const pct = (c / total) * 100;
-            return `<div class="gym-dow-seg" style="width:${pct}%; background:${g.color}" title="${g.label}: ${c}"></div>`;
+            return `<div class="gym-dow-seg" style="width:${pct}%; background:${g.color}" data-tooltip="${g.label}: ${c}"></div>`;
           }).join("");
         return `
           <div class="gym-dow-row">
@@ -232,7 +232,7 @@ function gymCalendar(gymDays) {
     const badges = groups.map(g => {
       const meta = GYM_LOOKUP[g];
       if (!meta) return "";
-      return `<span class="gym-cal-grp" style="background:${meta.color}" title="${meta.label}">${meta.abbr}</span>`;
+      return `<span class="gym-cal-grp" style="background:${meta.color}">${meta.label}</span>`;
     }).join("");
     const klass = `gym-cal-cell${groups.length ? " has-training" : ""}${isToday ? " is-today" : ""}`;
     cells += `
