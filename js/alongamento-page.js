@@ -64,6 +64,7 @@ const SESSIONS = {
 };
 
 const SECONDS_PER_EXERCISE = 60;
+const SECONDS_PREP = 5;       // janela de preparação entre exercícios
 
 // ─────────────────────────────────────────────────────────────────────
 //  STATE
@@ -75,6 +76,7 @@ const state = {
   exerciseIdx: 0,
   remaining: SECONDS_PER_EXERCISE,
   isPaused: false,
+  isPrep: false,          // true durante os 5s de preparação antes do exercício
   sessions: [],           // histórico do usuário atual (timestamp + duração)
 };
 
@@ -174,14 +176,22 @@ function startTick() {
   tickHandle = setInterval(() => {
     if (state.isPaused) return;
     state.remaining -= 1;
-    // beep nos últimos 5 segundos (5, 4, 3, 2, 1)
-    if (state.remaining > 0 && state.remaining <= 5) {
-      beepTick();
-    }
-    if (state.remaining <= 0) {
-      advanceExercise();
+    if (state.isPrep) {
+      // Durante a prep: tick a cada segundo (5..1)
+      if (state.remaining > 0) beepTick();
+      if (state.remaining <= 0) {
+        finishPrep();
+      } else {
+        updateCountdown();
+      }
     } else {
-      updateCountdown();
+      // Durante o exercício: tick só nos últimos 5s
+      if (state.remaining > 0 && state.remaining <= 5) beepTick();
+      if (state.remaining <= 0) {
+        advanceExercise();
+      } else {
+        updateCountdown();
+      }
     }
   }, 1000);
 }
@@ -193,6 +203,8 @@ function stopTick() {
   }
 }
 
+// Exercício terminou — avança índice e entra no modo prep (5s)
+// pra usuário se posicionar pro próximo exercício
 function advanceExercise() {
   const sess = SESSIONS[state.sessionKey];
   const nextIdx = state.exerciseIdx + 1;
@@ -201,8 +213,18 @@ function advanceExercise() {
     return;
   }
   state.exerciseIdx = nextIdx;
-  state.remaining = SECONDS_PER_EXERCISE;
+  state.isPrep = true;
+  state.remaining = SECONDS_PREP;
   beepTransition();
+  renderTimer();
+}
+
+// Prep terminou — começa o exercício de fato
+function finishPrep() {
+  state.isPrep = false;
+  state.remaining = SECONDS_PER_EXERCISE;
+  // beep mais agudo e prolongado = "agora!"
+  beep(1100, 250, 0.25);
   renderTimer();
 }
 
@@ -254,6 +276,7 @@ function startSession(key) {
   state.exerciseIdx = 0;
   state.remaining = SECONDS_PER_EXERCISE;
   state.isPaused = false;
+  state.isPrep = false;          // sem prep antes do primeiro exercício
   state.view = "timer";
   ensureAudioCtx();
   requestWakeLock();
@@ -274,13 +297,20 @@ function stopSession() {
   state.sessionKey = null;
   state.exerciseIdx = 0;
   state.isPaused = false;
+  state.isPrep = false;
   render();
 }
 
 function skipExercise() {
-  // pula instantaneamente pro próximo (útil pra debug ou quando travou)
-  state.remaining = 0;
-  advanceExercise();
+  // pula instantaneamente pro próximo
+  // Se estamos no exercício → avança (entra em prep do próximo)
+  // Se estamos na prep → começa o exercício direto
+  if (state.isPrep) {
+    finishPrep();
+  } else {
+    state.remaining = 0;
+    advanceExercise();
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────
@@ -490,14 +520,17 @@ function timerViewHtml() {
   const sess = SESSIONS[state.sessionKey];
   const total = sess.exercises.length;
   const idx = state.exerciseIdx;
-  const elapsed = SECONDS_PER_EXERCISE - state.remaining;
-  const currentPct = (elapsed / SECONDS_PER_EXERCISE) * 100;
-  const isFinal = state.remaining <= 5;
+  const totalForPhase = state.isPrep ? SECONDS_PREP : SECONDS_PER_EXERCISE;
+  const elapsed = totalForPhase - state.remaining;
+  const currentPct = (elapsed / totalForPhase) * 100;
+  // "is-final" só faz sentido no exercício, não na prep
+  const isFinal = !state.isPrep && state.remaining <= 5;
 
   const cards = sess.exercises.map((name, i) => {
     let klass = "along-card";
     let pct = 0;
     let timeStr = "";
+    let displayName = name;
     let badge = String(i + 1);
     if (i < idx) {
       klass += " is-done";
@@ -507,8 +540,12 @@ function timerViewHtml() {
       klass += " is-current";
       if (isFinal) klass += " is-final";
       if (state.isPaused) klass += " is-paused";
+      if (state.isPrep) {
+        klass += " is-prep";
+        displayName = `⏳ Prepare-se: ${name}`;
+      }
       pct = currentPct;
-      timeStr = fmtTime(state.remaining);
+      timeStr = state.isPrep ? String(state.remaining) : fmtTime(state.remaining);
     } else {
       klass += " is-future";
     }
@@ -516,18 +553,20 @@ function timerViewHtml() {
       <div class="${klass}" data-idx="${i}">
         <div class="along-card-progress" style="width:${pct}%"></div>
         <div class="along-card-num">${badge}</div>
-        <div class="along-card-name">${name}</div>
+        <div class="along-card-name">${displayName}</div>
         ${i === idx ? `<div class="along-card-time">${timeStr}</div>` : ""}
       </div>
     `;
   }).join("");
 
+  const headLabel = state.isPrep
+    ? `Preparação · próximo: <strong>${idx + 1}</strong> / ${total}`
+    : `Exercício <strong>${idx + 1}</strong> / ${total}`;
+
   return `
     <section class="along-timer">
       <div class="along-timer-head">
-        <div class="along-timer-progress-text">
-          Exercício <strong>${idx + 1}</strong> / ${total}
-        </div>
+        <div class="along-timer-progress-text">${headLabel}</div>
         <button class="ghost-btn along-stop-btn" id="along-stop">✕ Sair</button>
       </div>
 
@@ -535,7 +574,7 @@ function timerViewHtml() {
 
       <div class="along-controls">
         <button class="along-ctrl-btn" id="along-pause">${state.isPaused ? "▶ Continuar" : "⏸ Pausar"}</button>
-        <button class="along-ctrl-btn along-ctrl-btn--ghost" id="along-skip">⏭ Pular</button>
+        <button class="along-ctrl-btn along-ctrl-btn--ghost" id="along-skip">${state.isPrep ? "⏭ Pular prep" : "⏭ Pular"}</button>
       </div>
     </section>
   `;
@@ -588,11 +627,13 @@ function updateCountdown() {
   if (!card) return;
   const fill = card.querySelector(".along-card-progress");
   const time = card.querySelector(".along-card-time");
-  const elapsed = SECONDS_PER_EXERCISE - state.remaining;
-  const pct = (elapsed / SECONDS_PER_EXERCISE) * 100;
+  const totalForPhase = state.isPrep ? SECONDS_PREP : SECONDS_PER_EXERCISE;
+  const elapsed = totalForPhase - state.remaining;
+  const pct = (elapsed / totalForPhase) * 100;
   if (fill) fill.style.width = pct + "%";
-  if (time) time.textContent = fmtTime(state.remaining);
-  card.classList.toggle("is-final", state.remaining <= 5);
+  if (time) time.textContent = state.isPrep ? String(state.remaining) : fmtTime(state.remaining);
+  // "is-final" pulsante só durante o exercício
+  card.classList.toggle("is-final", !state.isPrep && state.remaining <= 5);
 }
 
 function updatePauseBtn() {

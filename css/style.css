@@ -2252,6 +2252,28 @@ body.is-loading::after {
   margin-left: 4px;
 }
 
+/* Preparação (5s antes do exercício) — amarelo */
+.along-card.is-current.is-prep {
+  border-color: #fbbf24;
+  box-shadow: 0 0 0 1px #fbbf24 inset, 0 4px 16px rgba(251, 191, 36, 0.20);
+  animation: none;
+}
+.along-card.is-current.is-prep .along-card-progress {
+  background: rgba(251, 191, 36, 0.22);
+}
+.along-card.is-current.is-prep .along-card-num {
+  background: #fbbf24;
+  border-color: #fbbf24;
+  color: #0b1220;
+}
+.along-card.is-current.is-prep .along-card-name {
+  color: #fde68a;
+}
+.along-card.is-current.is-prep .along-card-time {
+  color: #fbbf24;
+  font-size: 28px;
+}
+
 .along-controls {
   display: grid;
   grid-template-columns: 1fr 1fr;
