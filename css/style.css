@@ -1349,6 +1349,26 @@ body.is-loading::after {
   background: var(--bad);
   border-radius: 4px 4px 0 0;
 }
+/* Dia sem dados no chart de refeições */
+.meal-empty {
+  width: 100%; height: 100%;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px dashed var(--border);
+  border-radius: 4px;
+}
+.dow-meal-pct {
+  font-size: 9px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+.dow-meal-pct.meal-clean { color: var(--good); }
+.dow-meal-pct.meal-dirty { color: var(--bad); }
+.dow-meal-empty {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 700;
+}
 .dow-count {
   font-size: 12px;
   font-weight: 700;

@@ -321,8 +321,8 @@ function dowChart(jiuDays) {
   `;
 }
 
-// Barras empilhadas: cada coluna mostra refeições limpas (verde) +
-// refeições sujas (vermelho) somando lunch + dinner em todos os dias.
+// Barras normalizadas (100% altura): proporção limpa/suja dentro de cada dia.
+// Embaixo do label, mostra "X% · N" pra cada categoria.
 function mealDowChart(days) {
   const clean = [0, 0, 0, 0, 0, 0, 0];
   const dirty = [0, 0, 0, 0, 0, 0, 0];
@@ -334,14 +334,22 @@ function mealDowChart(days) {
       else if (d[slot] === "sujo") dirty[dow]++;
     }
   }
-  const max = Math.max(1, ...clean.map((c, i) => c + dirty[i]));
   return `
-    <div class="dow-chart">
+    <div class="dow-chart meal-dow-chart">
       ${DOW_PT_SHORT.map((label, i) => {
         const c = clean[i], s = dirty[i];
         const total = c + s;
-        const cPct = (c / max) * 100;
-        const sPct = (s / max) * 100;
+        if (total === 0) {
+          return `
+            <div class="dow-col">
+              <div class="dow-bar-wrap"><div class="meal-empty"></div></div>
+              <div class="dow-label">${label}</div>
+              <div class="dow-meal-empty">—</div>
+            </div>
+          `;
+        }
+        const cPct = Math.round((c / total) * 100);
+        const sPct = 100 - cPct;
         return `
           <div class="dow-col">
             <div class="dow-bar-wrap">
@@ -350,8 +358,9 @@ function mealDowChart(days) {
                 ${c > 0 ? `<div class="meal-bar meal-bar--clean" style="height:${cPct}%"></div>` : ""}
               </div>
             </div>
-            <div class="dow-count">${total}</div>
             <div class="dow-label">${label}</div>
+            <div class="dow-meal-pct meal-clean">${cPct}% · ${c}</div>
+            <div class="dow-meal-pct meal-dirty">${sPct}% · ${s}</div>
           </div>
         `;
       }).join("")}
