@@ -1,4 +1,4 @@
-import { storageMode, getRange } from "./storage.js";
+import { storageMode, getRange, getTransactions } from "./storage.js";
 import { initTracker, refreshAllTrackers, hasUnsavedChanges, saveAllDirty } from "./tracker.js";
 import { renderStats } from "./stats.js";
 import { renderHistory } from "./history.js";
@@ -60,11 +60,14 @@ async function refreshPointsBadge() {
   try {
     const end = todayISO();
     const start = APP_START_DATE;
-    const results = await Promise.all(
-      USERS.map(u => getRange(u, start, end).catch(() => []))
-    );
-    const total = results.flat().reduce((s, d) => s + pointsForDay(d), 0);
-    el.textContent = String(total);
+    const [dayResults, sharedTxs] = await Promise.all([
+      Promise.all(USERS.map(u => getRange(u, start, end).catch(() => []))),
+      getTransactions({ scope: "shared" }).catch(() => []),
+    ]);
+    const earned = dayResults.flat().reduce((s, d) => s + pointsForDay(d), 0);
+    const spent = sharedTxs.reduce((s, t) => s + (Number(t.price) || 0), 0);
+    const balance = earned - spent;
+    el.textContent = String(balance);
   } catch (err) {
     console.error(err);
     el.textContent = "···";
