@@ -321,6 +321,44 @@ function dowChart(jiuDays) {
   `;
 }
 
+// Barras empilhadas: cada coluna mostra refeições limpas (verde) +
+// refeições sujas (vermelho) somando lunch + dinner em todos os dias.
+function mealDowChart(days) {
+  const clean = [0, 0, 0, 0, 0, 0, 0];
+  const dirty = [0, 0, 0, 0, 0, 0, 0];
+  for (const d of days) {
+    const [y, m, day] = d.date.split("-").map(Number);
+    const dow = new Date(y, m - 1, day).getDay();
+    for (const slot of ["lunch", "dinner"]) {
+      if (d[slot] === "limpo") clean[dow]++;
+      else if (d[slot] === "sujo") dirty[dow]++;
+    }
+  }
+  const max = Math.max(1, ...clean.map((c, i) => c + dirty[i]));
+  return `
+    <div class="dow-chart">
+      ${DOW_PT_SHORT.map((label, i) => {
+        const c = clean[i], s = dirty[i];
+        const total = c + s;
+        const cPct = (c / max) * 100;
+        const sPct = (s / max) * 100;
+        return `
+          <div class="dow-col">
+            <div class="dow-bar-wrap">
+              <div class="meal-stack">
+                ${s > 0 ? `<div class="meal-bar meal-bar--dirty" style="height:${sPct}%"></div>` : ""}
+                ${c > 0 ? `<div class="meal-bar meal-bar--clean" style="height:${cPct}%"></div>` : ""}
+              </div>
+            </div>
+            <div class="dow-count">${total}</div>
+            <div class="dow-label">${label}</div>
+          </div>
+        `;
+      }).join("")}
+    </div>
+  `;
+}
+
 function jiuSectionHtml(stats, ACCENT) {
   const {
     totalTrainings, totalMinutes, totalSparMin, jiuDays,
@@ -529,16 +567,30 @@ function render() {
     </section>
 
     <section class="block">
-      <div class="block-head"><h2>Alimentação · mês</h2></div>
+      <div class="block-head"><h2>Alimentação</h2></div>
       <div class="stat-card" style="border-top:3px solid ${ACCENT}">
         ${(() => {
           const ms = monthStartClamped();
-          const monthData = _days.filter(d => d.date >= ms);
-          let c = 0, s = 0;
-          for (const d of monthData) for (const slot of ["lunch","dinner"]) {
-            if (d[slot] === "limpo") c++; else if (d[slot] === "sujo") s++;
+          let cM = 0, sM = 0, cAll = 0, sAll = 0;
+          for (const d of _days) {
+            for (const slot of ["lunch", "dinner"]) {
+              if (d[slot] === "limpo") {
+                cAll++;
+                if (d.date >= ms) cM++;
+              } else if (d[slot] === "sujo") {
+                sAll++;
+                if (d.date >= ms) sM++;
+              }
+            }
           }
-          return semiDonut(c, s);
+          return `
+            <h3 class="stats-subhead">Mês atual</h3>
+            ${semiDonut(cM, sM)}
+            <h3 class="stats-subhead">Desde o início</h3>
+            ${semiDonut(cAll, sAll)}
+            <h3 class="stats-subhead">Refeições por dia da semana</h3>
+            ${mealDowChart(_days)}
+          `;
         })()}
       </div>
     </section>

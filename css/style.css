@@ -1283,6 +1283,12 @@ body.is-loading::after {
   padding-top: 10px;
   border-top: 1px dashed var(--border);
 }
+/* Primeira subhead no card não precisa de divisor (não há nada acima) */
+.stats-subhead:first-child {
+  border-top: none;
+  padding-top: 0;
+  margin-top: 0;
+}
 .stats-meta {
   font-size: 11px;
   margin: 6px 0 0;
@@ -1321,6 +1327,27 @@ body.is-loading::after {
 .dow-bar.is-zero {
   background: var(--border);
   opacity: 0.4;
+}
+/* Barra empilhada pro chart de refeições (limpo abaixo, sujo acima) */
+.meal-stack {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: stretch;
+  width: 100%;
+  height: 100%;
+}
+.meal-bar {
+  width: 100%;
+  min-height: 2px;
+}
+.meal-bar--clean {
+  background: var(--good);
+  border-radius: 0 0 2px 2px;
+}
+.meal-bar--dirty {
+  background: var(--bad);
+  border-radius: 4px 4px 0 0;
 }
 .dow-count {
   font-size: 12px;
