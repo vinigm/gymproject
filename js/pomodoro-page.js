@@ -24,7 +24,10 @@ const _state = {
   category: "Trabalho",
   pomodorosCompleted: 0, // contador da sessão atual (zera ao recarregar)
   startedAt: null,
+  focusMode: false,      // overlay fullscreen preto durante o timer
 };
+
+let focusIdleTimer = null; // pra esconder controles após inatividade
 
 let tickHandle = null;
 let audioCtx = null;
@@ -164,7 +167,46 @@ function startTimer() {
   _state.running = true;
   _state.paused = false;
   tickHandle = setInterval(onTick, 1000);
+  enterFocusMode();
   render();
+}
+
+// ─── Modo foco (overlay preto fullscreen no celular) ────────────────
+function enterFocusMode() {
+  _state.focusMode = true;
+  document.body.classList.add("pom-focus-mode");
+  // tenta fullscreen real (iOS 16.4+, Safari/Chrome desktop)
+  const el = document.documentElement;
+  if (el.requestFullscreen) {
+    el.requestFullscreen().catch(() => {});
+  } else if (el.webkitRequestFullscreen) {
+    el.webkitRequestFullscreen();
+  }
+  // bloqueia scroll
+  document.body.style.overflow = "hidden";
+}
+
+function exitFocusMode() {
+  _state.focusMode = false;
+  document.body.classList.remove("pom-focus-mode");
+  document.body.style.overflow = "";
+  if (document.fullscreenElement && document.exitFullscreen) {
+    document.exitFullscreen().catch(() => {});
+  } else if (document.webkitFullscreenElement && document.webkitExitFullscreen) {
+    document.webkitExitFullscreen();
+  }
+  if (focusIdleTimer) { clearTimeout(focusIdleTimer); focusIdleTimer = null; }
+}
+
+// Mostra os controles e agenda esconder de novo
+function wakeFocusControls() {
+  const overlay = document.querySelector(".pom-focus");
+  if (!overlay) return;
+  overlay.classList.add("is-active");
+  if (focusIdleTimer) clearTimeout(focusIdleTimer);
+  focusIdleTimer = setTimeout(() => {
+    overlay.classList.remove("is-active");
+  }, 3000);
 }
 
 function pauseTimer() {
@@ -182,6 +224,7 @@ function stopTimer() {
   _state.paused = false;
   _state.remaining = modeTotalSecs();
   _state.startedAt = null;
+  exitFocusMode();
   render();
 }
 
@@ -198,6 +241,7 @@ function resetCycle() {
   _state.remaining = _state.config.focus_min * 60;
   _state.pomodorosCompleted = 0;
   _state.startedAt = null;
+  exitFocusMode();
   render();
 }
 
@@ -246,6 +290,7 @@ async function onPeriodComplete() {
     _state.paused = false;
     _state.startedAt = null;
     releaseWakeLock();
+    exitFocusMode();   // volta pra tela normal pra escolher próximo foco
     render();
   }
 }
@@ -507,6 +552,33 @@ function historyCardHtml() {
   `;
 }
 
+function focusOverlayHtml() {
+  const k = Math.max(1, _state.config.cycles_per_long || 1);
+  const cycleNow = (_state.pomodorosCompleted % k) + 1;
+  const modeName = _state.mode === "foco" ? "FOCO" : _state.mode === "short" ? "PAUSA CURTA" : "PAUSA LONGA";
+  const showCat = _state.mode === "foco";
+  return `
+    <div class="pom-focus is-active" id="pom-focus">
+      <div class="pom-focus-top">
+        <span class="pom-focus-mode-lbl">${modeName}</span>
+        ${showCat ? `<span class="pom-focus-cat">· ${_state.category}</span>` : ""}
+      </div>
+
+      <div class="pom-focus-countdown" id="pom-focus-countdown">${fmtTime(_state.remaining)}</div>
+
+      <div class="pom-focus-cycle">
+        Ciclo ${cycleNow} / ${k}
+        ${_state.pomodorosCompleted > 0 ? `· ${_state.pomodorosCompleted} ${_state.pomodorosCompleted === 1 ? "concluído" : "concluídos"}` : ""}
+      </div>
+
+      <div class="pom-focus-controls">
+        <button class="pom-focus-btn" id="pom-focus-pause">${_state.paused ? "▶" : "⏸"}</button>
+        <button class="pom-focus-btn pom-focus-btn--exit" id="pom-focus-exit">✕</button>
+      </div>
+    </div>
+  `;
+}
+
 function render() {
   const root = document.getElementById("pom-content");
   if (!root) return;
@@ -515,13 +587,17 @@ function render() {
     timerCardHtml(),
     statsCardHtml(),
     historyCardHtml(),
+    _state.focusMode ? focusOverlayHtml() : "",
   ].join("");
   bindAll();
 }
 
 function updateCountdownDom() {
+  const txt = fmtTime(_state.remaining);
   const el = document.getElementById("pom-countdown");
-  if (el) el.textContent = fmtTime(_state.remaining);
+  if (el) el.textContent = txt;
+  const focusEl = document.getElementById("pom-focus-countdown");
+  if (focusEl) focusEl.textContent = txt;
   const total = modeTotalSecs();
   const pct = total > 0 ? ((total - _state.remaining) / total) * 100 : 0;
   const fill = document.getElementById("pom-progress-fill");
@@ -529,6 +605,10 @@ function updateCountdownDom() {
   const card = document.querySelector(".pom-timer-card");
   if (card) {
     card.classList.toggle("is-final", _state.remaining <= 5 && _state.running);
+  }
+  const overlay = document.querySelector(".pom-focus");
+  if (overlay) {
+    overlay.classList.toggle("is-final", _state.remaining <= 5 && _state.running);
   }
 }
 
@@ -589,6 +669,28 @@ function bindAll() {
   document.getElementById("pom-pause")?.addEventListener("click", pauseTimer);
   document.getElementById("pom-stop")?.addEventListener("click", stopTimer);
   document.getElementById("pom-reset")?.addEventListener("click", resetCycle);
+
+  // Focus mode overlay (se visível)
+  const overlay = document.getElementById("pom-focus");
+  if (overlay) {
+    // tap em qualquer lugar do overlay → reacende controles
+    overlay.addEventListener("click", wakeFocusControls);
+    // botões internos do overlay (impedem propagação pra não re-acender ao clicar)
+    document.getElementById("pom-focus-pause")?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      pauseTimer();
+      // atualiza o label do botão
+      const btn = e.currentTarget;
+      btn.textContent = _state.paused ? "▶" : "⏸";
+      wakeFocusControls();
+    });
+    document.getElementById("pom-focus-exit")?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      stopTimer(); // já tem confirmação interna + sai do focus mode
+    });
+    // primeira aparição: controles visíveis, depois fade out
+    wakeFocusControls();
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────

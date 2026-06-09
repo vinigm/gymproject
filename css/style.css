@@ -2713,6 +2713,126 @@ body.is-loading::after {
   .pom-countdown { font-size: 104px; }
 }
 
+/* === Modo Foco (overlay preto fullscreen do Pomodoro) === */
+.pom-focus {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding:
+    max(env(safe-area-inset-top, 0), 16px)
+    max(env(safe-area-inset-right, 0), 16px)
+    max(env(safe-area-inset-bottom, 0), 16px)
+    max(env(safe-area-inset-left, 0), 16px);
+  color: #fff;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  animation: pom-focus-in 0.25s ease;
+}
+@keyframes pom-focus-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Topo: modo + categoria, sutil */
+.pom-focus-top {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 13px;
+  letter-spacing: 0.18em;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.45);
+  text-transform: uppercase;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.pom-focus.is-active .pom-focus-top { opacity: 1; }
+.pom-focus-cat {
+  letter-spacing: 0.05em;
+  text-transform: none;
+  font-weight: 500;
+}
+
+/* Countdown gigante centralizado */
+.pom-focus-countdown {
+  font-size: clamp(96px, 32vw, 220px);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.06em;
+  line-height: 0.95;
+  color: #fff;
+  transition: color 0.3s, transform 0.3s;
+}
+.pom-focus.is-final .pom-focus-countdown {
+  color: #f87171;
+  animation: pom-focus-pulse 0.6s ease-in-out infinite;
+}
+@keyframes pom-focus-pulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.04); }
+}
+
+.pom-focus-cycle {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.4);
+  letter-spacing: 0.02em;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.pom-focus.is-active .pom-focus-cycle { opacity: 1; }
+
+/* Controles — discretos, aparecem no toque */
+.pom-focus-controls {
+  position: absolute;
+  bottom: max(env(safe-area-inset-bottom, 0), 32px);
+  left: 0; right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+}
+.pom-focus.is-active .pom-focus-controls {
+  opacity: 1;
+  pointer-events: auto;
+}
+.pom-focus-btn {
+  width: 64px; height: 64px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, transform 0.08s;
+  -webkit-tap-highlight-color: transparent;
+}
+.pom-focus-btn:active { transform: scale(0.93); }
+.pom-focus-btn--exit {
+  background: rgba(248, 113, 113, 0.18);
+  border-color: rgba(248, 113, 113, 0.45);
+}
+
+/* Quando o modo foco tá ativo, esconde o resto da página */
+body.pom-focus-mode .topbar,
+body.pom-focus-mode .nav-menu,
+body.pom-focus-mode #pom-toggle-bar,
+body.pom-focus-mode .footer,
+body.pom-focus-mode #pom-content > section { display: none; }
+body.pom-focus-mode { background: #000; }
+
 /* === RESPONSIVO === */
 /* Em telas muito estreitas (< 360px) é raro mas mantém legível */
 @media (max-width: 359px) {
