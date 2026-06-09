@@ -630,6 +630,15 @@ function render() {
     </section>
 
     <section class="block">
+      <div class="block-head"><h2>Recordes</h2></div>
+      <div class="stat-card" style="border-top:3px solid ${ACCENT}">
+        ${recRow("Melhor dia", bDay, r => fmtDayFull(r.date))}
+        ${recRow("Melhor semana", bWeek, r => fmtWeekRange(r.weekStart))}
+        ${recRow("Melhor mês", bMonth, r => fmtMonth(r.monthKey))}
+      </div>
+    </section>
+
+    <section class="block">
       <div class="block-head"><h2>Resumo do período</h2></div>
       <div class="stat-card" style="border-top:3px solid ${ACCENT}">
         <div class="kpi-list">
@@ -666,6 +675,32 @@ function render() {
     </section>
 
     <section class="block">
+      <div class="block-head"><h2>Totais · desde o início</h2><span class="muted" style="font-size:11px">X / dias registrados</span></div>
+      <div class="stat-card" style="border-top:3px solid ${ACCENT}">
+        <div class="stat-row"><span class="stat-label">🚭 Dias sem fumar</span><span class="stat-value">${diasSemFumarTotal}<span class="muted" style="font-weight:500;font-size:12px">/${cigReg}</span></span></div>
+        <div class="stat-row"><span class="stat-label">🥤 Dias sem refrigerante</span><span class="stat-value">${diasSemRefri}<span class="muted" style="font-weight:500;font-size:12px">/${sodaReg}</span></span></div>
+        <div class="stat-row"><span class="stat-label">🥤 Dias com refrigerante</span><span class="stat-value">${diasComRefri}<span class="muted" style="font-weight:500;font-size:12px">/${sodaReg}</span></span></div>
+        <div class="stat-row"><span class="stat-label">🍰 Dias sem sobremesa</span><span class="stat-value">${diasSemSobremesa}<span class="muted" style="font-weight:500;font-size:12px">/${dessertReg}</span></span></div>
+        <div class="stat-row"><span class="stat-label">🍰 Dias com sobremesa</span><span class="stat-value">${diasComSobremesa}<span class="muted" style="font-weight:500;font-size:12px">/${dessertReg}</span></span></div>
+        <div class="stat-row"><span class="stat-label">🍱 Marmitas feitas</span><span class="stat-value">${marmitas}<span class="muted" style="font-weight:500;font-size:12px">/${activeDaysAll}</span></span></div>
+        <div class="stat-row"><span class="stat-label">🚬 Cigarros fumados (total)</span><span class="stat-value">${totalCigAll}</span></div>
+        <div class="stat-row"><span class="stat-label">💧 Água total</span><span class="stat-value">${fmtLitres(waterAll)}</span></div>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="block-head"><h2>Outros hábitos</h2><span class="muted" style="font-size:11px">no período</span></div>
+      <div class="stat-card" style="border-top:3px solid ${ACCENT}">
+        ${extraRows || `<p class="muted" style="font-size:12px;margin:4px 0">nada marcado no período</p>`}
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="block-head"><h2>Exercícios por modalidade</h2><span class="muted" style="font-size:11px">no período</span></div>
+      <div class="stat-card" style="border-top:3px solid ${ACCENT}">${modRows}</div>
+    </section>
+
+    <section class="block">
       <div class="block-head"><h2>Alimentação</h2></div>
       <div class="stat-card" style="border-top:3px solid ${ACCENT}">
         ${(() => {
@@ -694,44 +729,9 @@ function render() {
       </div>
     </section>
 
-    <section class="block">
-      <div class="block-head"><h2>Totais · desde o início</h2><span class="muted" style="font-size:11px">X / dias registrados</span></div>
-      <div class="stat-card" style="border-top:3px solid ${ACCENT}">
-        <div class="stat-row"><span class="stat-label">🚭 Dias sem fumar</span><span class="stat-value">${diasSemFumarTotal}<span class="muted" style="font-weight:500;font-size:12px">/${cigReg}</span></span></div>
-        <div class="stat-row"><span class="stat-label">🥤 Dias sem refrigerante</span><span class="stat-value">${diasSemRefri}<span class="muted" style="font-weight:500;font-size:12px">/${sodaReg}</span></span></div>
-        <div class="stat-row"><span class="stat-label">🥤 Dias com refrigerante</span><span class="stat-value">${diasComRefri}<span class="muted" style="font-weight:500;font-size:12px">/${sodaReg}</span></span></div>
-        <div class="stat-row"><span class="stat-label">🍰 Dias sem sobremesa</span><span class="stat-value">${diasSemSobremesa}<span class="muted" style="font-weight:500;font-size:12px">/${dessertReg}</span></span></div>
-        <div class="stat-row"><span class="stat-label">🍰 Dias com sobremesa</span><span class="stat-value">${diasComSobremesa}<span class="muted" style="font-weight:500;font-size:12px">/${dessertReg}</span></span></div>
-        <div class="stat-row"><span class="stat-label">🍱 Marmitas feitas</span><span class="stat-value">${marmitas}<span class="muted" style="font-weight:500;font-size:12px">/${activeDaysAll}</span></span></div>
-        <div class="stat-row"><span class="stat-label">🚬 Cigarros fumados (total)</span><span class="stat-value">${totalCigAll}</span></div>
-        <div class="stat-row"><span class="stat-label">💧 Água total</span><span class="stat-value">${fmtLitres(waterAll)}</span></div>
-      </div>
-    </section>
-
-    <section class="block">
-      <div class="block-head"><h2>Exercícios por modalidade</h2><span class="muted" style="font-size:11px">no período</span></div>
-      <div class="stat-card" style="border-top:3px solid ${ACCENT}">${modRows}</div>
-    </section>
-
-    ${gymSectionHtml(computeGymStats(_days), ACCENT)}
-
     ${USER === "vinicius" ? jiuSectionHtml(computeJiuStats(_days), ACCENT) : ""}
 
-    <section class="block">
-      <div class="block-head"><h2>Outros hábitos</h2><span class="muted" style="font-size:11px">no período</span></div>
-      <div class="stat-card" style="border-top:3px solid ${ACCENT}">
-        ${extraRows || `<p class="muted" style="font-size:12px;margin:4px 0">nada marcado no período</p>`}
-      </div>
-    </section>
-
-    <section class="block">
-      <div class="block-head"><h2>Recordes</h2></div>
-      <div class="stat-card" style="border-top:3px solid ${ACCENT}">
-        ${recRow("Melhor dia", bDay, r => fmtDayFull(r.date))}
-        ${recRow("Melhor semana", bWeek, r => fmtWeekRange(r.weekStart))}
-        ${recRow("Melhor mês", bMonth, r => fmtMonth(r.monthKey))}
-      </div>
-    </section>
+    ${gymSectionHtml(computeGymStats(_days), ACCENT)}
   `;
 }
 
