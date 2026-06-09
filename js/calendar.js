@@ -10,7 +10,7 @@ import { EXTRAS_META } from "./points-config.js";
 
 const EX_LABELS = {
   academia: "Academia", corrida: "Corrida", yoga: "Yoga",
-  jiujitsu: "Jiu Jitsu", bicicleta: "Bicicleta", alongamento: "Alongamento"
+  jiujitsu: "Jiu Jitsu", pilates: "Pilates", bicicleta: "Bicicleta", alongamento: "Alongamento"
 };
 function extraLabel(key) {
   const meta = EXTRAS_META.find(e => e.key === key);

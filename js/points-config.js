@@ -8,6 +8,7 @@
 export const CATEGORY_START_DATES = {
   academia: "2026-05-18",
   jiujitsu: "2026-06-08",
+  pilates:  "2026-06-09",
 };
 
 
@@ -60,6 +61,7 @@ export const DEFAULT_POINTS = {
     corrida:     70,
     yoga:        70,
     jiujitsu:    50,
+    pilates:     50,  // mesma pontuação do jiu (Vivi)
     bicicleta:   50,
     alongamento:  0,  // pontos vêm do bloco stretch (depende da duração)
   },

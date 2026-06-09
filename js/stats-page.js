@@ -17,7 +17,15 @@ const NAMES = { vinicius: "Vini", victoria: "Vivi" };
 const ACCENTS = { vinicius: "var(--vini)", victoria: "var(--vic)" };
 const EX_LABELS = {
   academia: "Academia", corrida: "Corrida", yoga: "Yoga",
-  jiujitsu: "Jiu Jitsu", bicicleta: "Bicicleta", alongamento: "Alongamento",
+  jiujitsu: "Jiu Jitsu", pilates: "Pilates", bicicleta: "Bicicleta", alongamento: "Alongamento",
+};
+
+// Badges que aparecem no mini-calendário da Academia pra marcar
+// atividades extras (jiu / pilates / etc.) feitas no mesmo dia.
+// Cada um tem cor própria pra distinguir dos grupos musculares.
+const ACTIVITY_BADGES = {
+  jiujitsu: { icon: "🥋", label: "Jiu Jitsu", color: "#6ee7b7", bg: "rgba(16, 185, 129, 0.14)",  border: "rgba(16, 185, 129, 0.55)"  },
+  pilates:  { icon: "🧘", label: "Pilates",   color: "#c4b5fd", bg: "rgba(167, 139, 250, 0.16)", border: "rgba(167, 139, 250, 0.55)" },
 };
 
 let _daysByUser = { vinicius: [], victoria: [] };
@@ -213,7 +221,7 @@ function gymDowBars(gymDays) {
 }
 
 // Mini-calendário: cada dia mostra badges com os grupos treinados.
-function gymCalendar(gymDays, jiuDateSet = new Set()) {
+function gymCalendar(gymDays, extrasByDate = new Map()) {
   const byDate = new Map(gymDays.map(d => [d.date, d]));
   const t = new Date();
   const year = t.getFullYear();
@@ -228,18 +236,20 @@ function gymCalendar(gymDays, jiuDateSet = new Set()) {
     const dateStr = `${year}-${pad(month + 1)}-${pad(day)}`;
     const dayData = byDate.get(dateStr);
     const groups = (dayData?.gym_groups || []);
-    const hasJiu = jiuDateSet.has(dateStr);
+    const extras = extrasByDate.get(dateStr) || [];
     const isToday = dateStr === todayStr;
     const groupBadges = groups.map(g => {
       const meta = GYM_LOOKUP[g];
       if (!meta) return "";
       return `<span class="gym-cal-grp" style="background:${meta.color}">${meta.label}</span>`;
     }).join("");
-    const jiuBadge = hasJiu
-      ? `<span class="gym-cal-jiu">🥋 Jiu Jitsu</span>`
-      : "";
-    const badges = groupBadges + jiuBadge;
-    const hasActivity = groups.length > 0 || hasJiu;
+    const extraBadges = extras.map(act => {
+      const meta = ACTIVITY_BADGES[act];
+      if (!meta) return "";
+      return `<span class="gym-cal-extra" style="color:${meta.color};background:${meta.bg};border-color:${meta.border}">${meta.icon} ${meta.label}</span>`;
+    }).join("");
+    const badges = groupBadges + extraBadges;
+    const hasActivity = groups.length > 0 || extras.length > 0;
     const klass = `gym-cal-cell${hasActivity ? " has-training" : ""}${isToday ? " is-today" : ""}`;
     cells += `
       <div class="${klass}">
@@ -278,7 +288,7 @@ function computeGymStats(days) {
   };
 }
 
-function gymSectionHtml(stats, ACCENT, jiuDateSet = new Set()) {
+function gymSectionHtml(stats, ACCENT, extrasByDate = new Map()) {
   const {
     total, groupCounts, daysWithoutGroups, gymDays,
     activeWeeks, activeMonths,
@@ -335,7 +345,7 @@ function gymSectionHtml(stats, ACCENT, jiuDateSet = new Set()) {
           ${gymDowBars(gymDays)}
 
           <h3 class="stats-subhead">Calendário do mês</h3>
-          ${gymCalendar(gymDays, jiuDateSet)}
+          ${gymCalendar(gymDays, extrasByDate)}
         `}
       </div>
     </section>
@@ -460,6 +470,54 @@ function mealDowChart(days) {
         `;
       }).join("")}
     </div>
+  `;
+}
+
+// Mapeia data → lista de atividades extras (jiu, pilates) feitas naquele dia.
+// Usado pelo calendário da Academia pra mostrar badges das outras modalidades.
+function buildExtrasByDate(days) {
+  const map = new Map();
+  for (const d of days) {
+    const acts = (d.exercises || []).filter(ex => ACTIVITY_BADGES[ex]);
+    if (acts.length) map.set(d.date, acts);
+  }
+  return map;
+}
+
+function computePilatesStats(days) {
+  const pilatesDays = days.filter(d => (d.exercises || []).includes("pilates"));
+  const total = pilatesDays.length;
+  const { weeks: activeWeeks, months: activeMonths } = activeWeeksMonths(pilatesDays);
+  const aw = Math.max(1, activeWeeks);
+  const am = Math.max(1, activeMonths);
+  return {
+    pilatesDays,
+    total,
+    activeWeeks, activeMonths,
+    avgPerActiveWeek: total / aw,
+    avgPerActiveMonth: total / am,
+  };
+}
+
+function pilatesSectionHtml(stats, ACCENT) {
+  const { total, pilatesDays, activeWeeks, activeMonths, avgPerActiveWeek, avgPerActiveMonth } = stats;
+  return `
+    <section class="block">
+      <div class="block-head"><h2>🧘 Pilates</h2></div>
+      <div class="stat-card" style="border-top:3px solid ${ACCENT}">
+        <div class="kpi-grid" style="grid-template-columns: repeat(3, 1fr)">
+          <div class="kpi"><div class="kpi-value">${total}</div><div class="kpi-label">aulas totais</div></div>
+          <div class="kpi"><div class="kpi-value">${fmtN(avgPerActiveWeek)}</div><div class="kpi-label">aulas / semana ativa</div></div>
+          <div class="kpi"><div class="kpi-value">${fmtN(avgPerActiveMonth)}</div><div class="kpi-label">aulas / mês ativo</div></div>
+        </div>
+        <p class="muted stats-meta">${startInfoLine(CATEGORY_START_DATES.pilates, activeWeeks, activeMonths)}</p>
+
+        ${total === 0 ? '<p class="muted" style="font-size:12px;margin:8px 0 0">sem aulas de pilates ainda</p>' : `
+          <h3 class="stats-subhead">Aulas por dia da semana</h3>
+          ${dowChart(pilatesDays)}
+        `}
+      </div>
+    </section>
   `;
 }
 
@@ -737,10 +795,12 @@ function render() {
 
     ${USER === "vinicius" ? jiuSectionHtml(computeJiuStats(_days), ACCENT) : ""}
 
+    ${USER === "victoria" ? pilatesSectionHtml(computePilatesStats(_days), ACCENT) : ""}
+
     ${gymSectionHtml(
       computeGymStats(_days),
       ACCENT,
-      new Set(_days.filter(d => (d.exercises || []).includes("jiujitsu")).map(d => d.date))
+      buildExtrasByDate(_days)
     )}
   `;
 }

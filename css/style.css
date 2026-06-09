@@ -1481,12 +1481,10 @@ body.is-loading::after {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.gym-cal-jiu {
+.gym-cal-extra {
   font-size: 10px;
   font-weight: 700;
-  color: #6ee7b7;
-  background: rgba(16, 185, 129, 0.14);
-  border: 1px solid rgba(16, 185, 129, 0.55);
+  border: 1px solid;
   padding: 1px 4px;
   border-radius: 3px;
   line-height: 1.2;

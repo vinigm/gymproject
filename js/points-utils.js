@@ -106,7 +106,7 @@ export const PERIOD_LABELS = {
 // --- breakdown (linha por categoria a partir de dias) ---------------
 const EX_LABELS = {
   academia: "Academia", corrida: "Corrida", yoga: "Yoga",
-  jiujitsu: "Jiu Jitsu", bicicleta: "Bicicleta", alongamento: "Alongamento",
+  jiujitsu: "Jiu Jitsu", pilates: "Pilates", bicicleta: "Bicicleta", alongamento: "Alongamento",
 };
 // labels dos "Outros hábitos" agora vêm de EXTRAS_META (runtime, suporta customs)
 

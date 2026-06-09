@@ -25,6 +25,7 @@ const SECTIONS = [
       { path: "exercises.corrida",     label: "Corrida" },
       { path: "exercises.yoga",        label: "Yoga" },
       { path: "exercises.jiujitsu",    label: "Jiu Jitsu" },
+      { path: "exercises.pilates",     label: "Pilates" },
       { path: "exercises.bicicleta",   label: "Bicicleta" },
     ],
   },
