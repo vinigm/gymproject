@@ -3,6 +3,7 @@
 import { todayISO, APP_START_DATE, USERS } from "./app.js";
 import { setupAuthGate, renderAuthFooter } from "./auth.js";
 import { getRange } from "./storage.js";
+import { getStretchSessions } from "./stretch-storage.js";
 import { pointsForDay } from "./points-engine.js";
 import { POINTS, EXTRAS_META, CATEGORY_START_DATES } from "./points-config.js";
 import {
@@ -24,11 +25,13 @@ const EX_LABELS = {
 // atividades extras (jiu / pilates / etc.) feitas no mesmo dia.
 // Cada um tem cor própria pra distinguir dos grupos musculares.
 const ACTIVITY_BADGES = {
-  jiujitsu: { icon: "🥋", label: "Jiu Jitsu", color: "#6ee7b7", bg: "rgba(16, 185, 129, 0.14)",  border: "rgba(16, 185, 129, 0.55)"  },
-  pilates:  { icon: "🧘", label: "Pilates",   color: "#c4b5fd", bg: "rgba(167, 139, 250, 0.16)", border: "rgba(167, 139, 250, 0.55)" },
+  jiujitsu:    { icon: "🥋", label: "Jiu Jitsu",   color: "#6ee7b7", bg: "rgba(16, 185, 129, 0.14)",  border: "rgba(16, 185, 129, 0.55)"  },
+  pilates:     { icon: "🧘", label: "Pilates",     color: "#c4b5fd", bg: "rgba(167, 139, 250, 0.16)", border: "rgba(167, 139, 250, 0.55)" },
+  alongamento: { icon: "🤸", label: "Alongamento", color: "#fcd34d", bg: "rgba(250, 204, 21, 0.14)",  border: "rgba(250, 204, 21, 0.55)"  },
 };
 
 let _daysByUser = { vinicius: [], victoria: [] };
+let _stretchByUser = { vinicius: [], victoria: [] };
 let _currentUser = "vinicius";
 let _currentRange = "30";
 
@@ -484,6 +487,61 @@ function buildExtrasByDate(days) {
   return map;
 }
 
+// ─── Alongamento (stretch_sessions: lista de sessões com timestamp) ───
+function computeStretchStats(sessions) {
+  const total = sessions.length;
+  const totalMin = sessions.reduce((s, x) => s + (Number(x.duration_min) || 0), 0);
+  // dias únicos (pra "dias ativos")
+  const days = new Set(sessions.map(s => s.date).filter(Boolean));
+  // semanas/meses ativos: usa o conjunto de dias
+  const fakeDays = [...days].map(d => ({ date: d }));
+  const { weeks: activeWeeks, months: activeMonths } = activeWeeksMonths(fakeDays);
+  const aw = Math.max(1, activeWeeks);
+  const am = Math.max(1, activeMonths);
+  return {
+    sessions,
+    total,
+    totalMin,
+    distinctDays: days.size,
+    activeWeeks, activeMonths,
+    avgMinPerSession: total > 0 ? totalMin / total : 0,
+    minPerActiveWeek: totalMin / aw,
+    minPerActiveMonth: totalMin / am,
+    sessionsPerActiveWeek: total / aw,
+  };
+}
+
+function stretchSectionHtml(stats, ACCENT) {
+  const { total, totalMin, distinctDays, activeWeeks, activeMonths, avgMinPerSession, minPerActiveWeek, sessions } = stats;
+  // dow chart precisa de objetos com .date
+  const fakeDays = sessions.map(s => ({ date: s.date }));
+  return `
+    <section class="block">
+      <div class="block-head"><h2>🤸 Alongamento</h2></div>
+      <div class="stat-card" style="border-top:3px solid ${ACCENT}">
+        <div class="kpi-grid" style="grid-template-columns: repeat(3, 1fr)">
+          <div class="kpi"><div class="kpi-value">${total}</div><div class="kpi-label">sessões totais</div></div>
+          <div class="kpi"><div class="kpi-value">${fmtHours(totalMin)}</div><div class="kpi-label">tempo total</div></div>
+          <div class="kpi"><div class="kpi-value">${distinctDays}</div><div class="kpi-label">${distinctDays === 1 ? "dia" : "dias"} c/ alongamento</div></div>
+        </div>
+        ${activeWeeks > 0 ? `<p class="muted stats-meta">
+          ${activeWeeks} ${activeWeeks === 1 ? "semana ativa" : "semanas ativas"} ·
+          ${activeMonths} ${activeMonths === 1 ? "mês ativo" : "meses ativos"}
+        </p>` : ""}
+
+        ${total === 0 ? '<p class="muted" style="font-size:12px;margin:8px 0 0">sem sessões de alongamento ainda</p>' : `
+          <h3 class="stats-subhead">Médias</h3>
+          <div class="stat-row"><span class="stat-label">⏱️ Min / sessão</span><span class="stat-value">${Math.round(avgMinPerSession)}min</span></div>
+          <div class="stat-row"><span class="stat-label">📅 Min / semana ativa</span><span class="stat-value">${fmtHours(Math.round(minPerActiveWeek))}</span></div>
+
+          <h3 class="stats-subhead">Sessões por dia da semana</h3>
+          ${dowChart(fakeDays)}
+        `}
+      </div>
+    </section>
+  `;
+}
+
 function computePilatesStats(days) {
   const pilatesDays = days.filter(d => (d.exercises || []).includes("pilates"));
   const total = pilatesDays.length;
@@ -797,6 +855,8 @@ function render() {
 
     ${USER === "victoria" ? pilatesSectionHtml(computePilatesStats(_days), ACCENT) : ""}
 
+    ${stretchSectionHtml(computeStretchStats(_stretchByUser[USER] || []), ACCENT)}
+
     ${gymSectionHtml(
       computeGymStats(_days),
       ACCENT,
@@ -829,10 +889,14 @@ async function initStatsPage(user) {
   select.addEventListener("change", () => { _currentRange = select.value; render(); });
   try {
     await loadAndApplyConfig();
-    const results = await Promise.all(
-      USERS.map(u => getRange(u, APP_START_DATE, todayISO()).catch(() => []))
-    );
-    USERS.forEach((u, i) => { _daysByUser[u] = results[i]; });
+    const [daysResults, stretchResults] = await Promise.all([
+      Promise.all(USERS.map(u => getRange(u, APP_START_DATE, todayISO()).catch(() => []))),
+      Promise.all(USERS.map(u => getStretchSessions(u).catch(() => []))),
+    ]);
+    USERS.forEach((u, i) => {
+      _daysByUser[u] = daysResults[i];
+      _stretchByUser[u] = stretchResults[i];
+    });
     _currentRange = select.value;
     render();
   } catch (err) {

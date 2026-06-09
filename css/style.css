@@ -2308,6 +2308,134 @@ body.is-loading::after {
   }
 }
 
+/* === Toggle Vini/Vivi na página de Alongamento === */
+.along-user-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.along-user-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--card-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--muted);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s, transform 0.08s;
+}
+.along-user-card:active { transform: scale(0.97); }
+.along-user-card.is-on {
+  border-color: var(--accent);
+  background: rgba(110, 168, 255, 0.12);
+  color: var(--text);
+}
+.along-user-card .avatar {
+  width: 26px; height: 26px;
+  font-size: 12px;
+}
+.along-user-name { letter-spacing: 0.01em; }
+
+/* Stats por período no alongamento */
+.along-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.along-stats-panel + .along-stats-panel {
+  border-top: 1px dashed var(--border);
+  padding-top: 10px;
+}
+
+/* Calendário do mês no alongamento */
+.along-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+.along-cal-head {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: center;
+  padding: 4px 0;
+  letter-spacing: 0.05em;
+}
+.along-cal-cell {
+  min-height: 52px;
+  background: var(--card-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2px;
+}
+.along-cal-cell.is-empty {
+  background: transparent;
+  border-color: transparent;
+  min-height: 32px;
+}
+.along-cal-cell.is-today {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+.along-cal-cell.has-stretch {
+  background: rgba(250, 204, 21, 0.10);
+  border-color: rgba(250, 204, 21, 0.50);
+}
+.along-cal-day {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+}
+.along-cal-min {
+  font-size: 10px;
+  font-weight: 800;
+  color: #fcd34d;
+  background: rgba(250, 204, 21, 0.16);
+  padding: 1px 5px;
+  border-radius: 999px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Histórico no alongamento */
+.along-hist-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 4px;
+}
+.along-hist-row + .along-hist-row { border-top: 1px dashed var(--border); }
+.along-hist-date {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+.along-hist-time {
+  font-size: 13px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.along-hist-dur {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fcd34d;
+  font-variant-numeric: tabular-nums;
+  min-width: 44px;
+  text-align: right;
+}
+
 /* === PÁGINA DE POMODORO === */
 /* Config card */
 .pom-cfg-grid {

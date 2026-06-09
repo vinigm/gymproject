@@ -3,6 +3,8 @@
 
 import { setupAuthGate, renderAuthFooter } from "./auth.js";
 import { mountNavMenu } from "./nav-menu.js";
+import { getDay, saveDay } from "./storage.js";
+import { saveStretchSession, getStretchSessions } from "./stretch-storage.js";
 
 // ─────────────────────────────────────────────────────────────────────
 //  CONFIGURAÇÃO DAS SESSÕES
@@ -68,10 +70,12 @@ const SECONDS_PER_EXERCISE = 60;
 // ─────────────────────────────────────────────────────────────────────
 const state = {
   view: "selector",       // "selector" | "timer" | "done"
+  user: "vinicius",       // "vinicius" | "victoria" — quem tá fazendo
   sessionKey: null,       // 5 | 10 | 15
   exerciseIdx: 0,
   remaining: SECONDS_PER_EXERCISE,
   isPaused: false,
+  sessions: [],           // histórico do usuário atual (timestamp + duração)
 };
 
 let tickHandle = null;
@@ -202,12 +206,44 @@ function advanceExercise() {
   renderTimer();
 }
 
-function finishSession() {
+async function finishSession() {
   stopTick();
   releaseWakeLock();
   beepFinal();
+  // Auto-salva: 1) histórico com timestamp em stretch_sessions
+  //             2) marca o dia no day-record (pra valer pontos no engine)
+  const sessionKey = state.sessionKey;
+  const userId = state.user;
   state.view = "done";
   render();
+  try {
+    const completedAt = new Date().toISOString();
+    await saveStretchSession({ userId, duration_min: sessionKey, completedAt });
+    await markDayWithStretch(userId, sessionKey, completedAt.slice(0, 10));
+    // recarrega histórico em background pra calendário/stats refletirem
+    state.sessions = await getStretchSessions(userId);
+    if (state.view === "done") render(); // só re-renderiza se ainda tá na done view
+  } catch (err) {
+    console.error("Falha ao salvar sessão de alongamento:", err);
+  }
+}
+
+// Marca o dia (today por padrão) do usuário com "alongamento" no array
+// de exercises + stretch_min, preservando todos os outros campos.
+async function markDayWithStretch(userId, durationMin, date) {
+  try {
+    const day = await getDay(userId, date);
+    const exercises = Array.isArray(day.exercises) ? [...day.exercises] : [];
+    if (!exercises.includes("alongamento")) exercises.push("alongamento");
+    const updated = {
+      ...day,
+      exercises,
+      stretch_min: Number(durationMin),
+    };
+    await saveDay(userId, date, updated);
+  } catch (err) {
+    console.error("Falha ao atualizar day-record:", err);
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────
@@ -256,6 +292,171 @@ function fmtTime(secs) {
   return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
+function userToggleHtml() {
+  return `
+    <div class="along-user-toggle">
+      <button class="along-user-card${state.user === "vinicius" ? " is-on" : ""}" data-user="vinicius">
+        <span class="along-user-avatar avatar avatar--vini">V</span>
+        <span class="along-user-name">Vini</span>
+      </button>
+      <button class="along-user-card${state.user === "victoria" ? " is-on" : ""}" data-user="victoria">
+        <span class="along-user-avatar avatar avatar--vic">V</span>
+        <span class="along-user-name">Vivi</span>
+      </button>
+    </div>
+  `;
+}
+
+function pad2(n) { return String(n).padStart(2, "0"); }
+function todayISO() {
+  const d = new Date();
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+}
+function weekStartISO() {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() - d.getDay());
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+}
+function fmtDurationMin(min) {
+  if (!min) return "0min";
+  const h = Math.floor(min / 60);
+  const m = Math.round(min % 60);
+  if (h === 0) return `${m}min`;
+  if (m === 0) return `${h}h`;
+  return `${h}h${pad2(m)}`;
+}
+function fmtTimeOfDay(iso) {
+  if (!iso) return "";
+  try {
+    const d = new Date(iso);
+    return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+  } catch { return ""; }
+}
+function fmtDateBR(iso) {
+  try {
+    const [y, m, d] = iso.split("-").map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+  } catch { return iso; }
+}
+
+function statsForRange(sessions, minDate) {
+  const out = { totalMin: 0, count: 0 };
+  for (const s of sessions) {
+    if (s.date && s.date < minDate) continue;
+    out.totalMin += Number(s.duration_min) || 0;
+    out.count += 1;
+  }
+  return out;
+}
+
+function statsCardHtml() {
+  const today = todayISO();
+  const weekStart = weekStartISO();
+  const today_ = statsForRange(state.sessions, today);
+  const week_  = statsForRange(state.sessions, weekStart);
+  const total_ = statsForRange(state.sessions, "0000-00-00");
+  const avg = total_.count > 0 ? total_.totalMin / total_.count : 0;
+
+  const panel = (title, data) => `
+    <div class="along-stats-panel">
+      <h3 class="stats-subhead">${title}</h3>
+      <div class="kpi-grid" style="grid-template-columns: 1fr 1fr">
+        <div class="kpi"><div class="kpi-value">${fmtDurationMin(data.totalMin)}</div><div class="kpi-label">tempo</div></div>
+        <div class="kpi"><div class="kpi-value">${data.count}</div><div class="kpi-label">${data.count === 1 ? "sessão" : "sessões"}</div></div>
+      </div>
+    </div>
+  `;
+
+  return `
+    <section class="block">
+      <div class="block-head"><h2>📊 Tempo alongado</h2></div>
+      <div class="stat-card along-stats">
+        ${panel("Hoje", today_)}
+        ${panel("Esta semana", week_)}
+        ${panel("Total", total_)}
+        ${total_.count > 0 ? `
+          <p class="muted" style="text-align:center;margin:4px 0 0;font-size:12px">
+            Média por sessão: <strong style="color:var(--text)">${fmtDurationMin(Math.round(avg))}</strong>
+          </p>` : ""}
+      </div>
+    </section>
+  `;
+}
+
+function calendarCardHtml() {
+  // Agrupa sessões por dia → total de minutos
+  const byDate = new Map();
+  for (const s of state.sessions) {
+    if (!s.date) continue;
+    byDate.set(s.date, (byDate.get(s.date) || 0) + (Number(s.duration_min) || 0));
+  }
+  const t = new Date();
+  const year = t.getFullYear();
+  const month = t.getMonth();
+  const firstDow = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const todayStr = `${year}-${pad2(month + 1)}-${pad2(t.getDate())}`;
+
+  const heads = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"]
+    .map(d => `<div class="along-cal-head">${d}</div>`).join("");
+  let cells = "";
+  for (let i = 0; i < firstDow; i++) cells += `<div class="along-cal-cell is-empty"></div>`;
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dateStr = `${year}-${pad2(month + 1)}-${pad2(day)}`;
+    const mins = byDate.get(dateStr) || 0;
+    const isToday = dateStr === todayStr;
+    const klass = `along-cal-cell${mins > 0 ? " has-stretch" : ""}${isToday ? " is-today" : ""}`;
+    cells += `
+      <div class="${klass}">
+        <span class="along-cal-day">${day}</span>
+        ${mins > 0 ? `<span class="along-cal-min">${mins}min</span>` : ""}
+      </div>
+    `;
+  }
+  const monthLabel = new Date(year, month, 1)
+    .toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+
+  return `
+    <section class="block">
+      <div class="block-head"><h2>📅 Calendário do mês</h2></div>
+      <div class="stat-card">
+        <p class="muted" style="text-align:center;margin:0 0 10px;font-size:12px;text-transform:capitalize">${monthLabel}</p>
+        <div class="along-cal-grid">${heads}${cells}</div>
+      </div>
+    </section>
+  `;
+}
+
+function historyCardHtml() {
+  const recent = state.sessions.slice(0, 12);
+  if (recent.length === 0) {
+    return `
+      <section class="block">
+        <div class="block-head"><h2>🕘 Histórico</h2></div>
+        <div class="stat-card">
+          <p class="muted" style="font-size:13px;margin:0">Nenhuma sessão registrada ainda. Comece uma sessão pra aparecer aqui!</p>
+        </div>
+      </section>
+    `;
+  }
+  const rows = recent.map(s => `
+    <div class="along-hist-row">
+      <div class="along-hist-date">${fmtDateBR(s.date || (s.completedAt || "").slice(0, 10))}</div>
+      <div class="along-hist-time">${fmtTimeOfDay(s.completedAt)}</div>
+      <div class="along-hist-dur">${s.duration_min}min</div>
+    </div>
+  `).join("");
+  return `
+    <section class="block">
+      <div class="block-head"><h2>🕘 Histórico recente</h2></div>
+      <div class="stat-card">
+        ${rows}
+      </div>
+    </section>
+  `;
+}
+
 function selectorViewHtml() {
   const cards = Object.entries(SESSIONS).map(([key, sess]) => {
     const n = sess.exercises.length;
@@ -270,13 +471,18 @@ function selectorViewHtml() {
     `;
   }).join("");
   return `
+    ${userToggleHtml()}
     <section class="block">
       <div class="block-head"><h2>🧘 Escolha a sessão</h2></div>
       <p class="muted" style="margin:0 0 12px;font-size:13px">
         Cada exercício dura 1 minuto. O timer avança automático com um beep entre exercícios.
+        A sessão fica salva no histórico de <strong style="color:var(--text)">${state.user === "vinicius" ? "Vini" : "Vivi"}</strong> quando você concluir.
       </p>
       <div class="along-grid">${cards}</div>
     </section>
+    ${statsCardHtml()}
+    ${calendarCardHtml()}
+    ${historyCardHtml()}
   `;
 }
 
@@ -410,6 +616,16 @@ function bindSelector() {
       if (SESSIONS[key]?.exercises.length > 0) startSession(key);
     });
   });
+  // Toggle Vini/Vivi
+  document.querySelectorAll(".along-user-card").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const newUser = btn.dataset.user;
+      if (newUser === state.user) return;
+      state.user = newUser;
+      state.sessions = await getStretchSessions(newUser);
+      render();
+    });
+  });
 }
 
 function bindTimer() {
@@ -442,8 +658,13 @@ window.addEventListener("beforeunload", (e) => {
 document.addEventListener("DOMContentLoaded", () => {
   mountNavMenu();
   setupAuthGate({
-    onAuthorized: (user) => {
+    onAuthorized: async (user) => {
       renderAuthFooter(user);
+      try {
+        state.sessions = await getStretchSessions(state.user);
+      } catch (e) {
+        console.warn("Falha ao carregar sessões:", e);
+      }
       render();
       document.body.classList.remove("is-loading");
     }
