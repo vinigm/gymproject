@@ -152,23 +152,29 @@ input, select { font: inherit; color: inherit; }
   border-color: var(--bad);
 }
 
-/* Bloco condicional de Academia — só aparece quando o chip Academia está marcado */
-.gym-detail {
-  display: none;
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px dashed var(--border);
+/* Stack de chips de exercícios — mantém gap consistente quando o grid é
+   quebrado pra intercalar gym-detail / jiu-detail entre as opções. */
+.exercise-stack {
+  display: flex; flex-direction: column; gap: 6px;
 }
-.person-card.has-gym .gym-detail { display: block; }
 
-/* Bloco condicional de Jiu Jitsu — só aparece quando o chip Jiu está marcado */
+/* Blocos condicionais (Academia / Jiu) — destaque verde pra chamar atenção */
+.gym-detail,
 .jiu-detail {
   display: none;
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px dashed var(--border);
+  padding: 10px 10px 8px;
+  background: rgba(52, 211, 153, 0.10);
+  border: 1px solid rgba(52, 211, 153, 0.40);
+  border-left: 3px solid var(--good);
+  border-radius: 10px;
 }
+.person-card.has-gym .gym-detail { display: block; }
 .person-card.has-jiu .jiu-detail { display: block; }
+.gym-detail .mini-title,
+.jiu-detail .mini-title {
+  color: var(--good);
+  margin-top: 2px;
+}
 .jiu-spar { display: none; margin-top: 8px; }
 .person-card.has-jiu-session .jiu-spar { display: block; }
 
@@ -1264,6 +1270,24 @@ body.is-loading::after {
   font-variant-numeric: tabular-nums;
 }
 .vic-h-undo { font-size: 11px; }
+
+/* Sub-cabeçalhos dentro de stat-cards (Academia, Jiu, etc.) — agrupa
+   blocos do mesmo tópico sem precisar de várias .stat-card separadas. */
+.stats-subhead {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin: 14px 0 6px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border);
+}
+.stats-meta {
+  font-size: 11px;
+  margin: 6px 0 0;
+  text-align: center;
+}
 
 /* === GRÁFICO DE BARRAS POR DIA DA SEMANA (Jiu) === */
 .dow-chart {

@@ -9,6 +9,7 @@ import {
   loadAndApplyConfig, pointsInPeriod, totalEarnedByUser,
   fmtPts, fmtDayFull, fmtWeekRange, fmtMonth,
   getBestDay, getBestWeek, getBestMonth,
+  mondayOfWeek,
 } from "./points-utils.js";
 import { mountNavMenu } from "./nav-menu.js";
 
@@ -113,6 +114,17 @@ function semiDonut(clean, dirty) {
 
 const bar = (p) => `<div class="bar"><i style="width:${p}%"></i></div>`;
 
+// === conta semanas/meses ATIVOS (com pelo menos 1 dia em `days`) ===
+function activeWeeksMonths(filteredDays) {
+  const weeks = new Set();
+  const months = new Set();
+  for (const d of filteredDays) {
+    weeks.add(mondayOfWeek(d.date));
+    months.add(d.date.slice(0, 7));
+  }
+  return { weeks: weeks.size, months: months.size };
+}
+
 // === Academia helpers (grupos musculares) ===
 const GYM_GROUPS = [
   { key: "costa",      label: "Costa" },
@@ -129,25 +141,32 @@ function computeGymStats(days) {
   const gymDays = days.filter(d => (d.exercises || []).includes("academia"));
   const total = gymDays.length;
   const groupCounts = {};
-  let totalGroupSelections = 0;
   for (const d of gymDays) {
     for (const g of (d.gym_groups || [])) {
       groupCounts[g] = (groupCounts[g] || 0) + 1;
-      totalGroupSelections++;
     }
   }
-  // dias de academia que não marcaram nenhum grupo
   const daysWithoutGroups = gymDays.filter(d => !(d.gym_groups || []).length).length;
+  const { weeks: activeWeeks, months: activeMonths } = activeWeeksMonths(gymDays);
+  const aw = Math.max(1, activeWeeks);
+  const am = Math.max(1, activeMonths);
   return {
+    gymDays,
     total,
     groupCounts,
-    avgGroupsPerTraining: total > 0 ? totalGroupSelections / total : 0,
     daysWithoutGroups,
+    activeWeeks, activeMonths,
+    avgPerActiveWeek: total / aw,
+    avgPerActiveMonth: total / am,
   };
 }
 
 function gymSectionHtml(stats, ACCENT) {
-  const { total, groupCounts, avgGroupsPerTraining, daysWithoutGroups } = stats;
+  const {
+    total, groupCounts, daysWithoutGroups, gymDays,
+    activeWeeks, activeMonths,
+    avgPerActiveWeek, avgPerActiveMonth,
+  } = stats;
   const sorted = [...GYM_GROUPS]
     .map(g => ({ ...g, count: groupCounts[g.key] || 0 }))
     .sort((a, b) => b.count - a.count);
@@ -169,25 +188,32 @@ function gymSectionHtml(stats, ACCENT) {
     <section class="block">
       <div class="block-head"><h2>🏋️ Academia</h2></div>
       <div class="stat-card" style="border-top:3px solid ${ACCENT}">
-        <div class="kpi-grid">
+        <div class="kpi-grid" style="grid-template-columns: repeat(3, 1fr)">
           <div class="kpi">
             <div class="kpi-value">${total}</div>
             <div class="kpi-label">treinos totais</div>
           </div>
           <div class="kpi">
-            <div class="kpi-value">${fmtN(avgGroupsPerTraining)}</div>
-            <div class="kpi-label">grupos / treino</div>
+            <div class="kpi-value">${fmtN(avgPerActiveWeek)}</div>
+            <div class="kpi-label">treinos / semana ativa</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-value">${fmtN(avgPerActiveMonth)}</div>
+            <div class="kpi-label">treinos / mês ativo</div>
           </div>
         </div>
-      </div>
-      <div class="stat-card" style="border-top:3px solid ${ACCENT}; margin-top:10px">
-        <h3>Por grupo muscular</h3>
-        ${total === 0
-          ? `<p class="muted" style="font-size:12px;margin:4px 0">sem treinos de academia ainda</p>`
-          : rows}
-        ${daysWithoutGroups > 0
-          ? `<p class="muted" style="font-size:11px;margin-top:6px">${daysWithoutGroups} treino${daysWithoutGroups === 1 ? "" : "s"} sem grupo marcado</p>`
-          : ""}
+        <p class="muted stats-meta">${activeWeeks} ${activeWeeks === 1 ? "semana" : "semanas"} ativa${activeWeeks === 1 ? "" : "s"} · ${activeMonths} ${activeMonths === 1 ? "mês" : "meses"} ativo${activeMonths === 1 ? "" : "s"}</p>
+
+        ${total === 0 ? '<p class="muted" style="font-size:12px;margin:8px 0 0">sem treinos de academia ainda</p>' : `
+          <h3 class="stats-subhead">Por grupo muscular</h3>
+          ${rows}
+          ${daysWithoutGroups > 0
+            ? `<p class="muted" style="font-size:11px;margin-top:6px">${daysWithoutGroups} treino${daysWithoutGroups === 1 ? "" : "s"} sem grupo marcado</p>`
+            : ""}
+
+          <h3 class="stats-subhead">Treinos por dia da semana</h3>
+          ${dowChart(gymDays)}
+        `}
       </div>
     </section>
   `;
@@ -215,7 +241,7 @@ function fmtN(n, digits = 1) {
   return Number(n).toFixed(digits).replace(".", ",");
 }
 
-function computeJiuStats(days, daysSinceStart) {
+function computeJiuStats(days) {
   const jiuDays = days.filter(d => (d.exercises || []).includes("jiujitsu"));
   let totalMinutes = 0;
   let totalSparMin = 0;
@@ -225,19 +251,23 @@ function computeJiuStats(days, daysSinceStart) {
       totalSparMin += Number(d.jiu_spar_min) || 0;
     }
   }
-  const weeks = Math.max(1, daysSinceStart / 7);
-  const months = Math.max(1, daysSinceStart / 30);
+  const total = jiuDays.length;
+  const { weeks: activeWeeks, months: activeMonths } = activeWeeksMonths(jiuDays);
+  const aw = Math.max(1, activeWeeks);
+  const am = Math.max(1, activeMonths);
   return {
     jiuDays,
-    totalTrainings: jiuDays.length,
+    totalTrainings: total,
     totalMinutes,
     totalSparMin,
-    avgWeekTrainings: jiuDays.length / weeks,
-    avgWeekMinutes: totalMinutes / weeks,
-    avgWeekSparMin: totalSparMin / weeks,
-    avgMonthTrainings: jiuDays.length / months,
-    avgMonthMinutes: totalMinutes / months,
-    avgMonthSparMin: totalSparMin / months,
+    activeWeeks, activeMonths,
+    avgSparPerTraining: total > 0 ? totalSparMin / total : 0,
+    avgTrainingsPerActiveWeek: total / aw,
+    avgMinutesPerActiveWeek: totalMinutes / aw,
+    avgSparPerActiveWeek: totalSparMin / aw,
+    avgTrainingsPerActiveMonth: total / am,
+    avgMinutesPerActiveMonth: totalMinutes / am,
+    avgSparPerActiveMonth: totalSparMin / am,
   };
 }
 
@@ -266,10 +296,11 @@ function dowChart(jiuDays) {
 function jiuSectionHtml(stats, ACCENT) {
   const {
     totalTrainings, totalMinutes, totalSparMin, jiuDays,
-    avgWeekTrainings, avgWeekMinutes, avgWeekSparMin,
-    avgMonthTrainings, avgMonthMinutes, avgMonthSparMin,
+    activeWeeks, activeMonths,
+    avgSparPerTraining,
+    avgTrainingsPerActiveWeek, avgMinutesPerActiveWeek, avgSparPerActiveWeek,
+    avgTrainingsPerActiveMonth, avgMinutesPerActiveMonth, avgSparPerActiveMonth,
   } = stats;
-  const sparPerTraining = totalTrainings > 0 ? Math.round(totalSparMin / totalTrainings) : 0;
   return `
     <section class="block">
       <div class="block-head"><h2>🥋 Jiu Jitsu</h2></div>
@@ -277,27 +308,22 @@ function jiuSectionHtml(stats, ACCENT) {
         <div class="kpi-grid">
           <div class="kpi"><div class="kpi-value">${totalTrainings}</div><div class="kpi-label">treinos totais</div></div>
           <div class="kpi"><div class="kpi-value">${fmtHours(totalMinutes)}</div><div class="kpi-label">tempo total</div></div>
-          <div class="kpi"><div class="kpi-value">${fmtHours(totalSparMin)}</div><div class="kpi-label">tempo de luta</div></div>
-          <div class="kpi"><div class="kpi-value">${sparPerTraining}<span class="muted" style="font-size:12px;font-weight:500">min</span></div><div class="kpi-label">luta / treino</div></div>
+          <div class="kpi"><div class="kpi-value">${fmtHours(totalSparMin)}</div><div class="kpi-label">luta total</div></div>
+          <div class="kpi"><div class="kpi-value">${Math.round(avgSparPerTraining)}<span class="muted" style="font-size:12px;font-weight:500">min</span></div><div class="kpi-label">luta / treino (média)</div></div>
         </div>
-      </div>
+        <p class="muted stats-meta">${activeWeeks} ${activeWeeks === 1 ? "semana" : "semanas"} ativa${activeWeeks === 1 ? "" : "s"} · ${activeMonths} ${activeMonths === 1 ? "mês" : "meses"} ativo${activeMonths === 1 ? "" : "s"}</p>
 
-      <div class="stat-card" style="border-top:3px solid ${ACCENT}; margin-top:10px">
-        <h3>Médias semanais</h3>
-        <div class="stat-row"><span class="stat-label">📅 Treinos / semana</span><span class="stat-value">${fmtN(avgWeekTrainings)}</span></div>
-        <div class="stat-row"><span class="stat-label">⏱️ Tempo / semana</span><span class="stat-value">${fmtHours(Math.round(avgWeekMinutes))}</span></div>
-        <div class="stat-row"><span class="stat-label">🥊 Luta / semana</span><span class="stat-value">${fmtHours(Math.round(avgWeekSparMin))}</span></div>
-      </div>
+        <h3 class="stats-subhead">Médias por semana ativa</h3>
+        <div class="stat-row"><span class="stat-label">📅 Treinos</span><span class="stat-value">${fmtN(avgTrainingsPerActiveWeek)}</span></div>
+        <div class="stat-row"><span class="stat-label">⏱️ Tempo total</span><span class="stat-value">${fmtHours(Math.round(avgMinutesPerActiveWeek))}</span></div>
+        <div class="stat-row"><span class="stat-label">🥊 Tempo de luta</span><span class="stat-value">${fmtHours(Math.round(avgSparPerActiveWeek))}</span></div>
 
-      <div class="stat-card" style="border-top:3px solid ${ACCENT}; margin-top:10px">
-        <h3>Médias mensais</h3>
-        <div class="stat-row"><span class="stat-label">📅 Treinos / mês</span><span class="stat-value">${fmtN(avgMonthTrainings)}</span></div>
-        <div class="stat-row"><span class="stat-label">⏱️ Tempo / mês</span><span class="stat-value">${fmtHours(Math.round(avgMonthMinutes))}</span></div>
-        <div class="stat-row"><span class="stat-label">🥊 Luta / mês</span><span class="stat-value">${fmtHours(Math.round(avgMonthSparMin))}</span></div>
-      </div>
+        <h3 class="stats-subhead">Médias por mês ativo</h3>
+        <div class="stat-row"><span class="stat-label">📅 Treinos</span><span class="stat-value">${fmtN(avgTrainingsPerActiveMonth)}</span></div>
+        <div class="stat-row"><span class="stat-label">⏱️ Tempo total</span><span class="stat-value">${fmtHours(Math.round(avgMinutesPerActiveMonth))}</span></div>
+        <div class="stat-row"><span class="stat-label">🥊 Tempo de luta</span><span class="stat-value">${fmtHours(Math.round(avgSparPerActiveMonth))}</span></div>
 
-      <div class="stat-card" style="border-top:3px solid ${ACCENT}; margin-top:10px">
-        <h3>Treinos por dia da semana</h3>
+        <h3 class="stats-subhead">Treinos por dia da semana</h3>
         ${dowChart(jiuDays)}
       </div>
     </section>
@@ -510,7 +536,7 @@ function render() {
 
     ${gymSectionHtml(computeGymStats(_days), ACCENT)}
 
-    ${USER === "vinicius" ? jiuSectionHtml(computeJiuStats(_days, daysSinceStart), ACCENT) : ""}
+    ${USER === "vinicius" ? jiuSectionHtml(computeJiuStats(_days), ACCENT) : ""}
 
     <section class="block">
       <div class="block-head"><h2>Outros hábitos</h2><span class="muted" style="font-size:11px">no período</span></div>
