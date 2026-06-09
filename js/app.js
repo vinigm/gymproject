@@ -1,8 +1,6 @@
 import { storageMode, getRange, getTransactions } from "./storage.js";
 import { initTracker, refreshAllTrackers, hasUnsavedChanges, saveAllDirty } from "./tracker.js";
-import { renderStats } from "./stats.js";
 import { renderHistory } from "./history.js";
-import { renderCalendar } from "./calendar.js";
 import { pointsForDay } from "./points-engine.js";
 import { setupAuthGate, renderAuthFooter } from "./auth.js";
 import { loadAndApplyConfig } from "./points-utils.js";
@@ -77,9 +75,7 @@ async function refreshPointsBadge() {
 async function refreshDependentViews() {
   // Tudo que depende do estado salvo no banco — chamar após save ou nav
   await Promise.all([
-    renderStats(),
     renderHistory(),
-    renderCalendar(),
     refreshPointsBadge(),
   ]);
 }
@@ -148,9 +144,7 @@ async function initApp(user) {
     renderExtrasChips();
     initTracker();
     await refreshAllTrackers();
-    await renderStats();
     await renderHistory();
-    await renderCalendar();
     await refreshPointsBadge();
   } finally {
     document.body.classList.remove("is-loading");
