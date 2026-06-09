@@ -647,10 +647,24 @@ document.addEventListener("DOMContentLoaded", () => {
   mountNavMenu();
   setupAuthGate({
     onAuthorized: async (user) => {
-      renderAuthFooter(user);
-      bindUserToggle();
-      await loadUserData(_state.user);
-      document.body.classList.remove("is-loading");
+      try {
+        renderAuthFooter(user);
+        bindUserToggle();
+        await loadUserData(_state.user);
+      } catch (err) {
+        console.error("Erro ao inicializar Pomodoro:", err);
+        // Render mínimo com defaults pra usuário ver alguma coisa
+        try { render(); } catch (e) { /* ignora */ }
+        const root = document.getElementById("pom-content");
+        if (root && !root.children.length) {
+          root.innerHTML = `<section class="block"><div class="stat-card">
+            <p class="muted">Erro ao carregar dados. Verifique as regras do Firestore no console.</p>
+            <p class="muted" style="font-size:12px;margin-top:8px">Detalhes no console do navegador.</p>
+          </div></section>`;
+        }
+      } finally {
+        document.body.classList.remove("is-loading");
+      }
     }
   });
 });

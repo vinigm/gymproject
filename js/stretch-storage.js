@@ -36,12 +36,17 @@ export async function saveStretchSession({ userId, duration_min, completedAt }) 
 
 export async function getStretchSessions(userId) {
   if (isConfigured) {
-    const q = query(collection(db, COL), where("userId", "==", userId));
-    const snap = await getDocs(q);
-    const out = [];
-    snap.forEach(d => out.push({ id: d.id, ...d.data() }));
-    out.sort((a, b) => (b.completedAt || "").localeCompare(a.completedAt || ""));
-    return out;
+    try {
+      const q = query(collection(db, COL), where("userId", "==", userId));
+      const snap = await getDocs(q);
+      const out = [];
+      snap.forEach(d => out.push({ id: d.id, ...d.data() }));
+      out.sort((a, b) => (b.completedAt || "").localeCompare(a.completedAt || ""));
+      return out;
+    } catch (err) {
+      console.warn("getStretchSessions falhou (regras do Firestore?):", err);
+      return [];
+    }
   }
   return readLS()
     .filter(s => s.userId === userId)

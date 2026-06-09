@@ -52,13 +52,17 @@ export async function savePomodoroSession({ userId, category, duration_min, comp
 
 export async function getPomodoroSessions(userId) {
   if (isConfigured) {
-    const q = query(collection(db, SES_COL), where("userId", "==", userId));
-    const snap = await getDocs(q);
-    const out = [];
-    snap.forEach(d => out.push({ id: d.id, ...d.data() }));
-    // ordena por completedAt desc
-    out.sort((a, b) => (b.completedAt || "").localeCompare(a.completedAt || ""));
-    return out;
+    try {
+      const q = query(collection(db, SES_COL), where("userId", "==", userId));
+      const snap = await getDocs(q);
+      const out = [];
+      snap.forEach(d => out.push({ id: d.id, ...d.data() }));
+      out.sort((a, b) => (b.completedAt || "").localeCompare(a.completedAt || ""));
+      return out;
+    } catch (err) {
+      console.warn("getPomodoroSessions falhou (regras do Firestore?):", err);
+      return [];
+    }
   }
   return readSesLS()
     .filter(s => s.userId === userId)
