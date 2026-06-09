@@ -189,7 +189,7 @@ function gymDowBars(gymDays) {
           .map(g => {
             const c = groupCounts[g.key];
             const pct = (c / total) * 100;
-            return `<div class="gym-dow-seg" style="width:${pct}%; background:${g.color}" data-tooltip="${g.label}: ${c}"></div>`;
+            return `<div class="gym-dow-seg" style="width:${pct}%; background:${g.color}"><span class="gym-dow-seg-lbl">${g.label}</span></div>`;
           }).join("");
         return `
           <div class="gym-dow-row">
