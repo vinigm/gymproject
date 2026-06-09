@@ -2027,6 +2027,214 @@ body.is-loading::after {
 .reward-status { font-weight: 600; }
 .reward-status--good { color: var(--good); }
 
+/* === PÁGINA DE ALONGAMENTO === */
+/* Cards de seleção (5/10/15 min) */
+.along-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+.along-session-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: var(--card-2);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--good);
+  border-radius: 14px;
+  padding: 18px 20px;
+  text-align: left;
+  cursor: pointer;
+  color: var(--text);
+  transition: transform 0.08s, border-color 0.15s, background 0.15s;
+}
+.along-session-card:hover {
+  border-color: var(--good);
+  background: rgba(52, 211, 153, 0.06);
+}
+.along-session-card:active { transform: scale(0.98); }
+.along-session-card.is-disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  border-left-color: var(--border);
+}
+.along-session-card.is-disabled:hover {
+  border-color: var(--border);
+  background: var(--card-2);
+}
+.along-session-label {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+.along-session-tag {
+  font-size: 13px;
+  color: var(--muted);
+}
+.along-session-count {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.along-session-go {
+  margin-top: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--good);
+}
+.along-session-tbd {
+  margin-top: 8px;
+  font-size: 12px;
+  font-style: italic;
+}
+
+/* View do timer */
+.along-timer {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 18px;
+  padding: 14px 4px;
+}
+.along-timer-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.along-timer-progress-text {
+  font-size: 13px;
+  color: var(--muted);
+}
+.along-timer-progress-text strong {
+  color: var(--text);
+  font-weight: 700;
+  font-size: 15px;
+}
+.along-stop-btn {
+  font-size: 13px;
+  padding: 6px 12px;
+}
+.along-progress-bar {
+  height: 6px;
+  background: var(--card-2);
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.along-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--good), var(--accent));
+  border-radius: 999px;
+  transition: width 0.4s linear;
+}
+.along-current {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 18px 16px;
+  background: rgba(52, 211, 153, 0.08);
+  border: 1px solid rgba(52, 211, 153, 0.35);
+  border-radius: 14px;
+  text-align: center;
+}
+.along-current-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+.along-current-name {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--text);
+}
+.along-countdown {
+  font-size: 84px;
+  font-weight: 800;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.04em;
+  color: var(--text);
+  padding: 8px 0;
+  transition: color 0.3s;
+}
+.along-countdown.is-final {
+  color: var(--bad);
+  animation: along-pulse 0.8s ease-in-out infinite;
+}
+.along-countdown.is-paused {
+  opacity: 0.45;
+}
+@keyframes along-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+.along-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.along-ctrl-btn {
+  padding: 14px 16px;
+  font-size: 15px;
+  font-weight: 700;
+  border-radius: 12px;
+  background: var(--accent);
+  color: #0b1220;
+  border: 1px solid var(--accent);
+  cursor: pointer;
+  transition: transform 0.08s, opacity 0.15s;
+}
+.along-ctrl-btn:active { transform: scale(0.97); }
+.along-ctrl-btn--ghost {
+  background: transparent;
+  color: var(--text);
+  border-color: var(--border);
+}
+.along-next {
+  text-align: center;
+  font-size: 13px;
+  padding: 10px 12px;
+  background: var(--card-2);
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+.along-next-name {
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* View "sessão concluída" */
+.along-done {
+  text-align: center;
+  padding: 28px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.along-done-emoji {
+  font-size: 64px;
+  line-height: 1;
+}
+.along-done-title {
+  font-size: 24px;
+  font-weight: 800;
+  margin: 4px 0;
+}
+
+@media (min-width: 640px) {
+  .along-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .along-countdown {
+    font-size: 104px;
+  }
+}
+
 /* === RESPONSIVO === */
 /* Em telas muito estreitas (< 360px) é raro mas mantém legível */
 @media (max-width: 359px) {
