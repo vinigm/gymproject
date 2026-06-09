@@ -56,11 +56,12 @@ export const DEFAULT_POINTS = {
 
   // Pontos por TIPO de exercício feito (cada exercício marcado soma).
   exercises: {
-    academia:  50,
-    corrida:   70,
-    yoga:      70,
-    jiujitsu:  50,
-    bicicleta: 50,
+    academia:    50,
+    corrida:     70,
+    yoga:        70,
+    jiujitsu:    50,
+    bicicleta:   50,
+    alongamento: 40,
   },
 
   // Pontos pela QUANTIDADE de água marcada no dia.

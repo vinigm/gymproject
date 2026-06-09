@@ -17,7 +17,7 @@ const NAMES = { vinicius: "Vini", victoria: "Vivi" };
 const ACCENTS = { vinicius: "var(--vini)", victoria: "var(--vic)" };
 const EX_LABELS = {
   academia: "Academia", corrida: "Corrida", yoga: "Yoga",
-  jiujitsu: "Jiu Jitsu", bicicleta: "Bicicleta",
+  jiujitsu: "Jiu Jitsu", bicicleta: "Bicicleta", alongamento: "Alongamento",
 };
 
 let _daysByUser = { vinicius: [], victoria: [] };

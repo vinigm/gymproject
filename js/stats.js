@@ -3,7 +3,7 @@ import { todayISO, USERS, APP_START_DATE } from "./app.js";
 
 const EX_LABELS = {
   academia: "Academia", corrida: "Corrida", yoga: "Yoga",
-  jiujitsu: "Jiu Jitsu", bicicleta: "Bicicleta"
+  jiujitsu: "Jiu Jitsu", bicicleta: "Bicicleta", alongamento: "Alongamento"
 };
 const NAMES = { vinicius: "Vinicius", victoria: "Vivi" };
 const AVATAR_CLASS = { vinicius: "avatar--vini", victoria: "avatar--vic" };

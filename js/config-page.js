@@ -21,11 +21,12 @@ const SECTIONS = [
   {
     title: "💪 Exercícios",
     fields: [
-      { path: "exercises.academia",  label: "Academia" },
-      { path: "exercises.corrida",   label: "Corrida" },
-      { path: "exercises.yoga",      label: "Yoga" },
-      { path: "exercises.jiujitsu",  label: "Jiu Jitsu" },
-      { path: "exercises.bicicleta", label: "Bicicleta" },
+      { path: "exercises.academia",    label: "Academia" },
+      { path: "exercises.corrida",     label: "Corrida" },
+      { path: "exercises.yoga",        label: "Yoga" },
+      { path: "exercises.jiujitsu",    label: "Jiu Jitsu" },
+      { path: "exercises.bicicleta",   label: "Bicicleta" },
+      { path: "exercises.alongamento", label: "Alongamento" },
     ],
   },
   {
