@@ -185,21 +185,10 @@ input, select { font: inherit; color: inherit; }
   min-height: 36px;
 }
 
-.spar-input {
-  width: 100%;
-  background: var(--card-2);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 10px 12px;
-  color: var(--text);
-  font-size: 15px;
-  font-weight: 600;
+/* chips numéricos do tempo de luta (15-60 min) */
+.jiu-spar .chip {
   font-variant-numeric: tabular-nums;
-  text-align: center;
-}
-.spar-input:focus {
-  outline: 2px solid var(--accent);
-  outline-offset: -1px;
+  letter-spacing: 0.01em;
 }
 
 /* chips numéricos (escala 0-6) — mais compactos */

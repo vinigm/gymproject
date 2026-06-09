@@ -77,7 +77,7 @@ function paintCard(userId) {
       const v = chip.dataset.value;
       const on = MULTI_GROUPS.has(group)
         ? (d[group] || []).includes(v)
-        : d[group] === v;
+        : (d[group] != null && String(d[group]) === v);
       chip.classList.toggle("is-on", on);
     });
   });
@@ -88,12 +88,6 @@ function paintCard(userId) {
   const hasJiu = (d.exercises || []).includes("jiujitsu");
   root.classList.toggle("has-jiu", hasJiu);
   root.classList.toggle("has-jiu-session", hasJiu && !!d.jiu_session);
-  // restaura valor do input de luta
-  const sparInput = root.querySelector(".spar-input");
-  if (sparInput) {
-    const val = d.jiu_spar_min;
-    sparInput.value = (val == null || val === "") ? "" : String(val);
-  }
 }
 
 function handleChipClick(userId, chip) {
@@ -108,7 +102,11 @@ function handleChipClick(userId, chip) {
     if (i >= 0) d[group].splice(i, 1);
     else d[group].push(v);
   } else {
-    d[group] = d[group] === v ? null : v;
+    // jiu_spar_min é armazenado como Number; demais como string
+    const next = group === "jiu_spar_min" ? Number(v) : v;
+    const cur = d[group];
+    const same = cur != null && String(cur) === v;
+    d[group] = same ? null : next;
   }
   paintCard(userId);
   paintSaveButton();
@@ -123,15 +121,6 @@ export function initTracker() {
         if (chip) handleChipClick(userId, chip);
       });
     });
-    // Input de tempo de luta no Jiu
-    const sparInput = root.querySelector(".spar-input");
-    if (sparInput) {
-      sparInput.addEventListener("input", () => {
-        const raw = sparInput.value.trim();
-        local[userId].jiu_spar_min = raw === "" ? null : Number(raw);
-        paintSaveButton();
-      });
-    }
   });
   // O handler do botão Salvar fica em app.js pra poder
   // re-renderizar Estatísticas/Histórico/Calendário após salvar.
