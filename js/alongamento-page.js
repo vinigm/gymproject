@@ -58,46 +58,56 @@ let wakeLock = null;
 //  criação acontece no click do "Começar".
 // ─────────────────────────────────────────────────────────────────────
 function ensureAudioCtx() {
-  if (audioCtx) return audioCtx;
-  try {
-    const Ctx = window.AudioContext || window.webkitAudioContext;
-    if (Ctx) audioCtx = new Ctx();
-  } catch (e) {
-    audioCtx = null;
+  if (!audioCtx) {
+    try {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (Ctx) audioCtx = new Ctx();
+    } catch (e) {
+      audioCtx = null;
+    }
+  }
+  // iOS frequentemente cria suspenso — precisa resumir após user gesture
+  if (audioCtx && audioCtx.state === "suspended") {
+    audioCtx.resume().catch(() => {});
   }
   return audioCtx;
 }
 
-function beep(freq = 880, durMs = 150, gain = 0.12) {
+function beep(freq = 880, durMs = 150, gain = 0.18) {
   const ctx = ensureAudioCtx();
-  if (!ctx) return;
+  if (!ctx || ctx.state !== "running") return;
   try {
     const o = ctx.createOscillator();
     const g = ctx.createGain();
     o.type = "sine";
     o.frequency.value = freq;
-    g.gain.value = gain;
     o.connect(g); g.connect(ctx.destination);
     const t0 = ctx.currentTime;
+    // attack rápido + decay exponencial (evita click do início)
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(gain, t0 + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + durMs / 1000);
     o.start(t0);
-    // fade out leve pra não estourar
-    g.gain.setValueAtTime(gain, t0);
-    g.gain.exponentialRampToValueAtTime(0.001, t0 + durMs / 1000);
     o.stop(t0 + durMs / 1000 + 0.02);
   } catch (e) { /* ignora */ }
 }
 
+function beepTick() {
+  // tick curto e seco pros 5s finais
+  beep(880, 80, 0.22);
+}
+
 function beepTransition() {
-  // dois beeps curtos pra mudança de exercício
+  // dois beeps mais altos = "mudou o exercício"
   beep(660, 120);
-  setTimeout(() => beep(880, 150), 160);
+  setTimeout(() => beep(990, 180, 0.22), 160);
 }
 
 function beepFinal() {
-  // três beeps mais longos pra fim da sessão
-  beep(880, 200);
-  setTimeout(() => beep(990, 200), 240);
-  setTimeout(() => beep(1100, 400), 480);
+  // três beeps crescentes = fim da sessão
+  beep(880, 220);
+  setTimeout(() => beep(990, 220), 260);
+  setTimeout(() => beep(1175, 450, 0.24), 520);
 }
 
 // ─────────────────────────────────────────────────────────────────────
@@ -133,6 +143,10 @@ function startTick() {
   tickHandle = setInterval(() => {
     if (state.isPaused) return;
     state.remaining -= 1;
+    // beep nos últimos 5 segundos (5, 4, 3, 2, 1)
+    if (state.remaining > 0 && state.remaining <= 5) {
+      beepTick();
+    }
     if (state.remaining <= 0) {
       advanceExercise();
     } else {
@@ -243,9 +257,37 @@ function timerViewHtml() {
   const sess = SESSIONS[state.sessionKey];
   const total = sess.exercises.length;
   const idx = state.exerciseIdx;
-  const current = sess.exercises[idx];
-  const next = sess.exercises[idx + 1];
-  const progressPct = ((idx + (1 - state.remaining / SECONDS_PER_EXERCISE)) / total) * 100;
+  const elapsed = SECONDS_PER_EXERCISE - state.remaining;
+  const currentPct = (elapsed / SECONDS_PER_EXERCISE) * 100;
+  const isFinal = state.remaining <= 5;
+
+  const cards = sess.exercises.map((name, i) => {
+    let klass = "along-card";
+    let pct = 0;
+    let timeStr = "";
+    let badge = String(i + 1);
+    if (i < idx) {
+      klass += " is-done";
+      pct = 100;
+      badge = "✓";
+    } else if (i === idx) {
+      klass += " is-current";
+      if (isFinal) klass += " is-final";
+      if (state.isPaused) klass += " is-paused";
+      pct = currentPct;
+      timeStr = fmtTime(state.remaining);
+    } else {
+      klass += " is-future";
+    }
+    return `
+      <div class="${klass}" data-idx="${i}">
+        <div class="along-card-progress" style="width:${pct}%"></div>
+        <div class="along-card-num">${badge}</div>
+        <div class="along-card-name">${name}</div>
+        ${i === idx ? `<div class="along-card-time">${timeStr}</div>` : ""}
+      </div>
+    `;
+  }).join("");
 
   return `
     <section class="along-timer">
@@ -256,28 +298,11 @@ function timerViewHtml() {
         <button class="ghost-btn along-stop-btn" id="along-stop">✕ Sair</button>
       </div>
 
-      <div class="along-progress-bar">
-        <div class="along-progress-fill" style="width:${progressPct}%"></div>
-      </div>
-
-      <div class="along-current">
-        <div class="along-current-label muted">Exercício atual</div>
-        <div class="along-current-name">${current}</div>
-      </div>
-
-      <div class="along-countdown${state.remaining <= 10 ? " is-final" : ""}${state.isPaused ? " is-paused" : ""}">
-        ${fmtTime(state.remaining)}
-      </div>
+      <div class="along-list">${cards}</div>
 
       <div class="along-controls">
         <button class="along-ctrl-btn" id="along-pause">${state.isPaused ? "▶ Continuar" : "⏸ Pausar"}</button>
         <button class="along-ctrl-btn along-ctrl-btn--ghost" id="along-skip">⏭ Pular</button>
-      </div>
-
-      <div class="along-next">
-        ${next
-          ? `<span class="muted">Próximo:</span> <span class="along-next-name">${next}</span>`
-          : `<span class="muted">Último exercício 🎯</span>`}
       </div>
     </section>
   `;
@@ -322,29 +347,33 @@ function renderTimer() {
   if (!root) return;
   root.innerHTML = timerViewHtml();
   bindTimer();
+  scrollCurrentIntoView();
 }
 
 function updateCountdown() {
-  const el = document.querySelector(".along-countdown");
-  if (!el) return;
-  el.textContent = fmtTime(state.remaining);
-  if (state.remaining <= 10) el.classList.add("is-final");
-  else el.classList.remove("is-final");
-
-  // atualiza só a barra de progresso suavemente
-  const sess = SESSIONS[state.sessionKey];
-  const total = sess.exercises.length;
-  const idx = state.exerciseIdx;
-  const progressPct = ((idx + (1 - state.remaining / SECONDS_PER_EXERCISE)) / total) * 100;
-  const fill = document.querySelector(".along-progress-fill");
-  if (fill) fill.style.width = progressPct + "%";
+  const card = document.querySelector(".along-card.is-current");
+  if (!card) return;
+  const fill = card.querySelector(".along-card-progress");
+  const time = card.querySelector(".along-card-time");
+  const elapsed = SECONDS_PER_EXERCISE - state.remaining;
+  const pct = (elapsed / SECONDS_PER_EXERCISE) * 100;
+  if (fill) fill.style.width = pct + "%";
+  if (time) time.textContent = fmtTime(state.remaining);
+  card.classList.toggle("is-final", state.remaining <= 5);
 }
 
 function updatePauseBtn() {
   const btn = document.getElementById("along-pause");
   if (btn) btn.textContent = state.isPaused ? "▶ Continuar" : "⏸ Pausar";
-  const cd = document.querySelector(".along-countdown");
-  if (cd) cd.classList.toggle("is-paused", state.isPaused);
+  const card = document.querySelector(".along-card.is-current");
+  if (card) card.classList.toggle("is-paused", state.isPaused);
+}
+
+function scrollCurrentIntoView() {
+  const card = document.querySelector(".along-card.is-current");
+  if (card) {
+    card.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
 }
 
 function bindSelector() {

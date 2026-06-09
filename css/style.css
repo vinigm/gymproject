@@ -2089,93 +2089,178 @@ body.is-loading::after {
   font-style: italic;
 }
 
-/* View do timer */
+/* View do timer — checklist com cards que vão completando */
 .along-timer {
   display: flex;
   flex-direction: column;
-  align-items: stretch;
-  gap: 18px;
-  padding: 14px 4px;
+  gap: 14px;
+  padding: 8px 0 80px;
 }
 .along-timer-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 8px;
+  padding: 0 4px;
 }
 .along-timer-progress-text {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--muted);
 }
 .along-timer-progress-text strong {
   color: var(--text);
-  font-weight: 700;
-  font-size: 15px;
+  font-weight: 800;
+  font-size: 18px;
 }
 .along-stop-btn {
   font-size: 13px;
   padding: 6px 12px;
 }
-.along-progress-bar {
-  height: 6px;
-  background: var(--card-2);
-  border-radius: 999px;
-  overflow: hidden;
-  border: 1px solid var(--border);
-}
-.along-progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--good), var(--accent));
-  border-radius: 999px;
-  transition: width 0.4s linear;
-}
-.along-current {
+
+.along-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 18px 16px;
-  background: rgba(52, 211, 153, 0.08);
-  border: 1px solid rgba(52, 211, 153, 0.35);
+  gap: 10px;
+}
+.along-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 18px;
+  background: var(--card-2);
+  border: 1px solid var(--border);
   border-radius: 14px;
-  text-align: center;
+  overflow: hidden;
+  min-height: 64px;
+  transition: opacity 0.3s, border-color 0.3s;
 }
-.along-current-label {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-weight: 600;
+.along-card-progress {
+  position: absolute;
+  top: 0; left: 0; bottom: 0;
+  width: 0%;
+  background: rgba(52, 211, 153, 0.22);
+  z-index: 0;
+  pointer-events: none;
+  transition: width 0.9s linear;
 }
-.along-current-name {
-  font-size: 22px;
-  font-weight: 700;
-  line-height: 1.25;
-  color: var(--text);
+.along-card-num,
+.along-card-name,
+.along-card-time {
+  position: relative;
+  z-index: 1;
 }
-.along-countdown {
-  font-size: 84px;
+.along-card-num {
+  flex: 0 0 auto;
+  width: 36px; height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 999px;
   font-weight: 800;
-  text-align: center;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.04em;
+  font-size: 15px;
+  color: var(--muted);
+}
+.along-card-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 17px;
+  font-weight: 600;
   color: var(--text);
-  padding: 8px 0;
-  transition: color 0.3s;
+  line-height: 1.3;
+  word-break: break-word;
 }
-.along-countdown.is-final {
+.along-card-time {
+  font-size: 22px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--good);
+  letter-spacing: -0.02em;
+}
+
+/* Estados */
+.along-card.is-done {
+  opacity: 0.55;
+  border-color: rgba(52, 211, 153, 0.45);
+}
+.along-card.is-done .along-card-progress {
+  background: rgba(52, 211, 153, 0.10);
+}
+.along-card.is-done .along-card-num {
+  background: var(--good);
+  color: #0b1220;
+  border-color: var(--good);
+}
+.along-card.is-done .along-card-name {
+  text-decoration: line-through;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.along-card.is-current {
+  border-color: var(--good);
+  box-shadow: 0 0 0 1px var(--good) inset, 0 4px 16px rgba(52, 211, 153, 0.18);
+  padding: 22px 18px;
+  min-height: 84px;
+}
+.along-card.is-current .along-card-num {
+  background: var(--good);
+  color: #0b1220;
+  border-color: var(--good);
+  width: 40px; height: 40px;
+  font-size: 16px;
+}
+.along-card.is-current .along-card-name {
+  font-weight: 800;
+  font-size: 19px;
+}
+
+.along-card.is-future {
+  opacity: 0.55;
+}
+
+/* Últimos 5 segundos — vermelho pulsante */
+.along-card.is-current.is-final {
+  border-color: var(--bad);
+  box-shadow: 0 0 0 1px var(--bad) inset, 0 4px 16px rgba(248, 113, 113, 0.22);
+  animation: along-card-pulse 0.6s ease-in-out infinite;
+}
+.along-card.is-current.is-final .along-card-progress {
+  background: rgba(248, 113, 113, 0.25);
+}
+.along-card.is-current.is-final .along-card-num {
+  background: var(--bad);
+  border-color: var(--bad);
+}
+.along-card.is-current.is-final .along-card-time {
   color: var(--bad);
-  animation: along-pulse 0.8s ease-in-out infinite;
 }
-.along-countdown.is-paused {
-  opacity: 0.45;
-}
-@keyframes along-pulse {
+@keyframes along-card-pulse {
   0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
+  50%      { transform: scale(1.015); }
 }
+
+.along-card.is-paused .along-card-progress {
+  opacity: 0.5;
+}
+.along-card.is-paused .along-card-time::after {
+  content: " ⏸";
+  font-size: 14px;
+  vertical-align: middle;
+  margin-left: 4px;
+}
+
 .along-controls {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
+  position: sticky;
+  bottom: 0;
+  padding: 12px 0;
+  background: linear-gradient(180deg, transparent 0%, var(--bg) 30%);
+  z-index: 5;
 }
 .along-ctrl-btn {
   padding: 14px 16px;
@@ -2193,18 +2278,6 @@ body.is-loading::after {
   background: transparent;
   color: var(--text);
   border-color: var(--border);
-}
-.along-next {
-  text-align: center;
-  font-size: 13px;
-  padding: 10px 12px;
-  background: var(--card-2);
-  border-radius: 10px;
-  border: 1px solid var(--border);
-}
-.along-next-name {
-  font-weight: 700;
-  color: var(--text);
 }
 
 /* View "sessão concluída" */
