@@ -32,7 +32,9 @@ function normalize(d) {
     dinner: d.dinner ?? null,
     cigarettes: (d.cigarettes ?? null) === "" ? null : (d.cigarettes ?? null),
     dessert: d.dessert ?? null,
-    soda: d.soda ?? null
+    soda: d.soda ?? null,
+    jiu_session: d.jiu_session ?? null,
+    jiu_spar_min: (d.jiu_spar_min === "" || d.jiu_spar_min == null) ? null : Number(d.jiu_spar_min),
   };
 }
 
@@ -78,6 +80,16 @@ function paintCard(userId) {
       chip.classList.toggle("is-on", on);
     });
   });
+  // visibilidade condicional do bloco Jiu
+  const hasJiu = (d.exercises || []).includes("jiujitsu");
+  root.classList.toggle("has-jiu", hasJiu);
+  root.classList.toggle("has-jiu-session", hasJiu && !!d.jiu_session);
+  // restaura valor do input de luta
+  const sparInput = root.querySelector(".spar-input");
+  if (sparInput) {
+    const val = d.jiu_spar_min;
+    sparInput.value = (val == null || val === "") ? "" : String(val);
+  }
 }
 
 function handleChipClick(userId, chip) {
@@ -107,6 +119,15 @@ export function initTracker() {
         if (chip) handleChipClick(userId, chip);
       });
     });
+    // Input de tempo de luta no Jiu
+    const sparInput = root.querySelector(".spar-input");
+    if (sparInput) {
+      sparInput.addEventListener("input", () => {
+        const raw = sparInput.value.trim();
+        local[userId].jiu_spar_min = raw === "" ? null : Number(raw);
+        paintSaveButton();
+      });
+    }
   });
   // O handler do botão Salvar fica em app.js pra poder
   // re-renderizar Estatísticas/Histórico/Calendário após salvar.

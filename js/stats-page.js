@@ -113,6 +113,117 @@ function semiDonut(clean, dirty) {
 
 const bar = (p) => `<div class="bar"><i style="width:${p}%"></i></div>`;
 
+// === Jiu Jitsu helpers ===
+const JIU_DURATION = {
+  "6h30": 60, "12h": 60, "16h30": 60,
+  "19h30": 90, "Sab11": 90,
+};
+const DOW_PT_SHORT = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"];
+
+function jiuMinutes(session) {
+  return JIU_DURATION[session] || 60;
+}
+function fmtHours(min) {
+  if (!min || min === 0) return "0h";
+  const h = Math.floor(min / 60);
+  const m = Math.round(min % 60);
+  if (h === 0) return `${m}min`;
+  if (m === 0) return `${h}h`;
+  return `${h}h${String(m).padStart(2, "0")}`;
+}
+function fmtN(n, digits = 1) {
+  return Number(n).toFixed(digits).replace(".", ",");
+}
+
+function computeJiuStats(days, daysSinceStart) {
+  const jiuDays = days.filter(d => (d.exercises || []).includes("jiujitsu"));
+  let totalMinutes = 0;
+  let totalSparMin = 0;
+  for (const d of jiuDays) {
+    totalMinutes += jiuMinutes(d.jiu_session);
+    if (d.jiu_spar_min != null && d.jiu_spar_min !== "") {
+      totalSparMin += Number(d.jiu_spar_min) || 0;
+    }
+  }
+  const weeks = Math.max(1, daysSinceStart / 7);
+  const months = Math.max(1, daysSinceStart / 30);
+  return {
+    jiuDays,
+    totalTrainings: jiuDays.length,
+    totalMinutes,
+    totalSparMin,
+    avgWeekTrainings: jiuDays.length / weeks,
+    avgWeekMinutes: totalMinutes / weeks,
+    avgWeekSparMin: totalSparMin / weeks,
+    avgMonthTrainings: jiuDays.length / months,
+    avgMonthMinutes: totalMinutes / months,
+    avgMonthSparMin: totalSparMin / months,
+  };
+}
+
+function dowChart(jiuDays) {
+  const counts = [0, 0, 0, 0, 0, 0, 0];
+  for (const d of jiuDays) {
+    const [y, m, day] = d.date.split("-").map(Number);
+    counts[new Date(y, m - 1, day).getDay()]++;
+  }
+  const max = Math.max(1, ...counts);
+  return `
+    <div class="dow-chart">
+      ${counts.map((c, i) => `
+        <div class="dow-col">
+          <div class="dow-bar-wrap">
+            <div class="dow-bar${c === 0 ? " is-zero" : ""}" style="height:${(c / max) * 100}%"></div>
+          </div>
+          <div class="dow-count">${c}</div>
+          <div class="dow-label">${DOW_PT_SHORT[i]}</div>
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
+function jiuSectionHtml(stats, ACCENT) {
+  const {
+    totalTrainings, totalMinutes, totalSparMin, jiuDays,
+    avgWeekTrainings, avgWeekMinutes, avgWeekSparMin,
+    avgMonthTrainings, avgMonthMinutes, avgMonthSparMin,
+  } = stats;
+  const sparPerTraining = totalTrainings > 0 ? Math.round(totalSparMin / totalTrainings) : 0;
+  return `
+    <section class="block">
+      <div class="block-head"><h2>🥋 Jiu Jitsu</h2></div>
+      <div class="stat-card" style="border-top:3px solid ${ACCENT}">
+        <div class="kpi-grid">
+          <div class="kpi"><div class="kpi-value">${totalTrainings}</div><div class="kpi-label">treinos totais</div></div>
+          <div class="kpi"><div class="kpi-value">${fmtHours(totalMinutes)}</div><div class="kpi-label">tempo total</div></div>
+          <div class="kpi"><div class="kpi-value">${fmtHours(totalSparMin)}</div><div class="kpi-label">tempo de luta</div></div>
+          <div class="kpi"><div class="kpi-value">${sparPerTraining}<span class="muted" style="font-size:12px;font-weight:500">min</span></div><div class="kpi-label">luta / treino</div></div>
+        </div>
+      </div>
+
+      <div class="stat-card" style="border-top:3px solid ${ACCENT}; margin-top:10px">
+        <h3>Médias semanais</h3>
+        <div class="stat-row"><span class="stat-label">📅 Treinos / semana</span><span class="stat-value">${fmtN(avgWeekTrainings)}</span></div>
+        <div class="stat-row"><span class="stat-label">⏱️ Tempo / semana</span><span class="stat-value">${fmtHours(Math.round(avgWeekMinutes))}</span></div>
+        <div class="stat-row"><span class="stat-label">🥊 Luta / semana</span><span class="stat-value">${fmtHours(Math.round(avgWeekSparMin))}</span></div>
+      </div>
+
+      <div class="stat-card" style="border-top:3px solid ${ACCENT}; margin-top:10px">
+        <h3>Médias mensais</h3>
+        <div class="stat-row"><span class="stat-label">📅 Treinos / mês</span><span class="stat-value">${fmtN(avgMonthTrainings)}</span></div>
+        <div class="stat-row"><span class="stat-label">⏱️ Tempo / mês</span><span class="stat-value">${fmtHours(Math.round(avgMonthMinutes))}</span></div>
+        <div class="stat-row"><span class="stat-label">🥊 Luta / mês</span><span class="stat-value">${fmtHours(Math.round(avgMonthSparMin))}</span></div>
+      </div>
+
+      <div class="stat-card" style="border-top:3px solid ${ACCENT}; margin-top:10px">
+        <h3>Treinos por dia da semana</h3>
+        ${dowChart(jiuDays)}
+      </div>
+    </section>
+  `;
+}
+
 function kpiRow(value, label, suffix = "") {
   return `
     <div class="kpi-row">
@@ -316,6 +427,8 @@ function render() {
       <div class="block-head"><h2>Exercícios por modalidade</h2><span class="muted" style="font-size:11px">no período</span></div>
       <div class="stat-card" style="border-top:3px solid ${ACCENT}">${modRows}</div>
     </section>
+
+    ${USER === "vinicius" ? jiuSectionHtml(computeJiuStats(_days, daysSinceStart), ACCENT) : ""}
 
     <section class="block">
       <div class="block-head"><h2>Outros hábitos</h2><span class="muted" style="font-size:11px">no período</span></div>

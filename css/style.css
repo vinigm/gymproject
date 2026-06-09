@@ -124,6 +124,7 @@ input, select { font: inherit; color: inherit; }
 .chip-grid--1 { grid-template-columns: 1fr; }
 .chip-grid--2 { grid-template-columns: 1fr 1fr; }
 .chip-grid--3 { grid-template-columns: 1fr 1fr 1fr; }
+.chip-grid--5 { grid-template-columns: repeat(5, 1fr); gap: 5px; }
 .chip-grid--7 { grid-template-columns: repeat(7, 1fr); gap: 4px; }
 
 .chip {
@@ -149,6 +150,41 @@ input, select { font: inherit; color: inherit; }
 .chip.chip--bad.is-on {
   background: rgba(248, 113, 113, 0.18);
   border-color: var(--bad);
+}
+
+/* Bloco condicional de Jiu Jitsu — só aparece quando o chip Jiu está marcado */
+.jiu-detail {
+  display: none;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border);
+}
+.person-card.has-jiu .jiu-detail { display: block; }
+.jiu-spar { display: none; margin-top: 8px; }
+.person-card.has-jiu-session .jiu-spar { display: block; }
+
+/* chips menores na grade de 5 horários (Sab11 e Jiu) */
+.chip-grid--5 .chip {
+  padding: 8px 4px;
+  font-size: 12px;
+  min-height: 36px;
+}
+
+.spar-input {
+  width: 100%;
+  background: var(--card-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+.spar-input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
 }
 
 /* chips numéricos (escala 0-6) — mais compactos */
@@ -1219,6 +1255,52 @@ body.is-loading::after {
   font-variant-numeric: tabular-nums;
 }
 .vic-h-undo { font-size: 11px; }
+
+/* === GRÁFICO DE BARRAS POR DIA DA SEMANA (Jiu) === */
+.dow-chart {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  margin-top: 12px;
+}
+.dow-col {
+  display: flex; flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.dow-bar-wrap {
+  width: 100%;
+  height: 90px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: var(--card-2);
+  border-radius: 6px;
+  padding: 4px;
+}
+.dow-bar {
+  width: 100%;
+  background: linear-gradient(180deg, var(--accent), var(--vini));
+  border-radius: 4px 4px 2px 2px;
+  min-height: 4px;
+  transition: height 0.4s ease;
+}
+.dow-bar.is-zero {
+  background: var(--border);
+  opacity: 0.4;
+}
+.dow-count {
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+.dow-label {
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: lowercase;
+  letter-spacing: 0.05em;
+}
 
 /* === TOGGLE DE USUÁRIO (stats.html) === */
 .stats-toggle-bar {
