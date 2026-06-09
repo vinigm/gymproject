@@ -113,6 +113,86 @@ function semiDonut(clean, dirty) {
 
 const bar = (p) => `<div class="bar"><i style="width:${p}%"></i></div>`;
 
+// === Academia helpers (grupos musculares) ===
+const GYM_GROUPS = [
+  { key: "costa",      label: "Costa" },
+  { key: "triceps",    label: "Tríceps" },
+  { key: "peito",      label: "Peito" },
+  { key: "biceps",     label: "Bíceps" },
+  { key: "perna",      label: "Perna" },
+  { key: "ombro",      label: "Ombro" },
+  { key: "lombar",     label: "Lombar" },
+  { key: "abdominal",  label: "Abdominal" },
+];
+
+function computeGymStats(days) {
+  const gymDays = days.filter(d => (d.exercises || []).includes("academia"));
+  const total = gymDays.length;
+  const groupCounts = {};
+  let totalGroupSelections = 0;
+  for (const d of gymDays) {
+    for (const g of (d.gym_groups || [])) {
+      groupCounts[g] = (groupCounts[g] || 0) + 1;
+      totalGroupSelections++;
+    }
+  }
+  // dias de academia que não marcaram nenhum grupo
+  const daysWithoutGroups = gymDays.filter(d => !(d.gym_groups || []).length).length;
+  return {
+    total,
+    groupCounts,
+    avgGroupsPerTraining: total > 0 ? totalGroupSelections / total : 0,
+    daysWithoutGroups,
+  };
+}
+
+function gymSectionHtml(stats, ACCENT) {
+  const { total, groupCounts, avgGroupsPerTraining, daysWithoutGroups } = stats;
+  const sorted = [...GYM_GROUPS]
+    .map(g => ({ ...g, count: groupCounts[g.key] || 0 }))
+    .sort((a, b) => b.count - a.count);
+  const rows = sorted.map(g => {
+    const c = g.count;
+    const p = total > 0 ? Math.round((c / total) * 100) : 0;
+    return `
+      <div class="stat-row">
+        <div style="flex:1;min-width:0">
+          <div class="stat-label">${g.label}</div>
+          ${bar(p)}
+        </div>
+        <div class="stat-value">${c}<span class="muted" style="font-weight:500;font-size:12px">/${total}</span></div>
+      </div>
+    `;
+  }).join("");
+
+  return `
+    <section class="block">
+      <div class="block-head"><h2>🏋️ Academia</h2></div>
+      <div class="stat-card" style="border-top:3px solid ${ACCENT}">
+        <div class="kpi-grid">
+          <div class="kpi">
+            <div class="kpi-value">${total}</div>
+            <div class="kpi-label">treinos totais</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-value">${fmtN(avgGroupsPerTraining)}</div>
+            <div class="kpi-label">grupos / treino</div>
+          </div>
+        </div>
+      </div>
+      <div class="stat-card" style="border-top:3px solid ${ACCENT}; margin-top:10px">
+        <h3>Por grupo muscular</h3>
+        ${total === 0
+          ? `<p class="muted" style="font-size:12px;margin:4px 0">sem treinos de academia ainda</p>`
+          : rows}
+        ${daysWithoutGroups > 0
+          ? `<p class="muted" style="font-size:11px;margin-top:6px">${daysWithoutGroups} treino${daysWithoutGroups === 1 ? "" : "s"} sem grupo marcado</p>`
+          : ""}
+      </div>
+    </section>
+  `;
+}
+
 // === Jiu Jitsu helpers ===
 const JIU_DURATION = {
   "6h30": 60, "12h": 60, "16h30": 60,
@@ -427,6 +507,8 @@ function render() {
       <div class="block-head"><h2>Exercícios por modalidade</h2><span class="muted" style="font-size:11px">no período</span></div>
       <div class="stat-card" style="border-top:3px solid ${ACCENT}">${modRows}</div>
     </section>
+
+    ${gymSectionHtml(computeGymStats(_days), ACCENT)}
 
     ${USER === "vinicius" ? jiuSectionHtml(computeJiuStats(_days, daysSinceStart), ACCENT) : ""}
 

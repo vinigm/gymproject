@@ -3,7 +3,7 @@ import { getState, USERS } from "./app.js";
 
 // Grupos que se comportam como multi-select (array de strings).
 // Demais grupos são radio-like (string única ou null).
-const MULTI_GROUPS = new Set(["exercises", "extras"]);
+const MULTI_GROUPS = new Set(["exercises", "extras", "gym_groups"]);
 
 // Snapshot por usuário do que está NO BANCO (após carregar/salvar)
 const saved = {};
@@ -27,6 +27,7 @@ function normalize(d) {
   return {
     exercises: [...(d.exercises || [])].sort(),
     extras: [...(d.extras || [])].sort(),
+    gym_groups: [...(d.gym_groups || [])].sort(),
     water: d.water ?? null,
     lunch: d.lunch ?? null,
     dinner: d.dinner ?? null,
@@ -80,6 +81,9 @@ function paintCard(userId) {
       chip.classList.toggle("is-on", on);
     });
   });
+  // visibilidade condicional do bloco Academia
+  const hasGym = (d.exercises || []).includes("academia");
+  root.classList.toggle("has-gym", hasGym);
   // visibilidade condicional do bloco Jiu
   const hasJiu = (d.exercises || []).includes("jiujitsu");
   root.classList.toggle("has-jiu", hasJiu);
@@ -163,6 +167,7 @@ export async function refreshAllTrackers() {
       const d = results[i];
       d.exercises = d.exercises || [];
       d.extras = d.extras || [];
+      d.gym_groups = d.gym_groups || [];
       saved[u] = JSON.parse(JSON.stringify(d));
       local[u] = JSON.parse(JSON.stringify(d));
       paintCard(u);

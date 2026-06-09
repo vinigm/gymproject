@@ -152,6 +152,15 @@ input, select { font: inherit; color: inherit; }
   border-color: var(--bad);
 }
 
+/* Bloco condicional de Academia — só aparece quando o chip Academia está marcado */
+.gym-detail {
+  display: none;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border);
+}
+.person-card.has-gym .gym-detail { display: block; }
+
 /* Bloco condicional de Jiu Jitsu — só aparece quando o chip Jiu está marcado */
 .jiu-detail {
   display: none;
