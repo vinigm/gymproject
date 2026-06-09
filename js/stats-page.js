@@ -4,7 +4,7 @@ import { todayISO, APP_START_DATE, USERS } from "./app.js";
 import { setupAuthGate, renderAuthFooter } from "./auth.js";
 import { getRange } from "./storage.js";
 import { pointsForDay } from "./points-engine.js";
-import { POINTS, EXTRAS_META } from "./points-config.js";
+import { POINTS, EXTRAS_META, CATEGORY_START_DATES } from "./points-config.js";
 import {
   loadAndApplyConfig, pointsInPeriod, totalEarnedByUser,
   fmtPts, fmtDayFull, fmtWeekRange, fmtMonth,
@@ -114,6 +114,34 @@ function semiDonut(clean, dirty) {
 
 const bar = (p) => `<div class="bar"><i style="width:${p}%"></i></div>`;
 
+// === Datas de início por categoria ===
+const MONTHS_PT_LOWER = [
+  "janeiro", "fevereiro", "março", "abril", "maio", "junho",
+  "julho", "agosto", "setembro", "outubro", "novembro", "dezembro",
+];
+function fmtStartDate(iso) {
+  const [y, m, d] = iso.split("-").map(Number);
+  return `${d} de ${MONTHS_PT_LOWER[m - 1]}`;
+}
+function daysSinceStart(startISO) {
+  const [sy, sm, sd] = startISO.split("-").map(Number);
+  const start = new Date(sy, sm - 1, sd);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return Math.floor((today - start) / 86400000) + 1;
+}
+function startInfoLine(startISO, activeWeeks, activeMonths) {
+  const days = daysSinceStart(startISO);
+  const dateLabel = fmtStartDate(startISO);
+  if (days >= 1) {
+    const aw = `${activeWeeks} ${activeWeeks === 1 ? "semana ativa" : "semanas ativas"}`;
+    const am = `${activeMonths} ${activeMonths === 1 ? "mês ativo" : "meses ativos"}`;
+    return `${days} ${days === 1 ? "dia" : "dias"} desde ${dateLabel} · ${aw} · ${am}`;
+  }
+  const future = 1 - days;
+  return `começa em ${future} ${future === 1 ? "dia" : "dias"} (${dateLabel})`;
+}
+
 // === conta semanas/meses ATIVOS (com pelo menos 1 dia em `days`) ===
 function activeWeeksMonths(filteredDays) {
   const weeks = new Set();
@@ -202,7 +230,7 @@ function gymSectionHtml(stats, ACCENT) {
             <div class="kpi-label">treinos / mês ativo</div>
           </div>
         </div>
-        <p class="muted stats-meta">${activeWeeks} ${activeWeeks === 1 ? "semana" : "semanas"} ativa${activeWeeks === 1 ? "" : "s"} · ${activeMonths} ${activeMonths === 1 ? "mês" : "meses"} ativo${activeMonths === 1 ? "" : "s"}</p>
+        <p class="muted stats-meta">${startInfoLine(CATEGORY_START_DATES.academia, activeWeeks, activeMonths)}</p>
 
         ${total === 0 ? '<p class="muted" style="font-size:12px;margin:8px 0 0">sem treinos de academia ainda</p>' : `
           <h3 class="stats-subhead">Por grupo muscular</h3>
@@ -311,7 +339,7 @@ function jiuSectionHtml(stats, ACCENT) {
           <div class="kpi"><div class="kpi-value">${fmtHours(totalSparMin)}</div><div class="kpi-label">luta total</div></div>
           <div class="kpi"><div class="kpi-value">${Math.round(avgSparPerTraining)}<span class="muted" style="font-size:12px;font-weight:500">min</span></div><div class="kpi-label">luta / treino (média)</div></div>
         </div>
-        <p class="muted stats-meta">${activeWeeks} ${activeWeeks === 1 ? "semana" : "semanas"} ativa${activeWeeks === 1 ? "" : "s"} · ${activeMonths} ${activeMonths === 1 ? "mês" : "meses"} ativo${activeMonths === 1 ? "" : "s"}</p>
+        <p class="muted stats-meta">${startInfoLine(CATEGORY_START_DATES.jiujitsu, activeWeeks, activeMonths)}</p>
 
         <h3 class="stats-subhead">Médias por semana ativa</h3>
         <div class="stat-row"><span class="stat-label">📅 Treinos</span><span class="stat-value">${fmtN(avgTrainingsPerActiveWeek)}</span></div>

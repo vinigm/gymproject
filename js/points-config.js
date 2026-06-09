@@ -1,4 +1,17 @@
 // ─────────────────────────────────────────────────────────────────────
+//  DATAS DE INÍCIO POR CATEGORIA
+// ---------------------------------------------------------------------
+//  Quando você começou a registrar cada categoria de exercício.
+//  Aparece nas Stats como "X dias desde DD de mês". Use YYYY-MM-DD.
+//  Pra começar uma categoria do zero, basta atualizar a data aqui.
+// ─────────────────────────────────────────────────────────────────────
+export const CATEGORY_START_DATES = {
+  academia: "2026-05-18",
+  jiujitsu: "2026-06-08",
+};
+
+
+// ─────────────────────────────────────────────────────────────────────
 //  METADADOS DOS "OUTROS HÁBITOS"
 // ---------------------------------------------------------------------
 //  Lista de hábitos extras (chave + label + ícone). É a fonte de verdade
