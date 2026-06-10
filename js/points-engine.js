@@ -27,6 +27,9 @@ export function pointsForDay(day) {
   if (day.cigarettes != null && day.cigarettes !== "") {
     pts += Number(day.cigarettes) * (POINTS.cigarettes || 0);
   }
+  if (day.nicotine_gum != null && day.nicotine_gum !== "") {
+    pts += Number(day.nicotine_gum) * (POINTS.nicotine_gum || 0);
+  }
   if (day.dessert && POINTS.dessert?.[day.dessert] != null) {
     pts += POINTS.dessert[day.dessert];
   }

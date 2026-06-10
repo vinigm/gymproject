@@ -625,6 +625,149 @@ function kpiRow(value, label, suffix = "") {
   `;
 }
 
+// ─── Cigarros & Chicletes de Nicotina ────────────────────────────────
+function computeCigStats(days) {
+  const byDate = new Map(days.map(d => [d.date, d]));
+  const today = todayISO();
+
+  // statusFn pra streak de "sem fumar": missing day = otimista (assumido sem fumar)
+  const noSmokeStatus = (d) => {
+    if (!d) return "satisfied";
+    const c = Number(d.cigarettes);
+    return (c > 0) ? "broken" : "satisfied";
+  };
+  const curNoSmoke = currentStreak(byDate, noSmokeStatus);
+  const bestNoSmoke = bestStreak(byDate, noSmokeStatus);
+
+  // Acumuladores
+  let totalCigs = 0, totalGum = 0;
+  let smokeDays = 0, gumDays = 0;
+  const dowCigs = [0, 0, 0, 0, 0, 0, 0];
+  const dowGum  = [0, 0, 0, 0, 0, 0, 0];
+
+  // Período atual: hoje, esta semana, este mês
+  const weekStart = (() => {
+    const [y, m, d] = today.split("-").map(Number);
+    const t = new Date(y, m - 1, d);
+    t.setDate(t.getDate() - t.getDay()); // dom = início da semana
+    return `${t.getFullYear()}-${pad(t.getMonth() + 1)}-${pad(t.getDate())}`;
+  })();
+  const monthStart = today.slice(0, 7) + "-01";
+
+  let todayCigs = 0, weekCigs = 0, monthCigs = 0;
+  let todayGum = 0,  weekGum = 0,  monthGum = 0;
+
+  for (const d of days) {
+    const c = Number(d.cigarettes) || 0;
+    const g = Number(d.nicotine_gum) || 0;
+    totalCigs += c;
+    totalGum += g;
+    if (c > 0) smokeDays++;
+    if (g > 0) gumDays++;
+
+    const [yy, mm, dd] = d.date.split("-").map(Number);
+    const dow = new Date(yy, mm - 1, dd).getDay();
+    dowCigs[dow] += c;
+    dowGum[dow]  += g;
+
+    if (d.date === today) { todayCigs += c; todayGum += g; }
+    if (d.date >= weekStart) { weekCigs += c; weekGum += g; }
+    if (d.date >= monthStart) { monthCigs += c; monthGum += g; }
+  }
+
+  // Dias decorridos desde APP_START_DATE pras médias
+  const totalDays = Math.max(1, daysBetweenInclusive(APP_START_DATE, today));
+  const weeksElapsed = Math.max(1, totalDays / 7);
+  const monthsElapsed = Math.max(1, totalDays / 30);
+
+  return {
+    totalCigs, totalGum,
+    smokeDays, gumDays,
+    curNoSmoke, bestNoSmoke,
+    todayCigs, weekCigs, monthCigs,
+    todayGum, weekGum, monthGum,
+    avgCigsPerDay: totalCigs / totalDays,
+    avgCigsPerWeek: totalCigs / weeksElapsed,
+    avgCigsPerMonth: totalCigs / monthsElapsed,
+    avgGumPerDay: totalGum / totalDays,
+    avgGumPerWeek: totalGum / weeksElapsed,
+    dowCigs, dowGum,
+    totalDays,
+    substitutionRatio: totalCigs > 0 ? totalGum / totalCigs : 0,
+  };
+}
+
+function dowSumChart(values, accentColor) {
+  const max = Math.max(1, ...values);
+  return `
+    <div class="dow-chart">
+      ${values.map((c, i) => `
+        <div class="dow-col">
+          <div class="dow-bar-wrap">
+            <div class="dow-bar${c === 0 ? " is-zero" : ""}" style="height:${(c / max) * 100}%;${accentColor ? `background:${accentColor};` : ""}"></div>
+          </div>
+          <div class="dow-count">${c}</div>
+          <div class="dow-label">${DOW_PT_SHORT[i]}</div>
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
+function cigSectionHtml(stats, ACCENT) {
+  const {
+    totalCigs, totalGum, curNoSmoke, bestNoSmoke,
+    todayCigs, weekCigs, monthCigs,
+    todayGum, weekGum, monthGum,
+    avgCigsPerDay, avgCigsPerWeek, avgCigsPerMonth,
+    avgGumPerDay, dowCigs, dowGum,
+    substitutionRatio, smokeDays, gumDays,
+  } = stats;
+
+  return `
+    <section class="block">
+      <div class="block-head"><h2>🚬 Cigarros & Nicotina</h2></div>
+      <div class="stat-card" style="border-top:3px solid ${ACCENT}">
+        <div class="kpi-grid" style="grid-template-columns: repeat(3, 1fr)">
+          <div class="kpi"><div class="kpi-value">${totalCigs}</div><div class="kpi-label">cigarros total</div></div>
+          <div class="kpi"><div class="kpi-value" style="color:var(--good)">${curNoSmoke}</div><div class="kpi-label">${curNoSmoke === 1 ? "dia sem fumar" : "dias sem fumar"}</div></div>
+          <div class="kpi"><div class="kpi-value">${bestNoSmoke}</div><div class="kpi-label">recorde sem fumar</div></div>
+        </div>
+
+        <h3 class="stats-subhead">Cigarros no período</h3>
+        <div class="stat-row"><span class="stat-label">🚬 Hoje</span><span class="stat-value">${todayCigs}</span></div>
+        <div class="stat-row"><span class="stat-label">🚬 Esta semana</span><span class="stat-value">${weekCigs}</span></div>
+        <div class="stat-row"><span class="stat-label">🚬 Este mês</span><span class="stat-value">${monthCigs}</span></div>
+
+        <h3 class="stats-subhead">Médias (desde o início)</h3>
+        <div class="stat-row"><span class="stat-label">Por dia</span><span class="stat-value">${fmtN(avgCigsPerDay)}</span></div>
+        <div class="stat-row"><span class="stat-label">Por semana</span><span class="stat-value">${fmtN(avgCigsPerWeek)}</span></div>
+        <div class="stat-row"><span class="stat-label">Por mês</span><span class="stat-value">${fmtN(avgCigsPerMonth)}</span></div>
+        <p class="muted" style="font-size:11px;margin:6px 0 0">${smokeDays} ${smokeDays === 1 ? "dia" : "dias"} em que fumou ao menos 1 cigarro</p>
+
+        <h3 class="stats-subhead">Cigarros por dia da semana</h3>
+        ${dowSumChart(dowCigs, "rgba(248, 113, 113, 0.85)")}
+
+        <h3 class="stats-subhead">🍬 Chicletes de nicotina</h3>
+        <div class="kpi-grid" style="grid-template-columns: repeat(3, 1fr)">
+          <div class="kpi"><div class="kpi-value">${totalGum}</div><div class="kpi-label">chicletes total</div></div>
+          <div class="kpi"><div class="kpi-value">${fmtN(avgGumPerDay)}</div><div class="kpi-label">média / dia</div></div>
+          <div class="kpi"><div class="kpi-value">${substitutionRatio > 0 ? fmtN(substitutionRatio) : "—"}</div><div class="kpi-label">${substitutionRatio > 0 ? "chicletes / cigarro" : "—"}</div></div>
+        </div>
+        <div class="stat-row"><span class="stat-label">🍬 Hoje</span><span class="stat-value">${todayGum}</span></div>
+        <div class="stat-row"><span class="stat-label">🍬 Esta semana</span><span class="stat-value">${weekGum}</span></div>
+        <div class="stat-row"><span class="stat-label">🍬 Este mês</span><span class="stat-value">${monthGum}</span></div>
+        ${gumDays > 0 ? `<p class="muted" style="font-size:11px;margin:6px 0 0">${gumDays} ${gumDays === 1 ? "dia" : "dias"} mascando chiclete</p>` : ""}
+
+        ${totalGum > 0 ? `
+          <h3 class="stats-subhead">Chicletes por dia da semana</h3>
+          ${dowSumChart(dowGum, "rgba(110, 231, 183, 0.85)")}
+        ` : ""}
+      </div>
+    </section>
+  `;
+}
+
 function render() {
   const USER = _currentUser;
   const ACCENT = ACCENTS[USER];
@@ -850,6 +993,8 @@ function render() {
         })()}
       </div>
     </section>
+
+    ${cigSectionHtml(computeCigStats(_days), ACCENT)}
 
     ${USER === "vinicius" ? jiuSectionHtml(computeJiuStats(_days), ACCENT) : ""}
 

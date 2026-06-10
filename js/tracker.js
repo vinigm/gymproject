@@ -32,6 +32,7 @@ function normalize(d) {
     lunch: d.lunch ?? null,
     dinner: d.dinner ?? null,
     cigarettes: (d.cigarettes ?? null) === "" ? null : (d.cigarettes ?? null),
+    nicotine_gum: (d.nicotine_gum ?? null) === "" ? null : (d.nicotine_gum ?? null),
     dessert: d.dessert ?? null,
     soda: d.soda ?? null,
     jiu_session: d.jiu_session ?? null,

@@ -125,6 +125,7 @@ input, select { font: inherit; color: inherit; }
 .chip-grid--2 { grid-template-columns: 1fr 1fr; }
 .chip-grid--3 { grid-template-columns: 1fr 1fr 1fr; }
 .chip-grid--5 { grid-template-columns: repeat(5, 1fr); gap: 5px; }
+.chip-grid--6 { grid-template-columns: repeat(6, 1fr); gap: 4px; }
 .chip-grid--7 { grid-template-columns: repeat(7, 1fr); gap: 4px; }
 
 .chip {

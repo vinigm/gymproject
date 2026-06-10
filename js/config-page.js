@@ -56,9 +56,12 @@ const SECTIONS = [
     ],
   },
   {
-    title: "🚬 Cigarros",
-    note: "Por cigarro fumado (multiplica pela quantidade marcada).",
-    fields: [{ path: "cigarettes", label: "Por cigarro" }],
+    title: "🚬 Cigarros / Nicotina",
+    note: "Por cigarro fumado (multiplica pela quantidade marcada). Chiclete: substituto pra parar — neutro (0) ou positivo pra incentivar.",
+    fields: [
+      { path: "cigarettes",   label: "Por cigarro" },
+      { path: "nicotine_gum", label: "Por chiclete" },
+    ],
   },
   {
     title: "🍰 Sobremesa",

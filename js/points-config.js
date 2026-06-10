@@ -94,6 +94,11 @@ export const DEFAULT_POINTS = {
   // Marcar 4 cigarros com cigarettes = -15 → -60 pontos.
   cigarettes: -15,
 
+  // Pontos POR CHICLETE de nicotina (substituto pra parar de fumar).
+  // Default 0 — sem gamificação (chiclete é meio do caminho).
+  // Pra incentivar a substituição, dá um valor positivo aqui (ex: 5).
+  nicotine_gum: 0,
+
   // Sobremesa: "nao" (dia sem açúcar refinado) = bônus. "sim" = neutro.
   dessert: {
     nao:  50,
