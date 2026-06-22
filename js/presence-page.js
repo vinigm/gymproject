@@ -16,8 +16,10 @@ const ACTIVE_USER_KEY = "habitos-presence-active-user";
 const state = {
   user: "vinicius",
   ocupado: false,
+  since: null, // epoch ms de quando ficou ocupado (pro cronômetro)
 };
 let unsub = null;
+let timerHandle = null;
 
 // ─── Wake Lock ────────────────────────────────────────────────────────
 let wakeLock = null;
@@ -77,9 +79,11 @@ function selectUser(userId) {
   // Reassina o status da pessoa selecionada
   if (unsub) { try { unsub(); } catch {} unsub = null; }
   state.ocupado = false;
+  state.since = null;
   applyState();
-  unsub = subscribePresence(userId, (ocupado) => {
+  unsub = subscribePresence(userId, ({ ocupado, since }) => {
     state.ocupado = ocupado;
+    state.since = since;
     applyState();
   });
 }
@@ -99,8 +103,11 @@ function render() {
     <button class="presence-hero" id="presence-hero" aria-pressed="false">
       <span class="presence-hero-who"></span>
       <span class="presence-hero-state"></span>
+      <span class="presence-hero-timer" aria-hidden="true"></span>
       <span class="presence-hero-hint"></span>
     </button>
+
+    <p id="presence-error" class="presence-error" hidden></p>
 
     <div class="presence-screen-bar">
       <button id="wake-toggle" class="presence-switch presence-switch--wake is-on" aria-pressed="true">
@@ -120,9 +127,15 @@ function render() {
   const hero = document.getElementById("presence-hero");
   hero.addEventListener("click", () => {
     const next = !state.ocupado;
-    state.ocupado = next;          // feedback otimista imediato
+    state.ocupado = next;                       // feedback otimista imediato
+    state.since = next ? Date.now() : null;
     applyState();
-    setPresence(state.user, next).catch((e) => console.warn("setPresence falhou:", e));
+    setPresence(state.user, next)
+      .then(() => showError(null))
+      .catch((e) => {
+        console.warn("setPresence falhou:", e);
+        showError("não consegui salvar o status — confira as regras do Firestore");
+      });
   });
 
   // Toggle do Wake Lock
@@ -155,6 +168,43 @@ function applyState() {
     : "toque para marcar ocupado";
 
   document.body.classList.toggle("presence-busy", ocupado);
+
+  // Cronômetro: roda enquanto ocupado, mostrando o tempo desde `since`
+  if (ocupado && state.since) {
+    if (!timerHandle) timerHandle = setInterval(updateTimer, 1000);
+  } else {
+    if (timerHandle) { clearInterval(timerHandle); timerHandle = null; }
+  }
+  updateTimer();
+}
+
+function fmtElapsed(ms) {
+  const total = Math.max(0, Math.floor(ms / 1000));
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
+  const mm = String(m).padStart(2, "0");
+  const ss = String(s).padStart(2, "0");
+  return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
+}
+
+function showError(msg) {
+  const el = document.getElementById("presence-error");
+  if (!el) return;
+  if (msg) { el.textContent = msg; el.hidden = false; }
+  else { el.textContent = ""; el.hidden = true; }
+}
+
+function updateTimer() {
+  const el = document.querySelector(".presence-hero-timer");
+  if (!el) return;
+  if (state.ocupado && state.since) {
+    el.textContent = `⏱ ${fmtElapsed(Date.now() - state.since)}`;
+    el.style.display = "";
+  } else {
+    el.textContent = "";
+    el.style.display = "none";
+  }
 }
 
 // ─── Boot ─────────────────────────────────────────────────────────────
@@ -185,5 +235,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 window.addEventListener("pagehide", () => {
   if (unsub) { try { unsub(); } catch {} }
+  if (timerHandle) { clearInterval(timerHandle); timerHandle = null; }
   releaseWakeLock();
 });

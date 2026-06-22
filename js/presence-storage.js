@@ -16,47 +16,58 @@ function lsKey(userId) { return LS_PREFIX + userId; }
 function readLS(userId) {
   try {
     const raw = localStorage.getItem(lsKey(userId));
-    return !!(raw ? JSON.parse(raw).ocupado : false);
+    const d = raw ? JSON.parse(raw) : {};
+    return { ocupado: !!d.ocupado, since: d.since || null };
   } catch {
-    return false;
+    return { ocupado: false, since: null };
   }
 }
 
 // Grava se a pessoa está ocupada (true) ou disponível (false).
+// `since` = epoch ms de quando ficou ocupada (pro cronômetro); null quando livre.
 export async function setPresence(userId, ocupado) {
   const val = !!ocupado;
+  const since = val ? Date.now() : null;
   if (isConfigured) {
     await setDoc(doc(db, COL, userId), {
       userId,
       ocupado: val,
+      since,
       updatedAt: serverTimestamp(),
     });
     return;
   }
   localStorage.setItem(lsKey(userId), JSON.stringify({
-    userId, ocupado: val, updatedAt: new Date().toISOString(),
+    userId, ocupado: val, since, updatedAt: new Date().toISOString(),
   }));
   // storage event não dispara na própria aba — avisa manualmente
-  window.dispatchEvent(new CustomEvent("presence-local", { detail: { userId, ocupado: val } }));
+  window.dispatchEvent(new CustomEvent("presence-local", { detail: { userId, ocupado: val, since } }));
 }
 
-// Assina mudanças do status de uma pessoa. Chama cb(ocupado) na hora e a cada update.
-// Retorna uma função pra cancelar a assinatura.
+// Assina mudanças do status de uma pessoa. Chama cb({ ocupado, since }) na hora
+// e a cada update. Retorna uma função pra cancelar a assinatura.
 export function subscribePresence(userId, cb) {
   if (isConfigured) {
     return onSnapshot(
       doc(db, COL, userId),
-      (snap) => cb(snap.exists() ? !!snap.data().ocupado : false),
+      (snap) => {
+        const d = snap.exists() ? snap.data() : {};
+        cb({ ocupado: !!d.ocupado, since: d.since || null });
+      },
       (err) => {
         console.warn("subscribePresence falhou (regras do Firestore?):", err);
-        cb(false);
+        cb({ ocupado: false, since: null });
       }
     );
   }
   // Fallback localStorage: estado inicial + escuta outras abas (storage) e a própria (custom)
   cb(readLS(userId));
   const onStorage = (e) => { if (e.key === lsKey(userId)) cb(readLS(userId)); };
-  const onLocal = (e) => { if (e.detail && e.detail.userId === userId) cb(!!e.detail.ocupado); };
+  const onLocal = (e) => {
+    if (e.detail && e.detail.userId === userId) {
+      cb({ ocupado: !!e.detail.ocupado, since: e.detail.since || null });
+    }
+  };
   window.addEventListener("storage", onStorage);
   window.addEventListener("presence-local", onLocal);
   return () => {
