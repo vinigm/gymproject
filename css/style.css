@@ -2872,62 +2872,63 @@ body.pom-focus-mode { background: #000; }
 }
 
 /* === PRESENÇA / STATUS === */
-.presence-grid { gap: 14px; }
-
-.presence-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px 14px 18px;
-  box-shadow: var(--shadow);
-  transition: border-color .2s, box-shadow .2s;
-}
-.presence-card[data-user="vinicius"] { border-top: 3px solid var(--vini); }
-.presence-card[data-user="victoria"] { border-top: 3px solid var(--vic); }
-
-.presence-head {
-  display: flex; align-items: center; gap: 8px;
-  margin-bottom: 12px;
-}
-.presence-name { font-weight: 700; font-size: 16px; }
-
-/* Banner grande e colorido — legível de longe num tablet */
-.presence-banner {
-  margin-bottom: 16px;
-  padding: 20px 12px;
-  border-radius: 14px;
+/* Hero: botão gigante que ocupa a tela. Vermelhão = Ocupado; verde = Disponível. */
+.presence-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+  min-height: clamp(300px, 56vh, 640px);
+  margin: 4px 0 18px;
+  padding: 28px 18px;
+  border-radius: 22px;
   text-align: center;
-  border: 1px solid var(--border);
-  background: var(--bg-2);
-  transition: background .2s, border-color .2s;
+  border: 2px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  transition: background .2s, border-color .2s, box-shadow .2s, color .2s;
 }
-.presence-banner-icon  { display: block; font-size: 30px; line-height: 1; }
-.presence-banner-label { display: block; font-size: 24px; font-weight: 800; margin-top: 8px; }
-.presence-banner-sub   { display: block; font-size: 12px; color: var(--muted); margin-top: 4px; }
+.presence-hero-who   { font-size: clamp(18px, 4.5vw, 28px); font-weight: 700; opacity: .92; }
+.presence-hero-state { font-size: clamp(52px, 16vw, 150px); font-weight: 900; line-height: 1; letter-spacing: -.02em; }
+.presence-hero-hint  { font-size: clamp(12px, 3vw, 15px); opacity: .75; margin-top: 6px; text-transform: lowercase; }
 
-/* Card inteiro reage ao estado */
-.presence-card.is-ocupado {
-  border-color: var(--bad);
-  box-shadow: 0 0 0 1px var(--bad), 0 0 26px rgba(248, 113, 113, .25);
-}
-.presence-card.is-ocupado .presence-banner {
-  background: rgba(248, 113, 113, .14);
-  border-color: var(--bad);
-}
-.presence-card.is-ocupado .presence-banner-label { color: var(--bad); }
-
-.presence-card.is-pode-falar {
+/* Disponível = verde */
+.presence-hero.is-livre {
   border-color: var(--good);
-  box-shadow: 0 0 0 1px var(--good), 0 0 26px rgba(52, 211, 153, .22);
+  background: rgba(52, 211, 153, .10);
+  color: var(--good);
+  box-shadow: 0 0 0 1px var(--good), 0 0 30px rgba(52, 211, 153, .18);
 }
-.presence-card.is-pode-falar .presence-banner {
-  background: rgba(52, 211, 153, .13);
-  border-color: var(--good);
+/* Ocupado = vermelhão SÓLIDO com texto branco — legível de longe (pulsa) */
+.presence-hero.is-ocupado {
+  border-color: #ff5a5f;
+  background: #e11d48;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .25);
+  box-shadow: 0 0 0 2px #e11d48, 0 0 52px rgba(225, 29, 72, .55);
+  animation: presence-pulse 1.8s ease-in-out infinite;
 }
-.presence-card.is-pode-falar .presence-banner-label { color: var(--good); }
+.presence-hero.is-ocupado .presence-hero-who,
+.presence-hero.is-ocupado .presence-hero-hint { opacity: .9; }
+@keyframes presence-pulse {
+  0%, 100% { box-shadow: 0 0 0 2px #e11d48, 0 0 34px rgba(225, 29, 72, .45); }
+  50%      { box-shadow: 0 0 0 3px #ff5a5f, 0 0 66px rgba(225, 29, 72, .8); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .presence-hero.is-ocupado { animation: none; }
+}
+/* Quando ocupado, escurece o fundo da página num tom avermelhado */
+body.presence-busy { background: #1a0609; }
 
-/* Switches (toggle estilo iOS) */
-.presence-switches { display: flex; flex-direction: column; gap: 10px; }
+/* Barra do Wake Lock + switch (toggle estilo iOS) */
+.presence-screen-bar {
+  display: flex; flex-direction: column; gap: 8px;
+  max-width: 360px; margin: 0 auto;
+  text-align: center;
+}
+.presence-screen-bar .muted { font-size: 12px; }
 
 .presence-switch {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
@@ -2955,26 +2956,5 @@ body.pom-focus-mode { background: #000; }
   transition: transform .15s;
 }
 .presence-switch.is-on .psw-thumb { transform: translateX(20px); }
-.presence-switch--busy.is-on { border-color: var(--bad); }
-.presence-switch--busy.is-on .psw-track { background: var(--bad); }
-.presence-switch--talk.is-on { border-color: var(--good); }
-.presence-switch--talk.is-on .psw-track { background: var(--good); }
 .presence-switch--wake.is-on { border-color: var(--accent); }
 .presence-switch--wake.is-on .psw-track { background: var(--accent); }
-
-/* Barra do Wake Lock */
-.presence-screen-bar {
-  display: flex; flex-direction: column; gap: 8px;
-  max-width: 360px; margin-left: auto; margin-right: auto;
-  text-align: center;
-}
-.presence-screen-bar .muted { font-size: 12px; }
-
-@media (min-width: 640px) {
-  .presence-card { padding: 22px 20px 24px; }
-  .presence-banner { padding: 28px 16px; }
-  .presence-banner-icon  { font-size: 40px; }
-  .presence-banner-label { font-size: 30px; }
-  .presence-banner-sub   { font-size: 13px; }
-  .psw-label { font-size: 17px; }
-}

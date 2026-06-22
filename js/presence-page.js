@@ -1,24 +1,23 @@
-// Página de Status (presença no escritório): cada pessoa tem os switches
-// "Ocupado" e "Pode falar". O painel sincroniza em tempo real entre os tablets.
-// Inclui Wake Lock (manter a tela ligada) com toggle visível.
+// Página de Status (presença no escritório): seleciona QUEM está usando este
+// tablet (Vini ou Vivi) e mostra um único botão grande de "Ocupado".
+// Ligado = OCUPADO em vermelhão; desligado = Disponível em verde.
+// Sincroniza em tempo real entre os tablets. Inclui Wake Lock (manter tela ligada).
 
 import { setupAuthGate, renderAuthFooter } from "./auth.js";
 import { mountNavMenu } from "./nav-menu.js";
 import { setPresence, subscribePresence } from "./presence-storage.js";
 
-const USERS = [
-  { id: "vinicius", name: "Vini", cls: "vini", emoji: "💙" },
-  { id: "victoria", name: "Vivi", cls: "vic",  emoji: "💗" },
-];
-
-const STATUS_META = {
-  livre:      { icon: "⚪", label: "Disponível",  sub: "sem sinal aceso",         cardCls: "" },
-  ocupado:    { icon: "🔴", label: "Ocupado",     sub: "em foco — não interromper", cardCls: "is-ocupado" },
-  pode_falar: { icon: "🟢", label: "Pode falar",  sub: "tô de boa, manda ver",     cardCls: "is-pode-falar" },
+const USERS = {
+  vinicius: { name: "Vini", cls: "vini", emoji: "💙" },
+  victoria: { name: "Vivi", cls: "vic",  emoji: "💗" },
 };
+const ACTIVE_USER_KEY = "habitos-presence-active-user";
 
-const current = { vinicius: "livre", victoria: "livre" };
-const unsubs = [];
+const state = {
+  user: "vinicius",
+  ocupado: false,
+};
+let unsub = null;
 
 // ─── Wake Lock ────────────────────────────────────────────────────────
 let wakeLock = null;
@@ -42,7 +41,6 @@ async function releaseWakeLock() {
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible" && wakeEnabled) requestWakeLock();
 });
-
 function wakeSupported() { return "wakeLock" in navigator; }
 
 function updateWakeUI() {
@@ -52,107 +50,111 @@ function updateWakeUI() {
   btn.classList.toggle("is-on", wakeEnabled);
   btn.setAttribute("aria-pressed", String(wakeEnabled));
   if (!status) return;
-  if (!wakeSupported()) {
-    status.textContent = "este navegador não permite manter a tela ligada";
-  } else if (!wakeEnabled) {
-    status.textContent = "a tela pode apagar normalmente";
-  } else if (wakeLock) {
-    status.textContent = "🔒 tela permanece ligada enquanto esta aba estiver aberta";
-  } else {
-    status.textContent = "tela será mantida ligada (toque na tela se não ativar)";
-  }
+  if (!wakeSupported()) status.textContent = "este navegador não permite manter a tela ligada";
+  else if (!wakeEnabled) status.textContent = "a tela pode apagar normalmente";
+  else if (wakeLock) status.textContent = "🔒 tela permanece ligada enquanto esta aba estiver aberta";
+  else status.textContent = "tela será mantida ligada (toque na tela se não ativar)";
+}
+
+// ─── Seletor de usuário ───────────────────────────────────────────────
+function loadActiveUser() {
+  try {
+    const u = localStorage.getItem(ACTIVE_USER_KEY);
+    if (u && USERS[u]) state.user = u;
+  } catch {}
+}
+function saveActiveUser(u) {
+  try { localStorage.setItem(ACTIVE_USER_KEY, u); } catch {}
+}
+
+function selectUser(userId) {
+  if (!USERS[userId]) return;
+  state.user = userId;
+  saveActiveUser(userId);
+  document.querySelectorAll("#presence-user-seg .seg-btn").forEach((b) => {
+    b.classList.toggle("is-on", b.dataset.user === userId);
+  });
+  // Reassina o status da pessoa selecionada
+  if (unsub) { try { unsub(); } catch {} unsub = null; }
+  state.ocupado = false;
+  applyState();
+  unsub = subscribePresence(userId, (ocupado) => {
+    state.ocupado = ocupado;
+    applyState();
+  });
 }
 
 // ─── Render ───────────────────────────────────────────────────────────
-function cardHTML(u) {
-  return `
-  <article class="presence-card" data-user="${u.id}" id="pcard-${u.id}">
-    <header class="presence-head">
-      <span class="avatar avatar--${u.cls} avatar--md">${u.name[0]}</span>
-      <span class="presence-name">${u.emoji} ${u.name}</span>
-    </header>
-
-    <div class="presence-banner">
-      <span class="presence-banner-icon"></span>
-      <span class="presence-banner-label"></span>
-      <span class="presence-banner-sub"></span>
-    </div>
-
-    <div class="presence-switches">
-      <button class="presence-switch presence-switch--busy" data-user="${u.id}" data-status="ocupado" aria-pressed="false">
-        <span class="psw-label">Ocupado</span>
-        <span class="psw-track"><span class="psw-thumb"></span></span>
-      </button>
-      <button class="presence-switch presence-switch--talk" data-user="${u.id}" data-status="pode_falar" aria-pressed="false">
-        <span class="psw-label">Pode falar</span>
-        <span class="psw-track"><span class="psw-thumb"></span></span>
-      </button>
-    </div>
-  </article>`;
-}
-
 function render() {
   const root = document.getElementById("presence-content");
   if (!root) return;
   root.innerHTML = `
-    <section class="block">
-      <div class="two-col presence-grid">
-        ${USERS.map(cardHTML).join("")}
+    <div class="stats-toggle-bar">
+      <div class="seg stats-user-seg" id="presence-user-seg">
+        <button data-user="vinicius" class="seg-btn">💙 Vini</button>
+        <button data-user="victoria" class="seg-btn">💗 Vivi</button>
       </div>
-    </section>
+    </div>
 
-    <section class="block presence-screen-bar">
+    <button class="presence-hero" id="presence-hero" aria-pressed="false">
+      <span class="presence-hero-who"></span>
+      <span class="presence-hero-state"></span>
+      <span class="presence-hero-hint"></span>
+    </button>
+
+    <div class="presence-screen-bar">
       <button id="wake-toggle" class="presence-switch presence-switch--wake is-on" aria-pressed="true">
         <span class="psw-label">🔆 Manter a tela ligada</span>
         <span class="psw-track"><span class="psw-thumb"></span></span>
       </button>
       <p id="wake-status" class="muted"></p>
-    </section>`;
+    </div>`;
 
-  // Switches de status (mutuamente exclusivos: tocar no ativo volta pra "livre")
-  root.querySelectorAll(".presence-switch[data-status]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const userId = btn.dataset.user;
-      const status = btn.dataset.status;
-      const next = current[userId] === status ? "livre" : status;
-      applyState(userId, next);             // feedback otimista imediato
-      setPresence(userId, next).catch((e) => console.warn("setPresence falhou:", e));
-    });
+  // Seletor Vini/Vivi
+  root.querySelectorAll("#presence-user-seg .seg-btn").forEach((btn) => {
+    btn.dataset.userClick = "1";
+    btn.addEventListener("click", () => selectUser(btn.dataset.user));
+  });
+
+  // Hero = botão grande que alterna Ocupado
+  const hero = document.getElementById("presence-hero");
+  hero.addEventListener("click", () => {
+    const next = !state.ocupado;
+    state.ocupado = next;          // feedback otimista imediato
+    applyState();
+    setPresence(state.user, next).catch((e) => console.warn("setPresence falhou:", e));
   });
 
   // Toggle do Wake Lock
   const wakeBtn = document.getElementById("wake-toggle");
-  if (wakeBtn) {
-    wakeBtn.addEventListener("click", () => {
-      wakeEnabled = !wakeEnabled;
-      if (wakeEnabled) requestWakeLock();
-      else releaseWakeLock();
-      updateWakeUI();
-    });
-  }
+  wakeBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    wakeEnabled = !wakeEnabled;
+    if (wakeEnabled) requestWakeLock();
+    else releaseWakeLock();
+    updateWakeUI();
+  });
 
-  USERS.forEach((u) => applyState(u.id, current[u.id]));
   updateWakeUI();
 }
 
-function applyState(userId, status) {
-  current[userId] = status;
-  const meta = STATUS_META[status] || STATUS_META.livre;
-  const card = document.getElementById(`pcard-${userId}`);
-  if (!card) return;
+function applyState() {
+  const hero = document.getElementById("presence-hero");
+  if (!hero) return;
+  const u = USERS[state.user];
+  const ocupado = state.ocupado;
 
-  card.classList.remove("is-ocupado", "is-pode-falar");
-  if (meta.cardCls) card.classList.add(meta.cardCls);
+  hero.classList.toggle("is-ocupado", ocupado);
+  hero.classList.toggle("is-livre", !ocupado);
+  hero.setAttribute("aria-pressed", String(ocupado));
 
-  card.querySelector(".presence-banner-icon").textContent = meta.icon;
-  card.querySelector(".presence-banner-label").textContent = meta.label;
-  card.querySelector(".presence-banner-sub").textContent = meta.sub;
+  hero.querySelector(".presence-hero-who").textContent = `${u.emoji} ${u.name}`;
+  hero.querySelector(".presence-hero-state").textContent = ocupado ? "OCUPADO" : "Disponível";
+  hero.querySelector(".presence-hero-hint").textContent = ocupado
+    ? "em foco — toque para liberar"
+    : "toque para marcar ocupado";
 
-  card.querySelectorAll(".presence-switch[data-status]").forEach((btn) => {
-    const on = btn.dataset.status === status;
-    btn.classList.toggle("is-on", on);
-    btn.setAttribute("aria-pressed", String(on));
-  });
+  document.body.classList.toggle("presence-busy", ocupado);
 }
 
 // ─── Boot ─────────────────────────────────────────────────────────────
@@ -162,11 +164,9 @@ document.addEventListener("DOMContentLoaded", () => {
     onAuthorized: (user) => {
       try {
         renderAuthFooter(user);
+        loadActiveUser();
         render();
-        // Assina o status das duas pessoas pra refletir em tempo real
-        USERS.forEach((u) => {
-          unsubs.push(subscribePresence(u.id, (status) => applyState(u.id, status)));
-        });
+        selectUser(state.user); // marca o seg ativo + assina o status
         requestWakeLock();
       } catch (err) {
         console.error("Erro ao inicializar Status:", err);
@@ -184,6 +184,6 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 window.addEventListener("pagehide", () => {
-  unsubs.forEach((fn) => { try { fn && fn(); } catch (e) {} });
+  if (unsub) { try { unsub(); } catch {} }
   releaseWakeLock();
 });

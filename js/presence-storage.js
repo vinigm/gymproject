@@ -1,4 +1,5 @@
 // Storage de Presença (status do escritório): 1 doc por usuário (id = userId).
+// Modelo simples: { ocupado: bool }. Ocupado = vermelho; senão = disponível (verde).
 // Usa Firestore com sincronização em TEMPO REAL (onSnapshot) quando configurado,
 // senão cai pra localStorage (sincroniza só entre abas do mesmo navegador).
 
@@ -10,59 +11,52 @@ import {
 const COL = "presence";                 // cada doc = status atual de 1 pessoa
 const LS_PREFIX = "habitos-presence-";  // fallback local
 
-// Estados possíveis. "livre" = neutro (sem sinal aceso).
-export const STATUSES = ["livre", "ocupado", "pode_falar"];
-
 function lsKey(userId) { return LS_PREFIX + userId; }
 
 function readLS(userId) {
   try {
     const raw = localStorage.getItem(lsKey(userId));
-    const data = raw ? JSON.parse(raw) : {};
-    return STATUSES.includes(data.status) ? data.status : "livre";
+    return !!(raw ? JSON.parse(raw).ocupado : false);
   } catch {
-    return "livre";
+    return false;
   }
 }
 
-// Grava o status atual da pessoa.
-export async function setPresence(userId, status) {
-  const clean = STATUSES.includes(status) ? status : "livre";
+// Grava se a pessoa está ocupada (true) ou disponível (false).
+export async function setPresence(userId, ocupado) {
+  const val = !!ocupado;
   if (isConfigured) {
     await setDoc(doc(db, COL, userId), {
       userId,
-      status: clean,
+      ocupado: val,
       updatedAt: serverTimestamp(),
     });
     return;
   }
   localStorage.setItem(lsKey(userId), JSON.stringify({
-    userId, status: clean, updatedAt: new Date().toISOString(),
+    userId, ocupado: val, updatedAt: new Date().toISOString(),
   }));
   // storage event não dispara na própria aba — avisa manualmente
-  window.dispatchEvent(new CustomEvent("presence-local", { detail: { userId, status: clean } }));
+  window.dispatchEvent(new CustomEvent("presence-local", { detail: { userId, ocupado: val } }));
 }
 
-// Assina mudanças do status de uma pessoa. Chama cb(status) na hora e a cada update.
+// Assina mudanças do status de uma pessoa. Chama cb(ocupado) na hora e a cada update.
 // Retorna uma função pra cancelar a assinatura.
 export function subscribePresence(userId, cb) {
   if (isConfigured) {
     return onSnapshot(
       doc(db, COL, userId),
-      (snap) => {
-        const status = snap.exists() ? snap.data().status : "livre";
-        cb(STATUSES.includes(status) ? status : "livre");
-      },
+      (snap) => cb(snap.exists() ? !!snap.data().ocupado : false),
       (err) => {
         console.warn("subscribePresence falhou (regras do Firestore?):", err);
-        cb("livre");
+        cb(false);
       }
     );
   }
   // Fallback localStorage: estado inicial + escuta outras abas (storage) e a própria (custom)
   cb(readLS(userId));
   const onStorage = (e) => { if (e.key === lsKey(userId)) cb(readLS(userId)); };
-  const onLocal = (e) => { if (e.detail && e.detail.userId === userId) cb(e.detail.status); };
+  const onLocal = (e) => { if (e.detail && e.detail.userId === userId) cb(!!e.detail.ocupado); };
   window.addEventListener("storage", onStorage);
   window.addEventListener("presence-local", onLocal);
   return () => {
