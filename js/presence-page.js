@@ -110,12 +110,15 @@ function render() {
     <p id="presence-error" class="presence-error" hidden></p>
 
     <div class="presence-screen-bar">
+      <button id="fs-toggle" class="presence-fs-btn">⛶ Tela cheia</button>
       <button id="wake-toggle" class="presence-switch presence-switch--wake is-on" aria-pressed="true">
         <span class="psw-label">🔆 Manter a tela ligada</span>
         <span class="psw-track"><span class="psw-thumb"></span></span>
       </button>
       <p id="wake-status" class="muted"></p>
-    </div>`;
+    </div>
+
+    <button id="fs-exit" class="presence-fs-exit" aria-label="Sair da tela cheia">✕</button>`;
 
   // Seletor Vini/Vivi
   root.querySelectorAll("#presence-user-seg .seg-btn").forEach((btn) => {
@@ -148,8 +151,49 @@ function render() {
     updateWakeUI();
   });
 
+  // Tela cheia (modo painel)
+  document.getElementById("fs-toggle").addEventListener("click", (e) => {
+    e.stopPropagation();
+    toggleFullscreen();
+  });
+  document.getElementById("fs-exit").addEventListener("click", (e) => {
+    e.stopPropagation();
+    exitFullscreen();
+  });
+
   updateWakeUI();
 }
+
+// ─── Tela cheia / modo painel ─────────────────────────────────────────
+function isFullscreen() {
+  return document.body.classList.contains("presence-fullscreen");
+}
+function enterFullscreen() {
+  document.body.classList.add("presence-fullscreen");
+  const el = document.documentElement;
+  if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
+  else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+}
+function exitFullscreen() {
+  document.body.classList.remove("presence-fullscreen");
+  if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(() => {});
+  else if (document.webkitFullscreenElement && document.webkitExitFullscreen) document.webkitExitFullscreen();
+}
+function toggleFullscreen() {
+  if (isFullscreen()) exitFullscreen();
+  else enterFullscreen();
+}
+// Mantém a classe em sincronia se o usuário sair pelo Esc / gesto do sistema
+function onFsChange() {
+  const real = document.fullscreenElement || document.webkitFullscreenElement;
+  // Só remove a classe se de fato saímos do fullscreen real (em PWA/iOS pode
+  // não haver fullscreen real e a gente segue no modo painel via CSS).
+  if (!real && (document.fullscreenEnabled || document.webkitFullscreenEnabled)) {
+    document.body.classList.remove("presence-fullscreen");
+  }
+}
+document.addEventListener("fullscreenchange", onFsChange);
+document.addEventListener("webkitfullscreenchange", onFsChange);
 
 function applyState() {
   const hero = document.getElementById("presence-hero");

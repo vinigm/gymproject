@@ -2956,3 +2956,54 @@ body.pom-focus-mode { background: #000; }
 .presence-switch.is-on .psw-thumb { transform: translateX(20px); }
 .presence-switch--wake.is-on { border-color: var(--accent); }
 .presence-switch--wake.is-on .psw-track { background: var(--accent); }
+
+/* Botão de tela cheia (modo painel) */
+.presence-fs-btn {
+  width: 100%;
+  padding: 13px 14px;
+  border-radius: 12px;
+  background: var(--card-2);
+  border: 1px solid var(--border);
+  font-weight: 600; font-size: 15px;
+  text-align: center;
+}
+
+/* Botão flutuante de sair (só aparece no modo painel) */
+.presence-fs-exit {
+  display: none;
+  position: fixed;
+  top: calc(12px + var(--safe-top)); right: 14px;
+  z-index: 60;
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  align-items: center; justify-content: center;
+  font-size: 18px; color: #fff;
+  background: rgba(0, 0, 0, .35);
+  border: 1px solid rgba(255, 255, 255, .3);
+  backdrop-filter: blur(4px);
+}
+
+/* === MODO PAINEL (tela cheia) === */
+body.presence-fullscreen .topbar,
+body.presence-fullscreen #nav-menu,
+body.presence-fullscreen .footer,
+body.presence-fullscreen .stats-toggle-bar,
+body.presence-fullscreen .presence-screen-bar,
+body.presence-fullscreen .presence-error { display: none !important; }
+
+body.presence-fullscreen .page { padding: 0; max-width: none; }
+body.presence-fullscreen .presence-hero {
+  position: fixed; inset: 0;
+  width: 100%; height: 100dvh; min-height: 100dvh;
+  margin: 0; border: 0; border-radius: 0;
+  z-index: 50;
+}
+body.presence-fullscreen .presence-hero { padding: 28px 24px; }
+body.presence-fullscreen .presence-hero-state {
+  font-size: clamp(44px, 14vw, 190px);
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+body.presence-fullscreen .presence-hero-timer { font-size: clamp(30px, 9vw, 80px); }
+body.presence-fullscreen .presence-hero-who   { font-size: clamp(22px, 5vw, 40px); }
+body.presence-fullscreen .presence-fs-exit { display: flex; }
