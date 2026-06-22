@@ -15,7 +15,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import {
   getFirestore,
   doc, getDoc, setDoc, collection, query, where, getDocs,
-  addDoc, deleteDoc, orderBy,
+  addDoc, deleteDoc, orderBy, onSnapshot,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {
@@ -49,4 +49,4 @@ if (isConfigured) {
 
 export const db = _db;
 export const auth = _auth;
-export { doc, getDoc, setDoc, collection, query, where, getDocs, addDoc, deleteDoc, orderBy, serverTimestamp, GoogleAuthProvider };
+export { doc, getDoc, setDoc, collection, query, where, getDocs, addDoc, deleteDoc, orderBy, onSnapshot, serverTimestamp, GoogleAuthProvider };
