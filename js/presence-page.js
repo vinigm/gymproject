@@ -28,29 +28,77 @@ const state = {
 let unsub = null;
 let timerHandle = null;
 
-// ─── Wake Lock ────────────────────────────────────────────────────────
+// ─── Wake Lock (manter a tela ligada) ──────────────────────────────────
+// Combina a Screen Wake Lock API — readquirindo sempre que o sistema soltar
+// o lock — com um vídeo mudo em loop de reforço (técnica "NoSleep") pra onde
+// a API é instável (ex.: iPad/Safari).
 let wakeLock = null;
 let wakeEnabled = true; // ligado por padrão — é um painel pra ficar exposto
 
 async function requestWakeLock() {
-  if (!wakeEnabled) return;
+  if (!wakeEnabled || document.visibilityState !== "visible") return;
+  playNoSleep();
+  if (!("wakeLock" in navigator) || wakeLock) { updateWakeUI(); return; }
   try {
-    if ("wakeLock" in navigator) {
-      wakeLock = await navigator.wakeLock.request("screen");
-      wakeLock.addEventListener("release", () => { wakeLock = null; });
-    }
-  } catch (e) { /* iOS pode recusar fora de gesto — re-tenta no próximo toque */ }
+    wakeLock = await navigator.wakeLock.request("screen");
+    wakeLock.addEventListener("release", () => {
+      wakeLock = null;
+      // o sistema costuma soltar o lock sozinho — readquire se ainda queremos
+      if (wakeEnabled && document.visibilityState === "visible") {
+        setTimeout(requestWakeLock, 400);
+      }
+    });
+  } catch (e) { /* iOS pode recusar fora de gesto — re-tenta no heartbeat/gesto */ }
   updateWakeUI();
 }
 async function releaseWakeLock() {
   try { if (wakeLock) await wakeLock.release(); } catch (e) {}
   wakeLock = null;
+  stopNoSleep();
   updateWakeUI();
 }
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible" && wakeEnabled) requestWakeLock();
 });
+// Heartbeat: repõe o lock caso ele tenha caído silenciosamente.
+setInterval(() => {
+  if (wakeEnabled && !wakeLock && document.visibilityState === "visible") requestWakeLock();
+}, 12000);
 function wakeSupported() { return "wakeLock" in navigator; }
+
+// Fallback "NoSleep": vídeo mudo em loop alimentado por um stream de canvas
+// (não precisa de arquivo). Mantém a tela acesa onde o Wake Lock falha.
+let nosleepVideo = null;
+function ensureNoSleepVideo() {
+  if (nosleepVideo) return;
+  try {
+    const canvas = document.createElement("canvas");
+    canvas.width = 2; canvas.height = 2;
+    const ctx = canvas.getContext("2d");
+    let flip = false;
+    setInterval(() => {
+      flip = !flip;
+      ctx.fillStyle = flip ? "#000001" : "#010000";
+      ctx.fillRect(0, 0, 2, 2);
+    }, 1000);
+    if (!canvas.captureStream) return;
+    const v = document.createElement("video");
+    v.muted = true; v.defaultMuted = true; v.loop = true;
+    v.setAttribute("muted", ""); v.setAttribute("playsinline", "");
+    v.setAttribute("aria-hidden", "true");
+    v.style.cssText = "position:fixed;left:-10px;top:-10px;width:1px;height:1px;opacity:0;pointer-events:none;";
+    v.srcObject = canvas.captureStream(2);
+    document.body.appendChild(v);
+    nosleepVideo = v;
+  } catch (e) { nosleepVideo = null; }
+}
+function playNoSleep() {
+  ensureNoSleepVideo();
+  if (nosleepVideo) nosleepVideo.play().catch(() => {});
+}
+function stopNoSleep() {
+  if (nosleepVideo) { try { nosleepVideo.pause(); } catch (e) {} }
+}
 
 function updateWakeUI() {
   const btn = document.getElementById("wake-toggle");
@@ -136,6 +184,7 @@ function render() {
   // Hero = botão grande que alterna Ocupado
   const hero = document.getElementById("presence-hero");
   hero.addEventListener("click", () => {
+    if (wakeEnabled) requestWakeLock();         // gesto — reforça a tela ligada
     const next = !state.ocupado;
     state.ocupado = next;                       // feedback otimista imediato
     state.since = next ? Date.now() : null;
@@ -180,6 +229,8 @@ function enterFullscreen() {
   const el = document.documentElement;
   if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
   else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+  // gesto do usuário — bom momento pra (re)garantir a tela ligada
+  if (wakeEnabled) requestWakeLock();
 }
 function exitFullscreen() {
   document.body.classList.remove("presence-fullscreen");
