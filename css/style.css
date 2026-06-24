@@ -2890,10 +2890,26 @@ body.pom-focus-mode { background: #000; }
   color: var(--text);
   transition: background .2s, border-color .2s, box-shadow .2s, color .2s;
 }
-.presence-hero-who   { font-size: clamp(18px, 4.5vw, 28px); font-weight: 700; opacity: .92; }
-.presence-hero-state { font-size: clamp(52px, 16vw, 150px); font-weight: 900; line-height: 1; letter-spacing: -.02em; }
-.presence-hero-timer { font-size: clamp(22px, 6vw, 42px); font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: .02em; margin-top: 10px; opacity: .95; }
+.presence-hero-state { font-size: clamp(44px, 13vw, 130px); font-weight: 900; line-height: 1; letter-spacing: -.02em; }
 .presence-hero-hint  { font-size: clamp(12px, 3vw, 15px); opacity: .75; margin-top: 6px; text-transform: lowercase; }
+
+/* Histórico dos segmentos concluídos (rolável se acumular muitos) */
+.presence-log {
+  display: flex; flex-direction: column; gap: 2px;
+  margin-top: 12px;
+  max-height: 26vh; overflow-y: auto;
+  font-variant-numeric: tabular-nums;
+}
+.cyc-line { font-size: clamp(15px, 3.6vw, 24px); font-weight: 600; opacity: .65; }
+
+/* Cronômetro corrente (grande) */
+.presence-now {
+  margin-top: 8px;
+  font-size: clamp(34px, 9vw, 72px);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: .02em;
+}
 
 /* Disponível = verde */
 .presence-hero.is-livre {
@@ -2910,7 +2926,6 @@ body.pom-focus-mode { background: #000; }
   text-shadow: 0 1px 2px rgba(0, 0, 0, .2);
   box-shadow: var(--shadow), 0 0 22px rgba(176, 85, 96, .28);
 }
-.presence-hero.is-ocupado .presence-hero-who,
 .presence-hero.is-ocupado .presence-hero-hint { opacity: .9; }
 
 .presence-error {
@@ -3000,10 +3015,11 @@ body.presence-fullscreen .presence-hero {
 }
 body.presence-fullscreen .presence-hero { padding: 28px 24px; }
 body.presence-fullscreen .presence-hero-state {
-  font-size: clamp(44px, 14vw, 190px);
+  font-size: clamp(40px, 11vw, 150px);
   max-width: 100%;
   overflow-wrap: anywhere;
 }
-body.presence-fullscreen .presence-hero-timer { font-size: clamp(30px, 9vw, 80px); }
-body.presence-fullscreen .presence-hero-who   { font-size: clamp(22px, 5vw, 40px); }
+body.presence-fullscreen .presence-log { max-height: 34vh; }
+body.presence-fullscreen .cyc-line { font-size: clamp(18px, 3.4vw, 34px); }
+body.presence-fullscreen .presence-now { font-size: clamp(40px, 11vw, 110px); }
 body.presence-fullscreen .presence-fs-exit { display: flex; }

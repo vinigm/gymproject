@@ -1,7 +1,9 @@
 // Página de Status (presença no escritório): seleciona QUEM está usando este
-// tablet (Vini ou Vivi) e mostra um único botão grande de "Ocupado".
-// Ligado = OCUPADO em vermelhão; desligado = Disponível em verde.
-// Sincroniza em tempo real entre os tablets. Inclui Wake Lock (manter tela ligada).
+// tablet (Vini ou Vivi) e mostra um painel de FOCO em ciclos Pomodoro.
+// Ao iniciar, roda 25 min de foco (OCUPADO, vermelho) → 5 min de pausa
+// (Disponível, verde) → repete, registrando cada segmento concluído.
+// Tudo é derivado do instante de início (`since`), então os dois tablets
+// veem o mesmo. Sincroniza em tempo real + Wake Lock (manter tela ligada).
 
 import { setupAuthGate, renderAuthFooter } from "./auth.js";
 import { mountNavMenu } from "./nav-menu.js";
@@ -13,10 +15,15 @@ const USERS = {
 };
 const ACTIVE_USER_KEY = "habitos-presence-active-user";
 
+// Ciclo Pomodoro (segundos)
+const FOCUS_SECS = 25 * 60;
+const BREAK_SECS = 5 * 60;
+const CYCLE_SECS = FOCUS_SECS + BREAK_SECS;
+
 const state = {
   user: "vinicius",
   ocupado: false,
-  since: null, // epoch ms de quando ficou ocupado (pro cronômetro)
+  since: null, // epoch ms de quando iniciou o ciclo (base de todo o cálculo)
 };
 let unsub = null;
 let timerHandle = null;
@@ -101,9 +108,9 @@ function render() {
     </div>
 
     <button class="presence-hero" id="presence-hero" aria-pressed="false">
-      <span class="presence-hero-who"></span>
       <span class="presence-hero-state"></span>
-      <span class="presence-hero-timer" aria-hidden="true"></span>
+      <div class="presence-log" id="presence-log"></div>
+      <div class="presence-now" id="presence-now"></div>
       <span class="presence-hero-hint"></span>
     </button>
 
@@ -195,41 +202,87 @@ function onFsChange() {
 document.addEventListener("fullscreenchange", onFsChange);
 document.addEventListener("webkitfullscreenchange", onFsChange);
 
+function inSession() { return state.ocupado && !!state.since; }
+
 function applyState() {
   const hero = document.getElementById("presence-hero");
   if (!hero) return;
-  const u = USERS[state.user];
-  const ocupado = state.ocupado;
 
-  hero.classList.toggle("is-ocupado", ocupado);
-  hero.classList.toggle("is-livre", !ocupado);
-  hero.setAttribute("aria-pressed", String(ocupado));
-
-  hero.querySelector(".presence-hero-who").textContent = `${u.emoji} ${u.name}`;
-  hero.querySelector(".presence-hero-state").textContent = ocupado ? "OCUPADO" : "Disponível";
-  hero.querySelector(".presence-hero-hint").textContent = ocupado
-    ? "em foco — toque para liberar"
-    : "toque para marcar ocupado";
-
-  document.body.classList.toggle("presence-busy", ocupado);
-
-  // Cronômetro: roda enquanto ocupado, mostrando o tempo desde `since`
-  if (ocupado && state.since) {
-    if (!timerHandle) timerHandle = setInterval(updateTimer, 1000);
-  } else {
-    if (timerHandle) { clearInterval(timerHandle); timerHandle = null; }
+  if (!inSession()) {
+    // Ocioso — Disponível em verde, sem ciclo rodando
+    stopTick();
+    hero.classList.remove("is-ocupado");
+    hero.classList.add("is-livre");
+    hero.setAttribute("aria-pressed", "false");
+    hero.querySelector(".presence-hero-state").textContent = "Disponível";
+    const hint = hero.querySelector(".presence-hero-hint");
+    hint.textContent = "toque para iniciar o foco";
+    hint.style.display = "";
+    document.getElementById("presence-log").innerHTML = "";
+    document.getElementById("presence-now").textContent = "";
+    document.body.classList.remove("presence-busy");
+    return;
   }
-  updateTimer();
+
+  // Em sessão — garante o tick de 1s e desenha
+  hero.querySelector(".presence-hero-hint").style.display = "none";
+  if (!timerHandle) timerHandle = setInterval(tick, 1000);
+  tick();
 }
 
-function fmtElapsed(ms) {
-  const total = Math.max(0, Math.floor(ms / 1000));
-  const h = Math.floor(total / 3600);
-  const m = Math.floor((total % 3600) / 60);
-  const s = total % 60;
-  const mm = String(m).padStart(2, "0");
-  const ss = String(s).padStart(2, "0");
-  return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
+// Deriva fase, segmentos concluídos e cronômetro atual a partir do tempo decorrido.
+function computeCycle(elapsedSec) {
+  const full = Math.floor(elapsedSec / CYCLE_SECS); // ciclos foco+pausa completos
+  const pos = elapsedSec % CYCLE_SECS;
+  const done = [];
+  for (let i = 0; i < full; i++) {
+    done.push({ kind: "focus", secs: FOCUS_SECS });
+    done.push({ kind: "break", secs: BREAK_SECS });
+  }
+  let phase, current;
+  if (pos < FOCUS_SECS) {
+    phase = "focus";
+    current = pos;
+  } else {
+    done.push({ kind: "focus", secs: FOCUS_SECS }); // o foco deste ciclo já fechou
+    phase = "break";
+    current = pos - FOCUS_SECS;
+  }
+  return { done, phase, current };
+}
+
+function tick() {
+  const hero = document.getElementById("presence-hero");
+  if (!hero || !inSession()) { stopTick(); return; }
+
+  const elapsed = Math.max(0, Math.floor((Date.now() - state.since) / 1000));
+  const c = computeCycle(elapsed);
+  const isFocus = c.phase === "focus";
+
+  hero.classList.toggle("is-ocupado", isFocus);
+  hero.classList.toggle("is-livre", !isFocus);
+  hero.setAttribute("aria-pressed", "true");
+  document.body.classList.toggle("presence-busy", isFocus);
+  hero.querySelector(".presence-hero-state").textContent = isFocus ? "OCUPADO" : "Disponível";
+
+  // Histórico dos segmentos já concluídos (🍅 foco 25:00 / ☕ pausa 5:00)
+  document.getElementById("presence-log").innerHTML = c.done
+    .map((seg) => `<div class="cyc-line">${seg.kind === "focus" ? "🍅" : "☕"} ${fmtClock(seg.secs)}</div>`)
+    .join("");
+
+  // Cronômetro corrente (grande), contando até o alvo da fase
+  const icon = isFocus ? "🍅" : "☕";
+  document.getElementById("presence-now").textContent = `${icon} ${fmtClock(c.current)}`;
+}
+
+function stopTick() {
+  if (timerHandle) { clearInterval(timerHandle); timerHandle = null; }
+}
+
+function fmtClock(sec) {
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
 function showError(msg) {
@@ -237,18 +290,6 @@ function showError(msg) {
   if (!el) return;
   if (msg) { el.textContent = msg; el.hidden = false; }
   else { el.textContent = ""; el.hidden = true; }
-}
-
-function updateTimer() {
-  const el = document.querySelector(".presence-hero-timer");
-  if (!el) return;
-  if (state.ocupado && state.since) {
-    el.textContent = `⏱ ${fmtElapsed(Date.now() - state.since)}`;
-    el.style.display = "";
-  } else {
-    el.textContent = "";
-    el.style.display = "none";
-  }
 }
 
 // ─── Boot ─────────────────────────────────────────────────────────────
