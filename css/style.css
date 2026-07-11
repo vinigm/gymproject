@@ -3023,3 +3023,118 @@ body.presence-fullscreen .presence-log { max-height: 34vh; }
 body.presence-fullscreen .cyc-line { font-size: clamp(18px, 3.4vw, 34px); }
 body.presence-fullscreen .presence-now { font-size: clamp(40px, 11vw, 110px); }
 body.presence-fullscreen .presence-fs-exit { display: flex; }
+
+/* ===================== KG VIVI (peso) ===================== */
+.kg-hero {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  background: var(--card); border: 1px solid var(--border);
+  border-top: 3px solid var(--vic);
+  border-radius: var(--radius); box-shadow: var(--shadow);
+  padding: 18px 14px; margin-bottom: 22px;
+}
+.kg-hero-value { font-size: clamp(44px, 13vw, 72px); font-weight: 900; line-height: 1; color: var(--vic); }
+.kg-hero-value small { font-size: .35em; font-weight: 700; color: var(--muted); margin-left: 4px; }
+.kg-hero-delta { font-size: 13px; font-weight: 700; margin-top: 2px; color: var(--accent); }
+.kg-hero-sub { font-size: 12px; color: var(--muted); }
+.kg-hero-empty { font-size: 13px; color: var(--muted); text-align: center; }
+
+/* Formulário */
+.kg-form { display: flex; flex-direction: column; gap: 14px; }
+.kg-field { display: flex; flex-direction: column; gap: 6px; }
+.kg-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+.kg-weight-input, .kg-height-input {
+  width: 100%; padding: 12px 14px; font-size: 22px; font-weight: 700;
+  background: var(--card-2); border: 1px solid var(--border); border-radius: 12px; color: var(--text);
+}
+.kg-height { max-width: 160px; margin-top: 14px; }
+.kg-height-input { font-size: 18px; }
+.kg-check { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 15px; cursor: pointer; }
+.kg-check input { width: 22px; height: 22px; accent-color: var(--vic); }
+.kg-save-btn { margin-top: 4px; }
+.kg-msg { font-size: 13px; color: var(--good); text-align: center; margin: 4px 0 0; }
+.kg-msg.is-error { color: var(--bad); }
+
+/* Roda de horário (estilo despertador iPhone) */
+.time-wheel {
+  position: relative;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  height: 200px; /* 5 itens de 40px */
+  background: var(--card-2); border: 1px solid var(--border); border-radius: 14px;
+  overflow: hidden; max-width: 240px;
+  -webkit-mask-image: linear-gradient(180deg, transparent, #000 26%, #000 74%, transparent);
+          mask-image: linear-gradient(180deg, transparent, #000 26%, #000 74%, transparent);
+}
+.wheel {
+  height: 200px; width: 72px; overflow-y: scroll;
+  scroll-snap-type: y mandatory; scrollbar-width: none;
+  padding-block: 80px; /* deixa 1º e último item centrarem */
+  text-align: center;
+}
+.wheel::-webkit-scrollbar { display: none; }
+.wheel-item {
+  height: 40px; line-height: 40px; scroll-snap-align: center;
+  font-size: 24px; font-weight: 600; color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  opacity: .5; transition: opacity .12s, color .12s, transform .12s;
+  cursor: pointer;
+}
+.wheel-item.is-sel { color: var(--vic); opacity: 1; transform: scale(1.12); font-weight: 800; }
+.wheel-colon { font-size: 26px; font-weight: 800; color: var(--text); }
+.wheel-band {
+  position: absolute; left: 8px; right: 8px; top: 80px; height: 40px;
+  border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+  border-radius: 8px; background: rgba(244,114,182,.08);
+  pointer-events: none;
+}
+
+/* Gráfico */
+.kg-chart-wrap {
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 10px 8px 4px; box-shadow: var(--shadow);
+}
+.kg-chart { width: 100%; height: auto; display: block; }
+.kgc-grid { stroke: var(--border); stroke-width: 1; }
+.kgc-ylabel { fill: var(--muted); font-size: 8px; text-anchor: end; font-variant-numeric: tabular-nums; }
+.kgc-xlabel { fill: var(--muted); font-size: 8px; }
+.kgc-area { fill: rgba(244,114,182,.14); stroke: none; }
+.kgc-line { fill: none; stroke: var(--vic); stroke-width: 2.2; stroke-linejoin: round; stroke-linecap: round; }
+.kgc-dot { fill: var(--vic); }
+.kgc-dot--last { fill: #fff; stroke: var(--vic); stroke-width: 2.5; }
+
+/* IMC */
+.kg-imc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.kg-stat {
+  display: flex; flex-direction: column; gap: 2px; align-items: center; text-align: center;
+  background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 12px 8px;
+}
+.kg-stat-value { font-size: 20px; font-weight: 800; color: var(--text); line-height: 1.1; }
+.kg-stat-value small { font-size: .55em; color: var(--muted); font-weight: 700; }
+.kg-stat-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+.kg-stat-tag { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.kg-stat.imc--low  { border-color: var(--water); }
+.kg-stat.imc--ok   { border-color: var(--good); }
+.kg-stat.imc--warn { border-color: #fbbf24; }
+.kg-stat.imc--high { border-color: var(--bad); }
+.kg-stat.imc--low  .kg-stat-value, .kg-stat.imc--low  .kg-stat-tag { color: var(--water); }
+.kg-stat.imc--ok   .kg-stat-value, .kg-stat.imc--ok   .kg-stat-tag { color: var(--good); }
+.kg-stat.imc--warn .kg-stat-value, .kg-stat.imc--warn .kg-stat-tag { color: #fbbf24; }
+.kg-stat.imc--high .kg-stat-value, .kg-stat.imc--high .kg-stat-tag { color: var(--bad); }
+.kg-imc-note { font-size: 11px; margin: 10px 0 0; }
+
+/* Lista de registros */
+.kg-list { display: flex; flex-direction: column; gap: 6px; }
+.kg-list-row {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px;
+}
+.kg-list-w { font-weight: 800; font-size: 15px; color: var(--vic); min-width: 68px; }
+.kg-list-meta { flex: 1; font-size: 12px; color: var(--muted); }
+.kg-del {
+  width: 28px; height: 28px; border-radius: 8px; color: var(--muted);
+  background: var(--card-2); border: 1px solid var(--border); font-size: 13px;
+}
+
+@media (min-width: 640px) {
+  .kg-hero-value { font-size: 84px; }
+  .kg-stat-value { font-size: 24px; }
+}

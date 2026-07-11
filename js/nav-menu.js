@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { href: "./alongamento.html", icon: "🧘", label: "Alongar", match: ["alongamento.html"] },
   { href: "./pomodoro.html", icon: "⏱", label: "Pomodoro", match: ["pomodoro.html"] },
   { href: "./presence.html", icon: "🚦", label: "Status",   match: ["presence.html"] },
+  { href: "./kg-vivi.html",  icon: "⚖️", label: "Kg Vivi",  match: ["kg-vivi.html"] },
   { href: "./victoria.html", icon: "💖", label: "Vivi",     match: ["victoria.html"] },
   { href: "./config.html",   icon: "⚙️", label: "Config",   match: ["config.html"] },
 ];
