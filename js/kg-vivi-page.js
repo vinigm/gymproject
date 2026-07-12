@@ -13,10 +13,32 @@ import { getDietDay, setDietDay, getDietMap } from "./diet-storage.js";
 const USER = "victoria";
 const SECTION_KEY = "habitos-kg-section";
 
-const MEALS = [
-  { key: "breakfast", icon: "🌅", label: "Café da manhã" },
-  { key: "lunch",     icon: "☀️", label: "Almoço" },
-  { key: "dinner",    icon: "🌙", label: "Janta" },
+// Cardápio: cada refeição tem alimentos, cada alimento tem opções de quantidade.
+// (Fácil de editar/expandir depois.)
+const DIET_MENU = [
+  { key: "cafe", icon: "🌅", label: "Café da manhã", foods: [
+    { key: "ovo", label: "Ovo",          options: [1, 2, 3, 4] },
+    { key: "pao", label: "Pão (fatias)",  options: [1, 2, 3] },
+  ]},
+  { key: "lanche_manha", icon: "🥪", label: "Lanche da manhã", foods: [
+    { key: "whey",    label: "Whey (doses)", options: [1, 2] },
+    { key: "iogurte", label: "Iogurte",      options: [1, 2] },
+    { key: "pao",     label: "Pão (fatias)", options: [1, 2] },
+  ]},
+  { key: "almoco", icon: "☀️", label: "Almoço", foods: [
+    { key: "arroz",  label: "Arroz (g)",  options: [50, 100, 150] },
+    { key: "feijao", label: "Feijão (g)", options: [50, 100, 150] },
+    { key: "carne",  label: "Carne (g)",  options: [50, 100, 150] },
+    { key: "frango", label: "Frango (g)", options: [50, 100, 150] },
+    { key: "peixe",  label: "Peixe (g)",  options: [50, 100, 150] },
+  ]},
+  { key: "janta", icon: "🌙", label: "Janta", foods: [
+    { key: "arroz",  label: "Arroz (g)",  options: [50, 100, 150] },
+    { key: "feijao", label: "Feijão (g)", options: [50, 100, 150] },
+    { key: "carne",  label: "Carne (g)",  options: [50, 100, 150] },
+    { key: "frango", label: "Frango (g)", options: [50, 100, 150] },
+    { key: "peixe",  label: "Peixe (g)",  options: [50, 100, 150] },
+  ]},
 ];
 const WD = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"];
 
@@ -24,8 +46,8 @@ const stateData = {
   section: "peso",       // "peso" | "dieta"
   entries: [],
   height: DEFAULT_HEIGHT_M,
-  dietToday: { breakfast: false, lunch: false, dinner: false },
-  dietMap: {},
+  dietFoods: {},         // mapa { "refeição.alimento": quantidade } do dia atual
+  dietMap: {},           // date -> foods (histórico)
 };
 
 // ─── Helpers de data ──────────────────────────────────────────────────
@@ -295,42 +317,62 @@ async function onSaveWeight() {
 }
 
 // ─── Seção DIETA ──────────────────────────────────────────────────────
+function foodId(mealKey, foodKey) { return `${mealKey}.${foodKey}`; }
+function mealLogged(foods, mealKey) {
+  return Object.keys(foods || {}).some((k) => k.startsWith(mealKey + ".") && foods[k]);
+}
+
 function renderDiet() {
   const el = document.getElementById("kg-section");
   if (!el) return;
-  const done = MEALS.filter((m) => stateData.dietToday[m.key]).length;
 
   el.innerHTML = `
     <section class="block">
-      <div class="block-head"><h2>Refeições de hoje</h2>
-        <span class="muted" style="font-size:11px">${done}/3</span>
+      <div class="block-head"><h2>Comidas de hoje</h2>
+        <span class="muted" id="diet-count" style="font-size:11px">${countItems(stateData.dietFoods)}</span>
       </div>
-      <div class="diet-checklist">
-        ${MEALS.map((m) => `
-          <button class="diet-meal ${stateData.dietToday[m.key] ? "is-done" : ""}" data-meal="${m.key}">
-            <span class="diet-meal-icon">${m.icon}</span>
-            <span class="diet-meal-label">${m.label}</span>
-            <span class="diet-meal-check" aria-hidden="true"></span>
-          </button>`).join("")}
-      </div>
+      ${DIET_MENU.map(mealHTML).join("")}
       <p id="kg-diet-msg" class="kg-msg" hidden></p>
     </section>
 
     <section class="block">
       <div class="block-head"><h2>Últimos 7 dias</h2></div>
-      ${dietHistoryHTML()}
-      <p class="muted diet-legend">🌅 café · ☀️ almoço · 🌙 janta</p>
+      <div id="diet-hist-wrap">${dietHistoryHTML()}</div>
+      <p class="muted diet-legend">${DIET_MENU.map((m) => `${m.icon} ${m.label.split(" ")[0].toLowerCase()}`).join(" · ")}</p>
     </section>`;
 
   bindDiet();
+}
+
+function countItems(foods) {
+  const n = Object.keys(foods || {}).length;
+  return n === 0 ? "nada ainda" : `${n} ${n === 1 ? "item" : "itens"}`;
+}
+
+function mealHTML(meal) {
+  return `
+    <div class="diet-meal-group">
+      <h3 class="diet-meal-title">${meal.icon} ${meal.label}</h3>
+      ${meal.foods.map((f) => {
+        const id = foodId(meal.key, f.key);
+        const sel = stateData.dietFoods[id];
+        return `
+          <div class="food-row">
+            <span class="food-name">${f.label}</span>
+            <div class="food-opts" data-food="${id}">
+              ${f.options.map((o) => `<button class="chip food-chip${sel === o ? " is-on" : ""}" data-food="${id}" data-val="${o}">${o}</button>`).join("")}
+            </div>
+          </div>`;
+      }).join("")}
+    </div>`;
 }
 
 function dietHistoryHTML() {
   const days = Array.from({ length: 7 }, (_, i) => offsetISO(-(6 - i)));
   const today = todayISO();
   return `<div class="diet-hist">${days.map((d) => {
-    const meals = d === today ? stateData.dietToday : (stateData.dietMap[d] || {});
-    const dots = MEALS.map((m) => `<span class="diet-dot ${meals[m.key] ? "on" : ""}"></span>`).join("");
+    const foods = d === today ? stateData.dietFoods : (stateData.dietMap[d] || {});
+    const dots = DIET_MENU.map((m) => `<span class="diet-dot ${mealLogged(foods, m.key) ? "on" : ""}"></span>`).join("");
     return `<div class="diet-hist-col${d === today ? " is-today" : ""}">
       <div class="diet-hist-dots">${dots}</div>
       <span class="diet-hist-wd">${weekdayShort(d)}</span>
@@ -340,22 +382,41 @@ function dietHistoryHTML() {
 }
 
 function bindDiet() {
-  document.querySelectorAll(".diet-meal").forEach((btn) => {
-    btn.addEventListener("click", async () => {
-      const key = btn.dataset.meal;
-      const next = !stateData.dietToday[key];
-      stateData.dietToday = { ...stateData.dietToday, [key]: next };
-      stateData.dietMap[todayISO()] = { ...stateData.dietToday };
-      renderDiet(); // feedback imediato
-      try {
-        await setDietDay(USER, todayISO(), stateData.dietToday);
-      } catch (e) {
-        console.warn("setDietDay falhou:", e);
-        const msg = document.getElementById("kg-diet-msg");
-        if (msg) { msg.textContent = "não consegui salvar — confira as regras do Firestore"; msg.hidden = false; msg.classList.add("is-error"); }
-      }
+  document.querySelectorAll(".food-chip").forEach((chip) => {
+    chip.addEventListener("click", () => {
+      const id = chip.dataset.food;
+      const val = Number(chip.dataset.val);
+      const cur = stateData.dietFoods[id];
+      if (cur === val) delete stateData.dietFoods[id]; // toca no selecionado → desmarca
+      else stateData.dietFoods[id] = val;
+
+      // Atualiza os chips deste alimento no lugar (sem re-render pra não pular scroll)
+      const group = chip.closest(".food-opts");
+      group.querySelectorAll(".food-chip").forEach((c) => {
+        c.classList.toggle("is-on", Number(c.dataset.val) === stateData.dietFoods[id]);
+      });
+
+      // Atualiza contador + histórico de hoje
+      const today = todayISO();
+      stateData.dietMap[today] = { ...stateData.dietFoods };
+      const count = document.getElementById("diet-count");
+      if (count) count.textContent = countItems(stateData.dietFoods);
+      const hist = document.getElementById("diet-hist-wrap");
+      if (hist) hist.innerHTML = dietHistoryHTML();
+
+      persistDiet();
     });
   });
+}
+
+async function persistDiet() {
+  try {
+    await setDietDay(USER, todayISO(), stateData.dietFoods);
+  } catch (e) {
+    console.warn("setDietDay falhou:", e);
+    const msg = document.getElementById("kg-diet-msg");
+    if (msg) { msg.textContent = "não consegui salvar — confira as regras do Firestore"; msg.hidden = false; msg.classList.add("is-error"); }
+  }
 }
 
 // ─── Seed inicial do peso ─────────────────────────────────────────────
@@ -384,7 +445,7 @@ document.addEventListener("DOMContentLoaded", () => {
         stateData.height = loadHeight(USER);
         stateData.entries = await getWeightEntries(USER);
         await seedIfEmpty();
-        stateData.dietToday = await getDietDay(USER, todayISO());
+        stateData.dietFoods = await getDietDay(USER, todayISO());
         stateData.dietMap = await getDietMap(USER);
         render();
       } catch (err) {

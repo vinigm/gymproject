@@ -1,5 +1,6 @@
-// Storage da dieta (checklist de refeições): 1 doc por usuário por dia.
-// id = `${userId}_${date}`. Usa Firestore se configurado, senão localStorage.
+// Storage da dieta: 1 doc por usuário por dia (id = `${userId}_${date}`).
+// Guarda um mapa `foods`: { "<refeição>.<alimento>": quantidade }.
+// Ex.: { "cafe.ovo": 2, "almoco.arroz": 100 }. Ausência = não comeu.
 
 import {
   db, isConfigured,
@@ -9,48 +10,53 @@ import {
 const COL = "diet_logs";
 const LS_KEY = "habitos-diet-logs-v1";
 
-const EMPTY = { breakfast: false, lunch: false, dinner: false };
-
 function keyOf(userId, date) { return `${userId}_${date}`; }
 function readLS() { try { return JSON.parse(localStorage.getItem(LS_KEY)) || {}; } catch { return {}; } }
 function writeLS(o) { localStorage.setItem(LS_KEY, JSON.stringify(o)); }
-function pickMeals(d) { return { breakfast: !!d.breakfast, lunch: !!d.lunch, dinner: !!d.dinner }; }
+function cleanFoods(foods) {
+  const out = {};
+  Object.keys(foods || {}).forEach((k) => {
+    const v = Number(foods[k]);
+    if (v > 0) out[k] = v;
+  });
+  return out;
+}
 
-// Refeições de um dia específico.
+// Alimentos marcados num dia (mapa foods).
 export async function getDietDay(userId, date) {
   if (isConfigured) {
     try {
       const s = await getDoc(doc(db, COL, keyOf(userId, date)));
-      return s.exists() ? pickMeals(s.data()) : { ...EMPTY };
+      return s.exists() ? cleanFoods(s.data().foods) : {};
     } catch (e) {
       console.warn("getDietDay falhou (regras do Firestore?):", e);
-      return { ...EMPTY };
+      return {};
     }
   }
   const all = readLS();
-  return { ...EMPTY, ...pickMeals(all[keyOf(userId, date)] || {}) };
+  return cleanFoods((all[keyOf(userId, date)] || {}).foods);
 }
 
-// Grava as refeições de um dia.
-export async function setDietDay(userId, date, meals) {
-  const clean = { userId, date, ...pickMeals(meals) };
+// Grava o mapa de alimentos do dia.
+export async function setDietDay(userId, date, foods) {
+  const clean = cleanFoods(foods);
   if (isConfigured) {
-    await setDoc(doc(db, COL, keyOf(userId, date)), { ...clean, updatedAt: serverTimestamp() });
+    await setDoc(doc(db, COL, keyOf(userId, date)), { userId, date, foods: clean, updatedAt: serverTimestamp() });
     return;
   }
   const all = readLS();
-  all[keyOf(userId, date)] = clean;
+  all[keyOf(userId, date)] = { userId, date, foods: clean };
   writeLS(all);
 }
 
-// Mapa date -> {breakfast,lunch,dinner} de todos os dias (pro histórico).
+// Mapa date -> foods de todos os dias (pro histórico).
 export async function getDietMap(userId) {
   const map = {};
   if (isConfigured) {
     try {
       const q = query(collection(db, COL), where("userId", "==", userId));
       const snap = await getDocs(q);
-      snap.forEach((d) => { const v = d.data(); map[v.date] = pickMeals(v); });
+      snap.forEach((d) => { const v = d.data(); map[v.date] = cleanFoods(v.foods); });
     } catch (e) {
       console.warn("getDietMap falhou (regras do Firestore?):", e);
     }
@@ -58,6 +64,6 @@ export async function getDietMap(userId) {
   }
   Object.values(readLS())
     .filter((v) => v.userId === userId)
-    .forEach((v) => { map[v.date] = pickMeals(v); });
+    .forEach((v) => { map[v.date] = cleanFoods(v.foods); });
   return map;
 }

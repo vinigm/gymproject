@@ -3104,31 +3104,23 @@ body.presence-fullscreen .presence-fs-exit { display: flex; }
   background: var(--card-2); border: 1px solid var(--border); font-size: 13px;
 }
 
-/* Dieta — checklist de refeições */
-.diet-checklist { display: flex; flex-direction: column; gap: 10px; }
-.diet-meal {
-  display: flex; align-items: center; gap: 12px; width: 100%;
-  padding: 16px 16px; border-radius: 14px;
-  background: var(--card-2); border: 1px solid var(--border);
-  text-align: left; transition: border-color .15s, background .15s;
+/* Dieta — refeições com alimentos e chips de quantidade */
+.diet-meal-group { margin-bottom: 18px; }
+.diet-meal-title {
+  margin: 0 0 8px; font-size: 15px; font-weight: 800; color: var(--vic);
 }
-.diet-meal-icon { font-size: 24px; line-height: 1; }
-.diet-meal-label { flex: 1; font-size: 16px; font-weight: 700; }
-.diet-meal-check {
-  width: 28px; height: 28px; border-radius: 50%;
-  border: 2px solid var(--border); flex: none;
-  display: flex; align-items: center; justify-content: center;
-  transition: background .15s, border-color .15s;
+.food-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 0; border-top: 1px solid var(--border);
 }
-.diet-meal.is-done {
-  border-color: var(--good);
-  background: rgba(52, 211, 153, .12);
-}
-.diet-meal.is-done .diet-meal-check {
-  background: var(--good); border-color: var(--good);
-}
-.diet-meal.is-done .diet-meal-check::after {
-  content: "✓"; color: #06231a; font-weight: 900; font-size: 16px;
+.food-row:first-of-type { border-top: none; }
+.food-name { flex: 1; font-size: 14px; font-weight: 600; }
+.food-opts { display: flex; gap: 6px; flex: none; }
+.food-chip { min-width: 42px; min-height: 38px; padding: 8px 4px; }
+.food-opts .chip.is-on {
+  background: rgba(244, 114, 182, .18);
+  border-color: var(--vic);
+  color: #fff;
 }
 
 /* Dieta — histórico 7 dias */
