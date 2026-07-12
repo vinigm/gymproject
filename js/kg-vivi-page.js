@@ -13,33 +13,56 @@ import { getDietDay, setDietDay, getDietMap } from "./diet-storage.js";
 const USER = "victoria";
 const SECTION_KEY = "habitos-kg-section";
 
-// Cardápio: cada refeição tem alimentos, cada alimento tem opções de quantidade.
-// (Fácil de editar/expandir depois.)
+// Cardápio: cada refeição tem alimentos, cada alimento tem opções de quantidade
+// e um perfil nutricional. `per: "unit"` = valores por unidade; `per: "100g"`
+// = valores por 100 g (a quantidade escolhida em g é escalonada).
+// Valores de referência aproximados (cozidos), pra estimativa — não é preciso.
 const DIET_MENU = [
   { key: "cafe", icon: "🌅", label: "Café da manhã", foods: [
-    { key: "ovo", label: "Ovo",          options: [1, 2, 3, 4] },
-    { key: "pao", label: "Pão (fatias)",  options: [1, 2, 3] },
+    { key: "ovo", label: "Ovo",         options: [1, 2, 3, 4], per: "unit",  kcal: 72, p: 6.3, c: 0.4, f: 4.8 },
+    { key: "pao", label: "Pão (fatias)", options: [1, 2, 3],    per: "unit",  kcal: 65, p: 2.2, c: 12,  f: 0.8 },
   ]},
   { key: "lanche_manha", icon: "🥪", label: "Lanche da manhã", foods: [
-    { key: "whey",    label: "Whey (doses)", options: [1, 2] },
-    { key: "iogurte", label: "Iogurte",      options: [1, 2] },
-    { key: "pao",     label: "Pão (fatias)", options: [1, 2] },
+    { key: "whey",    label: "Whey (doses)", options: [1, 2], per: "unit", kcal: 120, p: 24, c: 3,  f: 1.5 },
+    { key: "iogurte", label: "Iogurte",      options: [1, 2], per: "unit", kcal: 100, p: 6,  c: 12, f: 3 },
+    { key: "pao",     label: "Pão (fatias)", options: [1, 2], per: "unit", kcal: 65,  p: 2.2, c: 12, f: 0.8 },
   ]},
   { key: "almoco", icon: "☀️", label: "Almoço", foods: [
-    { key: "arroz",  label: "Arroz (g)",  options: [50, 100, 150] },
-    { key: "feijao", label: "Feijão (g)", options: [50, 100, 150] },
-    { key: "carne",  label: "Carne (g)",  options: [50, 100, 150] },
-    { key: "frango", label: "Frango (g)", options: [50, 100, 150] },
-    { key: "peixe",  label: "Peixe (g)",  options: [50, 100, 150] },
+    { key: "arroz",  label: "Arroz (g)",  options: [50, 100, 150], per: "100g", kcal: 130, p: 2.7, c: 28, f: 0.3 },
+    { key: "feijao", label: "Feijão (g)", options: [50, 100, 150], per: "100g", kcal: 80,  p: 5,   c: 14, f: 0.5 },
+    { key: "carne",  label: "Carne (g)",  options: [50, 100, 150], per: "100g", kcal: 220, p: 26,  c: 0,  f: 12 },
+    { key: "frango", label: "Frango (g)", options: [50, 100, 150], per: "100g", kcal: 165, p: 31,  c: 0,  f: 3.6 },
+    { key: "peixe",  label: "Peixe (g)",  options: [50, 100, 150], per: "100g", kcal: 130, p: 26,  c: 0,  f: 3 },
   ]},
   { key: "janta", icon: "🌙", label: "Janta", foods: [
-    { key: "arroz",  label: "Arroz (g)",  options: [50, 100, 150] },
-    { key: "feijao", label: "Feijão (g)", options: [50, 100, 150] },
-    { key: "carne",  label: "Carne (g)",  options: [50, 100, 150] },
-    { key: "frango", label: "Frango (g)", options: [50, 100, 150] },
-    { key: "peixe",  label: "Peixe (g)",  options: [50, 100, 150] },
+    { key: "arroz",  label: "Arroz (g)",  options: [50, 100, 150], per: "100g", kcal: 130, p: 2.7, c: 28, f: 0.3 },
+    { key: "feijao", label: "Feijão (g)", options: [50, 100, 150], per: "100g", kcal: 80,  p: 5,   c: 14, f: 0.5 },
+    { key: "carne",  label: "Carne (g)",  options: [50, 100, 150], per: "100g", kcal: 220, p: 26,  c: 0,  f: 12 },
+    { key: "frango", label: "Frango (g)", options: [50, 100, 150], per: "100g", kcal: 165, p: 31,  c: 0,  f: 3.6 },
+    { key: "peixe",  label: "Peixe (g)",  options: [50, 100, 150], per: "100g", kcal: 130, p: 26,  c: 0,  f: 3 },
   ]},
 ];
+
+// Índice alimento-id -> perfil nutricional (pra somar rápido).
+const FOOD_NUTRI = {};
+DIET_MENU.forEach((meal) => meal.foods.forEach((f) => {
+  FOOD_NUTRI[`${meal.key}.${f.key}`] = f;
+}));
+
+function computeNutrition(foods) {
+  const t = { kcal: 0, p: 0, c: 0, f: 0 };
+  Object.keys(foods || {}).forEach((id) => {
+    const q = Number(foods[id]);
+    const info = FOOD_NUTRI[id];
+    if (!q || !info) return;
+    const factor = info.per === "100g" ? q / 100 : q;
+    t.kcal += info.kcal * factor;
+    t.p += info.p * factor;
+    t.c += info.c * factor;
+    t.f += info.f * factor;
+  });
+  return { kcal: Math.round(t.kcal), p: Math.round(t.p), c: Math.round(t.c), f: Math.round(t.f) };
+}
 const WD = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"];
 
 const stateData = {
@@ -318,15 +341,17 @@ async function onSaveWeight() {
 
 // ─── Seção DIETA ──────────────────────────────────────────────────────
 function foodId(mealKey, foodKey) { return `${mealKey}.${foodKey}`; }
-function mealLogged(foods, mealKey) {
-  return Object.keys(foods || {}).some((k) => k.startsWith(mealKey + ".") && foods[k]);
-}
 
 function renderDiet() {
   const el = document.getElementById("kg-section");
   if (!el) return;
 
   el.innerHTML = `
+    <section class="block">
+      <div class="block-head"><h2>Resumo de hoje</h2></div>
+      <div id="diet-nutri">${nutriHTML(computeNutrition(stateData.dietFoods))}</div>
+    </section>
+
     <section class="block">
       <div class="block-head"><h2>Comidas de hoje</h2>
         <span class="muted" id="diet-count" style="font-size:11px">${countItems(stateData.dietFoods)}</span>
@@ -336,12 +361,27 @@ function renderDiet() {
     </section>
 
     <section class="block">
-      <div class="block-head"><h2>Últimos 7 dias</h2></div>
+      <div class="block-head"><h2>Histórico</h2></div>
       <div id="diet-hist-wrap">${dietHistoryHTML()}</div>
-      <p class="muted diet-legend">${DIET_MENU.map((m) => `${m.icon} ${m.label.split(" ")[0].toLowerCase()}`).join(" · ")}</p>
     </section>`;
 
   bindDiet();
+}
+
+function nutriHTML(t) {
+  return `
+    <div class="nutri">
+      <div class="nutri-kcal">
+        <span class="nutri-kcal-val">${t.kcal}</span>
+        <span class="nutri-kcal-unit">kcal</span>
+      </div>
+      <div class="nutri-macros">
+        <div class="nutri-macro nutri-p"><b>${t.p} g</b><span>Proteína</span></div>
+        <div class="nutri-macro nutri-c"><b>${t.c} g</b><span>Carbo</span></div>
+        <div class="nutri-macro nutri-f"><b>${t.f} g</b><span>Gordura</span></div>
+      </div>
+      <p class="muted nutri-note">estimativa aproximada dos valores</p>
+    </div>`;
 }
 
 function countItems(foods) {
@@ -368,15 +408,19 @@ function mealHTML(meal) {
 }
 
 function dietHistoryHTML() {
-  const days = Array.from({ length: 7 }, (_, i) => offsetISO(-(6 - i)));
   const today = todayISO();
-  return `<div class="diet-hist">${days.map((d) => {
-    const foods = d === today ? stateData.dietFoods : (stateData.dietMap[d] || {});
-    const dots = DIET_MENU.map((m) => `<span class="diet-dot ${mealLogged(foods, m.key) ? "on" : ""}"></span>`).join("");
-    return `<div class="diet-hist-col${d === today ? " is-today" : ""}">
-      <div class="diet-hist-dots">${dots}</div>
-      <span class="diet-hist-wd">${weekdayShort(d)}</span>
-      <span class="diet-hist-day">${d.slice(8)}</span>
+  const map = { ...stateData.dietMap, [today]: stateData.dietFoods };
+  const days = Object.keys(map)
+    .filter((d) => Object.keys(map[d] || {}).length > 0)
+    .sort((a, b) => b.localeCompare(a)); // mais recente primeiro
+  if (!days.length) return `<p class="muted" style="padding:8px">Nenhum registro ainda.</p>`;
+  return `<div class="diet-days">${days.map((d) => {
+    const foods = map[d];
+    const n = Object.keys(foods).length;
+    const kcal = computeNutrition(foods).kcal;
+    return `<div class="diet-day-row${d === today ? " is-today" : ""}">
+      <span class="diet-day-date">${weekdayShort(d)} ${fmtDateBR(d)}</span>
+      <span class="diet-day-meta">${n} ${n === 1 ? "item" : "itens"} · ~${kcal} kcal</span>
     </div>`;
   }).join("")}</div>`;
 }
@@ -396,9 +440,11 @@ function bindDiet() {
         c.classList.toggle("is-on", Number(c.dataset.val) === stateData.dietFoods[id]);
       });
 
-      // Atualiza contador + histórico de hoje
+      // Atualiza resumo nutricional + contador + histórico (sem re-render total)
       const today = todayISO();
       stateData.dietMap[today] = { ...stateData.dietFoods };
+      const nutri = document.getElementById("diet-nutri");
+      if (nutri) nutri.innerHTML = nutriHTML(computeNutrition(stateData.dietFoods));
       const count = document.getElementById("diet-count");
       if (count) count.textContent = countItems(stateData.dietFoods);
       const hist = document.getElementById("diet-hist-wrap");
