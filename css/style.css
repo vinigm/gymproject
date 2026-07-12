@@ -3054,38 +3054,8 @@ body.presence-fullscreen .presence-fs-exit { display: flex; }
 .kg-msg { font-size: 13px; color: var(--good); text-align: center; margin: 4px 0 0; }
 .kg-msg.is-error { color: var(--bad); }
 
-/* Roda de horário (estilo despertador iPhone) */
-.time-wheel {
-  position: relative;
-  display: flex; align-items: center; justify-content: center; gap: 6px;
-  height: 200px; /* 5 itens de 40px */
-  background: var(--card-2); border: 1px solid var(--border); border-radius: 14px;
-  overflow: hidden; max-width: 240px;
-  -webkit-mask-image: linear-gradient(180deg, transparent, #000 26%, #000 74%, transparent);
-          mask-image: linear-gradient(180deg, transparent, #000 26%, #000 74%, transparent);
-}
-.wheel {
-  height: 200px; width: 72px; overflow-y: scroll;
-  scroll-snap-type: y mandatory; scrollbar-width: none;
-  padding-block: 80px; /* deixa 1º e último item centrarem */
-  text-align: center;
-}
-.wheel::-webkit-scrollbar { display: none; }
-.wheel-item {
-  height: 40px; line-height: 40px; scroll-snap-align: center;
-  font-size: 24px; font-weight: 600; color: var(--muted);
-  font-variant-numeric: tabular-nums;
-  opacity: .5; transition: opacity .12s, color .12s, transform .12s;
-  cursor: pointer;
-}
-.wheel-item.is-sel { color: var(--vic); opacity: 1; transform: scale(1.12); font-weight: 800; }
-.wheel-colon { font-size: 26px; font-weight: 800; color: var(--text); }
-.wheel-band {
-  position: absolute; left: 8px; right: 8px; top: 80px; height: 40px;
-  border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
-  border-radius: 8px; background: rgba(244,114,182,.08);
-  pointer-events: none;
-}
+/* Seletor de seção (Peso / Dieta) */
+.kg-seg .seg-btn.is-on { box-shadow: inset 0 -2px 0 var(--vic); }
 
 /* Gráfico */
 .kg-chart-wrap {
@@ -3134,7 +3104,54 @@ body.presence-fullscreen .presence-fs-exit { display: flex; }
   background: var(--card-2); border: 1px solid var(--border); font-size: 13px;
 }
 
+/* Dieta — checklist de refeições */
+.diet-checklist { display: flex; flex-direction: column; gap: 10px; }
+.diet-meal {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  padding: 16px 16px; border-radius: 14px;
+  background: var(--card-2); border: 1px solid var(--border);
+  text-align: left; transition: border-color .15s, background .15s;
+}
+.diet-meal-icon { font-size: 24px; line-height: 1; }
+.diet-meal-label { flex: 1; font-size: 16px; font-weight: 700; }
+.diet-meal-check {
+  width: 28px; height: 28px; border-radius: 50%;
+  border: 2px solid var(--border); flex: none;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s, border-color .15s;
+}
+.diet-meal.is-done {
+  border-color: var(--good);
+  background: rgba(52, 211, 153, .12);
+}
+.diet-meal.is-done .diet-meal-check {
+  background: var(--good); border-color: var(--good);
+}
+.diet-meal.is-done .diet-meal-check::after {
+  content: "✓"; color: #06231a; font-weight: 900; font-size: 16px;
+}
+
+/* Dieta — histórico 7 dias */
+.diet-hist { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.diet-hist-col {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 8px 2px; border-radius: 10px;
+  background: var(--card); border: 1px solid var(--border);
+}
+.diet-hist-col.is-today { border-color: var(--vic); }
+.diet-hist-dots { display: flex; flex-direction: column; gap: 4px; }
+.diet-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--card-2); border: 1px solid var(--border);
+}
+.diet-dot.on { background: var(--good); border-color: var(--good); }
+.diet-hist-wd { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.diet-hist-day { font-size: 12px; font-weight: 700; color: var(--text); }
+.diet-hist-col.is-today .diet-hist-day { color: var(--vic); }
+.diet-legend { font-size: 11px; text-align: center; margin: 12px 0 0; }
+
 @media (min-width: 640px) {
   .kg-hero-value { font-size: 84px; }
   .kg-stat-value { font-size: 24px; }
+  .diet-dot { width: 12px; height: 12px; }
 }
