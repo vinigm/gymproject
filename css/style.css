@@ -3145,6 +3145,26 @@ body.presence-fullscreen .presence-fs-exit { display: flex; }
 .nutri-f b { color: #fbbf24; }
 .nutri-note { font-size: 11px; text-align: center; margin: 12px 0 0; }
 
+/* Dieta — metas com barra de progresso */
+.goals {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px 14px;
+}
+.goal-row { margin-bottom: 14px; }
+.goal-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 6px; gap: 8px; }
+.goal-label { font-size: 14px; font-weight: 700; }
+.goal-val { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.goal-bar {
+  height: 9px; border-radius: 999px; overflow: hidden;
+  background: var(--card-2); border: 1px solid var(--border);
+}
+.goal-fill { height: 100%; border-radius: 999px; transition: width .25s ease; }
+.goal-kcal .goal-fill { background: var(--vic); }
+.goal-p .goal-fill { background: var(--good); }
+.goal-c .goal-fill { background: var(--water); }
+.goal-f .goal-fill { background: #fbbf24; }
+.goal-row.is-met .goal-val { color: var(--good); font-weight: 700; }
+
 /* Dieta — histórico de dias com registro */
 .diet-days { display: flex; flex-direction: column; gap: 6px; }
 .diet-day-row {

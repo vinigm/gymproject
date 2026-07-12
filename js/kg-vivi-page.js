@@ -63,6 +63,15 @@ function computeNutrition(foods) {
   });
   return { kcal: Math.round(t.kcal), p: Math.round(t.p), c: Math.round(t.c), f: Math.round(t.f) };
 }
+
+// ⚠️ METAS DIÁRIAS — números PROVISÓRIOS. Quando tiver os certos, troque só aqui.
+const GOALS = { kcal: 2000, p: 90, c: 250, f: 65 };
+const GOAL_META = [
+  { key: "kcal", label: "Calorias", unit: "kcal", cls: "goal-kcal" },
+  { key: "p",    label: "Proteína", unit: "g",    cls: "goal-p" },
+  { key: "c",    label: "Carbo",    unit: "g",    cls: "goal-c" },
+  { key: "f",    label: "Gordura",  unit: "g",    cls: "goal-f" },
+];
 const WD = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"];
 
 const stateData = {
@@ -353,6 +362,11 @@ function renderDiet() {
     </section>
 
     <section class="block">
+      <div class="block-head"><h2>Metas de hoje</h2></div>
+      <div id="diet-goals">${goalsHTML(computeNutrition(stateData.dietFoods))}</div>
+    </section>
+
+    <section class="block">
       <div class="block-head"><h2>Comidas de hoje</h2>
         <span class="muted" id="diet-count" style="font-size:11px">${countItems(stateData.dietFoods)}</span>
       </div>
@@ -366,6 +380,26 @@ function renderDiet() {
     </section>`;
 
   bindDiet();
+}
+
+function goalsHTML(t) {
+  return `<div class="goals">
+    ${GOAL_META.map((g) => {
+      const cur = t[g.key];
+      const goal = Number(GOALS[g.key]) || 0;
+      const pct = goal > 0 ? Math.round((cur / goal) * 100) : 0;
+      const w = Math.max(0, Math.min(100, pct));
+      return `
+        <div class="goal-row ${g.cls}${pct >= 100 ? " is-met" : ""}">
+          <div class="goal-head">
+            <span class="goal-label">${g.label}</span>
+            <span class="goal-val">${cur} / ${goal} ${g.unit} · ${pct}%</span>
+          </div>
+          <div class="goal-bar"><div class="goal-fill" style="width:${w}%"></div></div>
+        </div>`;
+    }).join("")}
+    <p class="muted nutri-note">metas provisórias — ajuste quando tiver os números certos</p>
+  </div>`;
 }
 
 function nutriHTML(t) {
@@ -443,8 +477,11 @@ function bindDiet() {
       // Atualiza resumo nutricional + contador + histórico (sem re-render total)
       const today = todayISO();
       stateData.dietMap[today] = { ...stateData.dietFoods };
+      const totals = computeNutrition(stateData.dietFoods);
       const nutri = document.getElementById("diet-nutri");
-      if (nutri) nutri.innerHTML = nutriHTML(computeNutrition(stateData.dietFoods));
+      if (nutri) nutri.innerHTML = nutriHTML(totals);
+      const goals = document.getElementById("diet-goals");
+      if (goals) goals.innerHTML = goalsHTML(totals);
       const count = document.getElementById("diet-count");
       if (count) count.textContent = countItems(stateData.dietFoods);
       const hist = document.getElementById("diet-hist-wrap");
