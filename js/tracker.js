@@ -1,9 +1,6 @@
 import { getDay, saveDay } from "./storage.js";
 import { getState, USERS } from "./app.js";
-
-// Grupos que se comportam como multi-select (array de strings).
-// Demais grupos são radio-like (string única ou null).
-const MULTI_GROUPS = new Set(["exercises", "extras", "gym_groups"]);
+import { normalizeTrackerDay, toggleTrackerValue } from "./tracker-model.js";
 
 // Snapshot por usuário do que está NO BANCO (após carregar/salvar)
 const saved = {};
@@ -19,26 +16,7 @@ function setStatus(text, kind = "") {
 function isDirtyUser(userId) {
   const a = saved[userId], b = local[userId];
   if (!a || !b) return false;
-  return JSON.stringify(normalize(a)) !== JSON.stringify(normalize(b));
-}
-
-function normalize(d) {
-  // Comparação estável (arrays ordenados, campos nulos virados em null)
-  return {
-    exercises: [...(d.exercises || [])].sort(),
-    extras: [...(d.extras || [])].sort(),
-    gym_groups: [...(d.gym_groups || [])].sort(),
-    water: d.water ?? null,
-    lunch: d.lunch ?? null,
-    dinner: d.dinner ?? null,
-    cigarettes: (d.cigarettes ?? null) === "" ? null : (d.cigarettes ?? null),
-    nicotine_gum: (d.nicotine_gum ?? null) === "" ? null : (d.nicotine_gum ?? null),
-    dessert: d.dessert ?? null,
-    soda: d.soda ?? null,
-    jiu_session: d.jiu_session ?? null,
-    jiu_spar_min: (d.jiu_spar_min === "" || d.jiu_spar_min == null) ? null : Number(d.jiu_spar_min),
-    stretch_min: (d.stretch_min === "" || d.stretch_min == null) ? null : Number(d.stretch_min),
-  };
+  return JSON.stringify(normalizeTrackerDay(a)) !== JSON.stringify(normalizeTrackerDay(b));
 }
 
 function dirtyCount() {
@@ -86,6 +64,9 @@ function paintCard(userId) {
   // visibilidade condicional do bloco Academia
   const hasGym = (d.exercises || []).includes("academia");
   root.classList.toggle("has-gym", hasGym);
+  // visibilidade condicional do bloco Corrida
+  const hasRun = (d.exercises || []).includes("corrida");
+  root.classList.toggle("has-run", hasRun);
   // visibilidade condicional do bloco Jiu
   const hasJiu = (d.exercises || []).includes("jiujitsu");
   root.classList.toggle("has-jiu", hasJiu);
@@ -101,19 +82,7 @@ function handleChipClick(userId, chip) {
   const v = chip.dataset.value;
   const d = local[userId];
 
-  if (MULTI_GROUPS.has(group)) {
-    if (!Array.isArray(d[group])) d[group] = [];
-    const i = d[group].indexOf(v);
-    if (i >= 0) d[group].splice(i, 1);
-    else d[group].push(v);
-  } else {
-    // jiu_spar_min e stretch_min armazenados como Number; demais como string
-    const isNum = group === "jiu_spar_min" || group === "stretch_min";
-    const next = isNum ? Number(v) : v;
-    const cur = d[group];
-    const same = cur != null && String(cur) === v;
-    d[group] = same ? null : next;
-  }
+  toggleTrackerValue(d, group, v);
   paintCard(userId);
   paintSaveButton();
 }

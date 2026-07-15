@@ -78,6 +78,7 @@ No iPhone/Android, abrir o site no navegador e usar "Adicionar à tela de iníci
 | `nav-menu.js` | Menu de navegação compartilhado (`NAV_ITEMS`, `mountNavMenu`), item ativo e `--stack-top` |
 | `firebase-config.js` | Inicialização condicional do Firebase; exporta `db`, `auth`, `isConfigured` e helpers do Firestore |
 | `tracker.js` | Lógica dos cards de hábitos: carga, edição, dirty-check, salvamento em lote |
+| `tracker-model.js` | Regras puras do tracker: normalização, toggle dos grupos e opções válidas de distância da corrida |
 | `storage.js` | Camada de dados de `days`, `transactions` e `config` (Firestore x localStorage) |
 | `history.js` | Histórico do mês corrente na página principal (grid de 6 hábitos) |
 | `points-config.js` | Tabela de pontos (`POINTS`), prêmios (`REWARDS`/`REWARDS_VICTORIA`), extras, datas de início e funções de override/reset |
@@ -118,6 +119,7 @@ No iPhone/Android, abrir o site no navegador e usar "Adicionar à tela de iníci
 | `DIETA_VINI.md` | Fonte auditável do plano alimentar do Vini e decisões da integração com o tracker |
 | `dieta_vini/` | 21 screenshots-fonte do plano alimentar (19 conteúdos únicos) |
 | `tests/vini-diet-plan.test.mjs` | Testes dos cálculos, snapshots, opcionais, hidratação e arroz + purê |
+| `tests/tracker-run-distance.test.mjs` | Testes das opções, seleção, troca e limpeza da distância de corrida |
 
 ## Boot & autenticação
 
@@ -173,17 +175,17 @@ Em seguida o nav é posicionado logo abaixo da `.topbar`: `setOffsets()` mede `t
 
 **Como funciona por baixo.** Dois usuários fixos: `USERS = ["vinicius", "victoria"]`. A data ativa fica em `state.date` (default `todayISO()`, clampada a `APP_START_DATE = "2026-05-18"`). O HTML tem dois `<article class="person-card" data-user="vinicius|victoria">`, cada um com `.chip-grid[data-group="..."]` de `.chip[data-value="..."]`.
 
-`tracker.js` mantém dois objetos por usuário: `saved[userId]` (o que está no banco) e `local[userId]` (o que está sendo editado). `MULTI_GROUPS = new Set(["exercises","extras","gym_groups"])` são multi-select (arrays); os demais grupos são radio-like (string única, `Number` para `jiu_spar_min`/`stretch_min`, ou `null`).
+`tracker.js` mantém dois objetos por usuário: `saved[userId]` (o que está no banco) e `local[userId]` (o que está sendo editado). As regras puras ficam em `tracker-model.js`: `MULTI_GROUPS = new Set(["exercises","extras","gym_groups"])` são multi-select (arrays); os demais grupos são radio-like (string única, `Number` para `jiu_spar_min`/`stretch_min`/`run_km`, ou `null`).
 
 - **Carga** — `refreshAllTrackers()` pega a data, faz `Promise.all(USERS.map(u => getDay(u, date)))`, garante arrays em `exercises/extras/gym_groups`, faz deep-copy para `saved[u]` e `local[u]`, e chama `paintCard(u)` + `paintSaveButton()`.
-- **Edição** — `handleChipClick` lê `group` e `v`; se MULTI, faz toggle no array; se radio, guarda `Number(v)` (para `jiu_spar_min`/`stretch_min`) ou string, e clicar no valor já ativo zera para `null`.
-- **Blocos condicionais** — `paintCard` alterna classes no `.person-card`: `has-gym` (tem "academia"), `has-jiu` (tem "jiujitsu"), `has-jiu-session`, `has-stretch` (tem "alongamento"), revelando `.gym-detail`, `.jiu-detail`, `.jiu-spar`, `.stretch-detail`. Jiu-jítsu e seus detalhes só existem no card do Vinicius.
-- **Dirty-check** — `isDirtyUser` compara `JSON.stringify(normalize(saved))` vs `normalize(local)`. `normalize` ordena arrays, normaliza nulos e coage tipos. `hasUnsavedChanges()` = `dirtyCount() > 0`.
+- **Edição** — `handleChipClick` passa `group` e `v` para `toggleTrackerValue`; se MULTI, faz toggle no array; se radio, guarda `Number(v)` (para `jiu_spar_min`/`stretch_min`/`run_km`) ou string, e clicar no valor já ativo zera para `null`. Marcar corrida abre os cards de distância (2,5 a 10 km); desmarcá-la recolhe o bloco e limpa `run_km`. A distância é descritiva e não altera os pontos fixos da corrida.
+- **Blocos condicionais** — `paintCard` alterna classes no `.person-card`: `has-gym` (tem "academia"), `has-run` (tem "corrida"), `has-jiu` (tem "jiujitsu"), `has-jiu-session`, `has-stretch` (tem "alongamento"), revelando `.gym-detail`, `.run-detail`, `.jiu-detail`, `.jiu-spar`, `.stretch-detail`. O detalhe de corrida existe nos dois cards; jiu-jítsu e seus detalhes só existem no card do Vinicius.
+- **Dirty-check** — `isDirtyUser` compara `JSON.stringify(normalizeTrackerDay(saved))` vs `normalizeTrackerDay(local)`. A normalização ordena arrays, trata nulos, valida `run_km` e coage tipos. `hasUnsavedChanges()` = `dirtyCount() > 0`.
 - **Salvar** — `saveAllDirty()` filtra usuários dirty, `Promise.all(dirty.map(u => saveDay(u, date, local[u])))`, e em sucesso copia `saved[u] = deep-copy(local[u])`, repinta e mostra "salvo!". O `#btn-save` (ligado em `app.js`) chama `saveAndRefresh()` = `saveAllDirty()` + `refreshDependentViews()` (que roda `renderHistory()` + `refreshPointsBadge()`).
 - **Navegação de data** — `#date-input` (min = `APP_START_DATE`) e `#btn-today` chamam `navigateToDate`, que clampa a data e, se houver pendências, dá `confirm()` (OK = salvar e mudar; Cancelar = descartar e mudar). Há `beforeunload` bloqueando fechar a aba com pendências.
 - **Chips de "Outros hábitos"** — renderizados dinamicamente por `renderExtrasChips()` a partir de `EXTRAS_META`, depois de `loadAndApplyConfig()`. Os grids no HTML vêm vazios de propósito.
 
-**Arquivos.** `index.html`, `js/tracker.js`, `js/storage.js`, `js/history.js`, `js/app.js`, `js/points-config.js`.
+**Arquivos.** `index.html`, `js/tracker.js`, `js/tracker-model.js`, `js/storage.js`, `js/history.js`, `js/app.js`, `js/points-config.js`.
 
 ### Pontos
 
@@ -321,9 +323,9 @@ Todas as coleções têm um módulo de storage próprio com fallback automático
 
 - **Doc ID**: `${userId}_${YYYY-MM-DD}` (ex.: `vinicius_2026-07-15`), via `dayKey(userId, date)`.
 - **Módulo**: `js/storage.js` (`COL = "days"`). Leitura por `getDoc` direto; `getRange` faz `Promise.all` de `getDoc` por ID (não usa query — decisão explícita para não travar sob as regras).
-- **Campos**: `userId` ("vinicius"|"victoria"), `date`, `exercises` (string[]), `gym_groups` (string[]), `extras` (string[]), `water` ("0.5L"|"1L"|"1.5L"|"2L"|null), `lunch`/`dinner` ("limpo"|"sujo"|null), `dessert` ("sim"|"nao"|null), `soda` ("sim"|"nao"|null), `cigarettes` (string "0".."6"|null), `nicotine_gum` (string "0".."10"|null), `jiu_session` ("6h30"|"12h"|"16h30"|"19h30"|"Sab11"|null), `jiu_spar_min` (Number ∈ {15, 20, 25, 30, 35, 40, 45, 50, 60}|null), `stretch_min` (Number 5/10/15|null), `updatedAt` (serverTimestamp no Firebase / ISO string no local).
-- **Valores dos grupos**: `exercises` — Vini: academia, corrida, jiujitsu, alongamento; Vivi: academia, corrida, yoga, pilates, bicicleta, alongamento. `gym_groups`: costa, triceps, peito, biceps, perna, ombro, lombar, abdominal. `jiu_session` (radio, só card Vini): 6h30, 12h, 16h30, 19h30, Sab11. `jiu_spar_min` (radio→Number, só Vini): 15, 20, 25, 30, 35, 40, 45, 50, 60. `extras`: keys de `EXTRAS_META` (marmita, vegetais, fruta, cafe, mercado, escada, leitura, conversa, skincare, suplemento + custom).
-- **Observação**: `emptyDay()` inicializa só `{userId, date, exercises:[], water:null, lunch:null, dinner:null, updatedAt:null}` — os demais campos só existem no doc depois de marcados.
+- **Campos**: `userId` ("vinicius"|"victoria"), `date`, `exercises` (string[]), `gym_groups` (string[]), `extras` (string[]), `run_km` (Number ∈ {2.5, 3, 4, 5, 6, 7, 8, 9, 10}|null), `water` ("0.5L"|"1L"|"1.5L"|"2L"|null), `lunch`/`dinner` ("limpo"|"sujo"|null), `dessert` ("sim"|"nao"|null), `soda` ("sim"|"nao"|null), `cigarettes` (string "0".."6"|null), `nicotine_gum` (string "0".."10"|null), `jiu_session` ("6h30"|"12h"|"16h30"|"19h30"|"Sab11"|null), `jiu_spar_min` (Number ∈ {15, 20, 25, 30, 35, 40, 45, 50, 60}|null), `stretch_min` (Number 5/10/15|null), `updatedAt` (serverTimestamp no Firebase / ISO string no local).
+- **Valores dos grupos**: `exercises` — Vini: academia, corrida, jiujitsu, alongamento; Vivi: academia, corrida, yoga, pilates, bicicleta, alongamento. `run_km` (radio, nos dois cards): 2.5, 3, 4, 5, 6, 7, 8, 9, 10. `gym_groups`: costa, triceps, peito, biceps, perna, ombro, lombar, abdominal. `jiu_session` (radio, só card Vini): 6h30, 12h, 16h30, 19h30, Sab11. `jiu_spar_min` (radio→Number, só Vini): 15, 20, 25, 30, 35, 40, 45, 50, 60. `extras`: keys de `EXTRAS_META` (marmita, vegetais, fruta, cafe, mercado, escada, leitura, conversa, skincare, suplemento + custom).
+- **Observação**: `emptyDay()` inicializa `{userId, date, exercises:[], run_km:null, water:null, lunch:null, dinner:null, updatedAt:null}` — os demais campos só existem no doc depois de marcados.
 
 ### Coleção `transactions`
 
@@ -462,7 +464,7 @@ Amarelos (`#fbbf24`/`#fcd34d`/`#fde68a`) e roxos/azuis de gradiente **não têm 
 ### Componentes reutilizáveis
 
 - **Chips**: `.chip` (base), `.chip.is-on` (fundo accent), variantes `.chip--good.is-on` (verde), `.chip--bad.is-on` (vermelho), `.chip--num` (escala numérica; `data-value="0"` verde, `"5"/"6"` vermelho para cigarros). Grades `.chip-grid` + modificadores `--1/--2/--3/--5/--6/--7` (não há `--4`; grids de 4 usam layout ad-hoc). `.exercise-stack` empilha chips + blocos condicionais.
-- **Blocos condicionais**: `.gym-detail`/`.jiu-detail`/`.stretch-detail`/`.jiu-spar`, revelados por `.person-card.has-gym`/`.has-jiu`/`.has-stretch`/`.has-jiu-session`.
+- **Blocos condicionais**: `.gym-detail`/`.run-detail`/`.jiu-detail`/`.stretch-detail`/`.jiu-spar`, revelados por `.person-card.has-gym`/`.has-run`/`.has-jiu`/`.has-stretch`/`.has-jiu-session`.
 - **Segmented control**: `.seg > .seg-btn`, ativo `.seg-btn.is-on`; underline por pessoa via `.seg-btn[data-user=...].is-on`. `.stats-user-seg` é a variante full-width. O ciclo reutiliza o padrão em `.tracking-scope-seg` dentro de `.tracking-cycle-card`.
 - **Cards de pessoa**: `.person-card` (border-top colorido por `data-user`), `.person-head`/`.person-name`, estado `.has-pending` (anel accent).
 - **Avatares**: `.avatar` + `.avatar--vini`/`.avatar--vic` + tamanhos `--md/--sm/--xs`.
@@ -485,9 +487,9 @@ Breakpoints: `@media (max-width:359px)` compacta chips; `(max-width:420/480px)` 
 
 ### Service Worker
 
-`service-worker.js`, estratégia **network-first** com fallback offline. `CACHE = "habitos-shell-v21"`. No `install` faz `self.skipWaiting()`; no `activate` deleta todos os caches com nome diferente de `CACHE` e chama `self.clients.claim()`. No `fetch`: deixa passar direto hosts que contenham `googleapis.com`, `firebaseio.com` ou `gstatic.com`, e métodos diferentes de GET; para o resto faz `fetch(req, { cache: "no-store" })`, clona a resposta para o cache em background e, se a rede falhar, responde com `caches.match(req)`. Isso garante versão fresca quando online e evita ficar preso em versão antiga após deploy. O SW é registrado por `index.html` no evento `load`.
+`service-worker.js`, estratégia **network-first** com fallback offline. `CACHE = "habitos-shell-v22"`. No `install` faz `self.skipWaiting()`; no `activate` deleta todos os caches com nome diferente de `CACHE` e chama `self.clients.claim()`. No `fetch`: deixa passar direto hosts que contenham `googleapis.com`, `firebaseio.com` ou `gstatic.com`, e métodos diferentes de GET; para o resto faz `fetch(req, { cache: "no-store" })`, clona a resposta para o cache em background e, se a rede falhar, responde com `caches.match(req)`. Isso garante versão fresca quando online e evita ficar preso em versão antiga após deploy. O SW é registrado por `index.html` no evento `load`.
 
-Para invalidar caches antigos num deploy, é preciso **incrementar manualmente o nome do cache** (`habitos-shell-v21`) — o número é a versão efetiva do shell. Em rede lenta mas presente não há timeout: o app espera a rede em vez de servir o cache.
+Para invalidar caches antigos num deploy, é preciso **incrementar manualmente o nome do cache** (`habitos-shell-v22`) — o número é a versão efetiva do shell. Em rede lenta mas presente não há timeout: o app espera a rede em vez de servir o cache.
 
 ### Wake Lock
 

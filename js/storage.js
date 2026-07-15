@@ -4,6 +4,7 @@
 //   userId: 'vinicius' | 'victoria',
 //   date: 'YYYY-MM-DD',
 //   exercises: string[],
+//   run_km: 2.5 | 3 | ... | 10 | null,
 //   water:  '1L' | '1.5L' | '2L' | null,
 //   lunch:  'limpo' | 'sujo' | null,
 //   dinner: 'limpo' | 'sujo' | null,
@@ -33,6 +34,7 @@ function emptyDay(userId, date) {
   return {
     userId, date,
     exercises: [],
+    run_km: null,
     water: null,
     lunch: null,
     dinner: null,

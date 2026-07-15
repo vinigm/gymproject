@@ -354,6 +354,7 @@ classes CSS, email) pra não invalidar os dados antigos no Firestore.
 days/{userId}_{YYYY-MM-DD} = {
   userId, date,
   exercises: ["academia", "corrida", ...],
+  run_km: 2.5 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | null,
   extras: ["marmita", "leitura", ...],
   water: "1L" | "1.5L" | "2L" | "0.5L" | null,
   lunch: "limpo" | "sujo" | null,

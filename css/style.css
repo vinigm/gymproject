@@ -167,8 +167,9 @@ input, select { font: inherit; color: inherit; }
   display: flex; flex-direction: column; gap: 6px;
 }
 
-/* Blocos condicionais (Academia / Jiu / Alongamento) — destaque verde pra chamar atenção */
+/* Blocos condicionais (Academia / Corrida / Jiu / Alongamento) — destaque verde pra chamar atenção */
 .gym-detail,
+.run-detail,
 .jiu-detail,
 .stretch-detail {
   display: none;
@@ -179,9 +180,11 @@ input, select { font: inherit; color: inherit; }
   border-radius: 10px;
 }
 .person-card.has-gym .gym-detail { display: block; }
+.person-card.has-run .run-detail { display: block; }
 .person-card.has-jiu .jiu-detail { display: block; }
 .person-card.has-stretch .stretch-detail { display: block; }
 .gym-detail .mini-title,
+.run-detail .mini-title,
 .jiu-detail .mini-title,
 .stretch-detail .mini-title {
   color: var(--good);
@@ -199,6 +202,10 @@ input, select { font: inherit; color: inherit; }
 
 /* chips numéricos do tempo de luta (15-60 min) */
 .jiu-spar .chip {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+.run-detail .chip {
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.01em;
 }
