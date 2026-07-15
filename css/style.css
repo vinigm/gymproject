@@ -3324,6 +3324,10 @@ body.presence-fullscreen .presence-fs-exit { display: flex; }
 .vini-date-copy strong { font-size: 15px; text-transform: capitalize; }
 .vini-save-status { min-height: 15px; color: var(--good); font-size: 11px; font-weight: 700; }
 .vini-save-status.is-error { color: var(--bad); }
+.vini-save-row { display: grid; grid-column: 1 / -1; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; }
+.vini-diet-save-btn { min-height: 44px; padding: 10px 14px; font-size: 13px; }
+.vini-diet-save-btn.is-saved { color: #052e1d; background: var(--good); border-color: var(--good); box-shadow: 0 6px 20px rgba(52, 211, 153, .22); }
+.vini-diet-save-btn.is-error { color: #fff; background: var(--bad); border-color: var(--bad); box-shadow: none; }
 .vini-date-nav { display: flex; align-items: center; gap: 6px; }
 .vini-date-nav input {
   min-height: 40px;
@@ -3541,6 +3545,8 @@ body.presence-fullscreen .presence-fs-exit { display: flex; }
   .vini-date-card { grid-template-columns: 1fr; }
   .vini-date-nav { width: 100%; }
   .vini-date-nav input { flex: 1; min-width: 0; }
+  .vini-save-row { grid-template-columns: 1fr; }
+  .vini-save-status { text-align: center; }
 }
 
 @media (max-width: 440px) {

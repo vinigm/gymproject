@@ -1,4 +1,5 @@
 import {
+  cacheViniDietPlanDay,
   getViniDietPlanMap,
   setViniDietPlanDay,
 } from "./diet-storage.js";
@@ -97,15 +98,30 @@ function currentMapInScope() {
 
 function updateSaveStatus() {
   const el = tracker.root?.querySelector("#vini-diet-save-status");
-  if (!el) return;
-  el.textContent = tracker.saveStatus === "saving"
+  const button = tracker.root?.querySelector("[data-save-diet]");
+  const message = tracker.saveStatus === "saving"
     ? "salvando…"
     : tracker.saveStatus === "error"
-      ? "erro ao salvar"
+      ? "salvo neste aparelho; nuvem pendente"
       : tracker.saveStatus === "saved"
-        ? "salvo ✓"
+        ? "sincronizado com a nuvem ✓"
         : "";
-  el.classList.toggle("is-error", tracker.saveStatus === "error");
+  if (el) {
+    el.textContent = message;
+    el.classList.toggle("is-error", tracker.saveStatus === "error");
+  }
+  if (button) {
+    button.disabled = tracker.saveStatus === "saving";
+    button.textContent = tracker.saveStatus === "saving"
+      ? "Salvando…"
+      : tracker.saveStatus === "error"
+        ? "Tentar sincronizar novamente"
+        : tracker.saveStatus === "saved"
+          ? "Salvo ✓"
+          : "Salvar marcações";
+    button.classList.toggle("is-saved", tracker.saveStatus === "saved");
+    button.classList.toggle("is-error", tracker.saveStatus === "error");
+  }
 }
 
 function queuePersist(date, payload) {
@@ -131,6 +147,7 @@ function queuePersist(date, payload) {
       tracker.saveStatus = "error";
       updateSaveStatus();
     });
+  return tracker.persistQueue;
 }
 
 function mutateCurrentDay(mutator) {
@@ -141,8 +158,18 @@ function mutateCurrentDay(mutator) {
   mutator(draft);
   const payload = withViniDietSummary(draft);
   tracker.map[tracker.selectedDate] = payload;
+  // O cache síncrono garante que até uma saída imediata da página preserve
+  // a última marcação; o Firebase continua sendo sincronizado em seguida.
+  cacheViniDietPlanDay(USER, tracker.selectedDate, payload);
   queuePersist(tracker.selectedDate, payload);
   renderTracker();
+}
+
+function persistCurrentDay() {
+  const payload = withViniDietSummary(currentDay());
+  tracker.map[tracker.selectedDate] = payload;
+  cacheViniDietPlanDay(USER, tracker.selectedDate, payload);
+  return queuePersist(tracker.selectedDate, payload);
 }
 
 function selectDate(iso) {
@@ -203,13 +230,16 @@ function dateNavigatorHTML(isToday) {
       <div class="vini-date-copy">
         <span class="vini-date-kicker">Registro alimentar</span>
         <strong>${isToday ? "Hoje · " : ""}${pretty}</strong>
-        <span id="vini-diet-save-status" class="vini-save-status"></span>
       </div>
       <div class="vini-date-nav">
         <button class="ghost-btn vini-date-arrow" data-date-shift="-1" aria-label="Dia anterior">‹</button>
         <input type="date" id="vini-diet-date" value="${tracker.selectedDate}" max="${todayISO()}" aria-label="Data do registro" />
         <button class="ghost-btn vini-date-arrow" data-date-shift="1" ${isToday ? "disabled" : ""} aria-label="Próximo dia">›</button>
         ${isToday ? "" : `<button class="ghost-btn vini-today-btn" data-date-today>Hoje</button>`}
+      </div>
+      <div class="vini-save-row">
+        <button type="button" class="save-btn is-dirty vini-diet-save-btn" data-save-diet>Salvar marcações</button>
+        <span id="vini-diet-save-status" class="vini-save-status" aria-live="polite"></span>
       </div>
     </section>`;
 }
@@ -543,6 +573,7 @@ function historyHTML() {
 }
 
 function bindTracker() {
+  tracker.root.querySelector("[data-save-diet]")?.addEventListener("click", persistCurrentDay);
   tracker.root.querySelectorAll("[data-date-shift]").forEach((button) => {
     button.addEventListener("click", () => selectDate(addDaysISO(tracker.selectedDate, Number(button.dataset.dateShift))));
   });
