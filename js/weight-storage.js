@@ -72,12 +72,12 @@ export async function deleteWeightEntry(userId, id) {
 }
 
 // ─── Altura (localStorage) ────────────────────────────────────────────
-export function loadHeight(userId) {
+export function loadHeight(userId, fallback = DEFAULT_HEIGHT_M) {
   try {
     const raw = localStorage.getItem(LS_HEIGHT_PREFIX + userId);
     const h = raw ? Number(raw) : NaN;
-    return h > 0 ? h : DEFAULT_HEIGHT_M;
-  } catch { return DEFAULT_HEIGHT_M; }
+    return h > 0 ? h : fallback;
+  } catch { return fallback; }
 }
 export function saveHeight(userId, meters) {
   try { localStorage.setItem(LS_HEIGHT_PREFIX + userId, String(meters)); } catch {}

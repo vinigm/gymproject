@@ -9,6 +9,9 @@
   --accent: #6ea8ff;
   --vini: #60a5fa;
   --vic: #f472b6;
+  --kg-accent: var(--vic);
+  --kg-accent-soft: rgba(244, 114, 182, 0.14);
+  --kg-accent-selected: rgba(244, 114, 182, 0.18);
   --good: #34d399;
   --bad: #f87171;
   --water: #38bdf8;
@@ -30,6 +33,11 @@ html, body {
   text-rendering: optimizeLegibility;
 }
 body { min-height: 100dvh; }
+body.kg-vini-page {
+  --kg-accent: var(--vini);
+  --kg-accent-soft: rgba(96, 165, 250, 0.14);
+  --kg-accent-selected: rgba(96, 165, 250, 0.18);
+}
 
 button { font: inherit; color: inherit; cursor: pointer; border: none; background: none; }
 input, select { font: inherit; color: inherit; }
@@ -3028,11 +3036,11 @@ body.presence-fullscreen .presence-fs-exit { display: flex; }
 .kg-hero {
   display: flex; flex-direction: column; align-items: center; gap: 4px;
   background: var(--card); border: 1px solid var(--border);
-  border-top: 3px solid var(--vic);
+  border-top: 3px solid var(--kg-accent);
   border-radius: var(--radius); box-shadow: var(--shadow);
   padding: 18px 14px; margin-bottom: 22px;
 }
-.kg-hero-value { font-size: clamp(44px, 13vw, 72px); font-weight: 900; line-height: 1; color: var(--vic); }
+.kg-hero-value { font-size: clamp(44px, 13vw, 72px); font-weight: 900; line-height: 1; color: var(--kg-accent); }
 .kg-hero-value small { font-size: .35em; font-weight: 700; color: var(--muted); margin-left: 4px; }
 .kg-hero-delta { font-size: 13px; font-weight: 700; margin-top: 2px; color: var(--accent); }
 .kg-hero-sub { font-size: 12px; color: var(--muted); }
@@ -3049,13 +3057,13 @@ body.presence-fullscreen .presence-fs-exit { display: flex; }
 .kg-height { max-width: 160px; margin-top: 14px; }
 .kg-height-input { font-size: 18px; }
 .kg-check { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 15px; cursor: pointer; }
-.kg-check input { width: 22px; height: 22px; accent-color: var(--vic); }
+.kg-check input { width: 22px; height: 22px; accent-color: var(--kg-accent); }
 .kg-save-btn { margin-top: 4px; }
 .kg-msg { font-size: 13px; color: var(--good); text-align: center; margin: 4px 0 0; }
 .kg-msg.is-error { color: var(--bad); }
 
 /* Seletor de seção (Peso / Dieta) */
-.kg-seg .seg-btn.is-on { box-shadow: inset 0 -2px 0 var(--vic); }
+.kg-seg .seg-btn.is-on { box-shadow: inset 0 -2px 0 var(--kg-accent); }
 
 /* Gráfico */
 .kg-chart-wrap {
@@ -3066,10 +3074,10 @@ body.presence-fullscreen .presence-fs-exit { display: flex; }
 .kgc-grid { stroke: var(--border); stroke-width: 1; }
 .kgc-ylabel { fill: var(--muted); font-size: 8px; text-anchor: end; font-variant-numeric: tabular-nums; }
 .kgc-xlabel { fill: var(--muted); font-size: 8px; }
-.kgc-area { fill: rgba(244,114,182,.14); stroke: none; }
-.kgc-line { fill: none; stroke: var(--vic); stroke-width: 2.2; stroke-linejoin: round; stroke-linecap: round; }
-.kgc-dot { fill: var(--vic); }
-.kgc-dot--last { fill: #fff; stroke: var(--vic); stroke-width: 2.5; }
+.kgc-area { fill: var(--kg-accent-soft); stroke: none; }
+.kgc-line { fill: none; stroke: var(--kg-accent); stroke-width: 2.2; stroke-linejoin: round; stroke-linecap: round; }
+.kgc-dot { fill: var(--kg-accent); }
+.kgc-dot--last { fill: #fff; stroke: var(--kg-accent); stroke-width: 2.5; }
 
 /* IMC */
 .kg-imc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
@@ -3097,7 +3105,7 @@ body.presence-fullscreen .presence-fs-exit { display: flex; }
   display: flex; align-items: center; gap: 10px;
   background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px;
 }
-.kg-list-w { font-weight: 800; font-size: 15px; color: var(--vic); min-width: 68px; }
+.kg-list-w { font-weight: 800; font-size: 15px; color: var(--kg-accent); min-width: 68px; }
 .kg-list-meta { flex: 1; font-size: 12px; color: var(--muted); }
 .kg-del {
   width: 28px; height: 28px; border-radius: 8px; color: var(--muted);
@@ -3107,7 +3115,7 @@ body.presence-fullscreen .presence-fs-exit { display: flex; }
 /* Dieta — refeições com alimentos e chips de quantidade */
 .diet-meal-group { margin-bottom: 18px; }
 .diet-meal-title {
-  margin: 0 0 8px; font-size: 15px; font-weight: 800; color: var(--vic);
+  margin: 0 0 8px; font-size: 15px; font-weight: 800; color: var(--kg-accent);
 }
 .food-row {
   display: flex; align-items: center; gap: 10px;
@@ -3118,20 +3126,20 @@ body.presence-fullscreen .presence-fs-exit { display: flex; }
 .food-opts { display: flex; gap: 6px; flex: none; }
 .food-chip { min-width: 42px; min-height: 38px; padding: 8px 4px; }
 .food-opts .chip.is-on {
-  background: rgba(244, 114, 182, .18);
-  border-color: var(--vic);
+  background: var(--kg-accent-selected);
+  border-color: var(--kg-accent);
   color: #fff;
 }
 
 /* Dieta — resumo nutricional */
 .nutri {
   background: var(--card); border: 1px solid var(--border);
-  border-top: 3px solid var(--vic);
+  border-top: 3px solid var(--kg-accent);
   border-radius: var(--radius); box-shadow: var(--shadow);
   padding: 16px 14px;
 }
 .nutri-kcal { display: flex; align-items: baseline; justify-content: center; gap: 6px; }
-.nutri-kcal-val { font-size: clamp(38px, 11vw, 56px); font-weight: 900; color: var(--vic); line-height: 1; }
+.nutri-kcal-val { font-size: clamp(38px, 11vw, 56px); font-weight: 900; color: var(--kg-accent); line-height: 1; }
 .nutri-kcal-unit { font-size: 15px; font-weight: 700; color: var(--muted); }
 .nutri-macros { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 14px; }
 .nutri-macro {
@@ -3159,7 +3167,7 @@ body.presence-fullscreen .presence-fs-exit { display: flex; }
   background: var(--card-2); border: 1px solid var(--border);
 }
 .goal-fill { height: 100%; border-radius: 999px; transition: width .25s ease; }
-.goal-kcal .goal-fill { background: var(--vic); }
+.goal-kcal .goal-fill { background: var(--kg-accent); }
 .goal-p .goal-fill { background: var(--good); }
 .goal-c .goal-fill { background: var(--water); }
 .goal-f .goal-fill { background: #fbbf24; }
@@ -3171,9 +3179,10 @@ body.presence-fullscreen .presence-fs-exit { display: flex; }
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
   background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px;
 }
-.diet-day-row.is-today { border-color: var(--vic); }
+.diet-day-row.is-today { border-color: var(--kg-accent); }
 .diet-day-date { font-size: 14px; font-weight: 700; text-transform: capitalize; }
 .diet-day-meta { font-size: 12px; color: var(--muted); }
+.diet-stats-card { border-top: 3px solid var(--kg-accent); }
 
 @media (min-width: 640px) {
   .kg-hero-value { font-size: 84px; }

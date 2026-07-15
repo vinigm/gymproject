@@ -65,6 +65,7 @@ No iPhone/Android, abrir o site no navegador e usar "Adicionar à tela de iníci
 | `alongamento.html` | Ferramenta de alongamento guiado (timer com auto-avanço) |
 | `pomodoro.html` | Timer Pomodoro (foco/pausas) com estatísticas por usuário |
 | `presence.html` | Status/presença (painel de foco Pomodoro para tablet, tempo real) |
+| `kg-vini.html` | Peso + dieta do Vini, com salada no almoço e estatísticas alimentares |
 | `kg-vivi.html` | Peso + dieta da Vivi (registro, gráfico, IMC, alimentos) |
 | `config.html` | Configuração da tabela de pontos/prêmios (persistida em `config/points`) |
 
@@ -95,7 +96,8 @@ No iPhone/Android, abrir o site no navegador e usar "Adicionar à tela de iníci
 | `stretch-storage.js` | Storage de `stretch_sessions` |
 | `presence-page.js` | Página de status/presença (ciclo Pomodoro, Wake Lock, fullscreen) |
 | `presence-storage.js` | Storage de `presence` (tempo real via `onSnapshot`) |
-| `kg-vivi-page.js` | Página de peso + dieta da Vivi |
+| `kg-vivi-page.js` | Implementação compartilhada das páginas de peso + dieta de Vini e Vivi |
+| `kg-vini-page.js` | Entrada do Kg Vini; reutiliza a implementação compartilhada |
 | `weight-storage.js` | Storage de `weight_logs` + altura/seed em localStorage |
 | `diet-storage.js` | Storage de `diet_logs` |
 | `stats.js` | **Código morto/legado** — não importado por nenhum HTML |
@@ -105,7 +107,7 @@ No iPhone/Android, abrir o site no navegador e usar "Adicionar à tela de iníci
 
 | Arquivo | Papel |
 | --- | --- |
-| `css/style.css` | Design system single-file (~3183 linhas, dark theme) |
+| `css/style.css` | Design system single-file (~3191 linhas, dark theme) |
 | `service-worker.js` | Cache network-first, offline fallback |
 | `manifest.webmanifest` | Manifest PWA |
 | `README.md` | Guia de setup/deploy |
@@ -121,7 +123,7 @@ O boot real acontece no listener `DOMContentLoaded` de `app.js` (app.js:154-164)
 
 `initApp` (app.js:111-152) pinta a data, preenche `#storage-badge` conforme `storageMode`, chama `renderAuthFooter(user)`, registra listeners (`date-input` change, `btn-today`, `btn-save`, `beforeunload` com `hasUnsavedChanges()`), e num bloco try/finally carrega config/tracker/history/points; o `finally` remove `is-loading` do body, revelando a página.
 
-As demais páginas repetem o mesmo par `mountNavMenu()` + `setupAuthGate(...)` no seu próprio `*-page.js` (ex.: `points-page.js:290-291`, `kg-vivi-page.js:522-543`) e removem `is-loading` no fim.
+As demais páginas repetem o mesmo par `mountNavMenu()` + `setupAuthGate(...)` no seu próprio `*-page.js` e removem `is-loading` no fim.
 
 ### Auth-gate reutilizável
 
@@ -151,7 +153,7 @@ Em `firebase-config.js`, o SDK 10.12.2 é importado da CDN gstatic. `firebaseCon
 
 ## Navegação
 
-O menu vem de `nav-menu.js`. `NAV_ITEMS` é um array de 12 itens `{href, icon, label, match}`: Hábitos, Pontos, Prêmios, Recordes, Placares, Stats, Alongar, Pomodoro, Status, Kg Vivi, Vivi, Config.
+O menu vem de `nav-menu.js`. `NAV_ITEMS` é um array de 13 itens `{href, icon, label, match}`: Hábitos, Pontos, Prêmios, Recordes, Placares, Stats, Alongar, Pomodoro, Status, Kg Vini, Kg Vivi, Vivi, Config.
 
 `mountNavMenu(containerId="nav-menu")` pega o `<nav id="nav-menu">`, adiciona a classe `nav-menu` e um `aria-label`, e renderiza os `<a class="nav-item">` (ícone + label). O item ativo é decidido por `currentFile()` (último segmento de `window.location.pathname`, com `""` virando home) comparado a `item.match.includes(file)`; o ativo ganha `is-active` e `aria-current="page"` (a home casa com `["", "index.html"]`).
 
@@ -253,16 +255,16 @@ Cores: OCUPADO (fase foco) = `is-ocupado` + `presence-busy` (vermelho); Disponí
 
 **Arquivos.** `presence.html`, `js/presence-page.js`, `js/presence-storage.js`.
 
-### Kg Vivi (peso + dieta)
+### Kg Vini e Kg Vivi (peso + dieta)
 
-**O que faz.** `kg-vivi.html`: acompanhamento do peso da Vivi (registro, gráfico, IMC) e da dieta do dia (alimentos por refeição, resumo nutricional, metas e histórico). Usuário fixo `USER = "victoria"`.
+**O que faz.** `kg-vivi.html` e `kg-vini.html`: acompanhamento individual de peso (registro, gráfico e IMC) e dieta do dia (alimentos por refeição, resumo nutricional, metas e histórico). O atributo `data-kg-user="victoria|vinicius"` do `<body>` define o usuário e separa os dados pelo `userId`.
 
-**Como funciona por baixo.** Seletor `#kg-section-seg` ("⚖️ Peso" / "🍽️ Dieta") persistido em `localStorage` sob `habitos-kg-section`.
+**Como funciona por baixo.** A implementação é compartilhada por `kg-vivi-page.js`; `kg-vini-page.js` é a entrada da nova página. O seletor `#kg-section-seg` ("⚖️ Peso" / "🍽️ Dieta") usa `habitos-kg-section` para Vivi e `habitos-kg-section-vinicius` para Vini.
 
-- **Peso** — `renderWeight()` monta hero, formulário, gráfico, IMC e últimos registros. Registro **sem horário**: `onSaveWeight()` chama `addWeightEntry({ userId, weight, fasting, date: todayISO(), time: "", at: Date.now() })` (`time` sempre vazio). Checkbox "Em jejum" (`#kg-fasting`) vem marcado por padrão. Peso default = último registro ou `44.6`. `chartHTML` desenha um SVG 320x180 (linha `.kgc-line`, área `.kgc-area`, pontos `.kgc-dot`, grid de 3 linhas). `imcHTML` calcula `bmi(w,h)=w/(h*h)`; `bmiClass` classifica: <18,5 "Abaixo do peso", <25 "Peso normal", <30 "Sobrepeso", senão "Obesidade". Faixa normal `18,5–24,9` (`normalLo`/`normalHi`). Altura editável em `#kg-height` → `saveHeight(USER, h)`. `seedIfEmpty()` cria, só uma vez por usuário, duas pesagens em jejum: **45,2 kg ontem** e **44,6 kg hoje**.
-- **Dieta** — `renderDiet()` monta "Resumo de hoje", "Metas de hoje", "Comidas de hoje" (`DIET_MENU.map(mealHTML)`) e "Histórico". Cada alimento vira `.food-row` com chips `.food-chip` (uma opção de quantidade cada). `bindDiet()` alterna a seleção em `stateData.dietFoods[id]` (tocar no já selecionado desmarca), recalcula `computeNutrition`, atualiza os cards e persiste via `setDietDay(USER, todayISO(), stateData.dietFoods)`. `computeNutrition` soma kcal/proteína/carbo/gordura (fator `q/100` para itens "per 100g", `q` para "per unit"), usando o índice `FOOD_NUTRI`. `goalsHTML` renderiza uma barra por meta (percorrendo `GOAL_META`, valores-alvo em `GOALS`), com `is-met` ao atingir 100%. Histórico lista dias com itens ("seg 15/07 · N itens · ~X kcal").
+- **Peso** — `renderWeight()` monta hero, formulário, gráfico, IMC e últimos registros. O registro continua sem horário e separado por usuário. A Vivi preserva o seed inicial de **45,2 kg ontem** e **44,6 kg hoje**; o Vini começa sem peso ou altura inventados e preenche os dados antes do cálculo de IMC.
+- **Dieta** — `renderDiet()` monta resumo, metas, alimentos e histórico. `computeNutrition` soma kcal/proteína/carbo/gordura e `setDietDay` persiste por usuário/data. No Vini, o almoço também inclui salada [50,100,150] g. O final da página dele mostra dias registrados, médias de kcal/proteína, quantidade de alimentos, consumo de salada, frequência por refeição e alimentos mais consumidos.
 
-**Metas diárias (`GOALS`, kg-vivi-page.js:68).** Valores **provisórios** (comentário explícito no código: "Quando tiver os certos, troque só aqui"; a UI mostra a nota "metas provisórias — ajuste quando tiver os números certos"):
+**Metas diárias (`GOALS`).** Valores **provisórios** (comentário explícito no código: "Quando tiver os certos, troque só aqui"; a UI mostra a nota "metas provisórias — ajuste quando tiver os números certos"):
 
 | Meta | Valor-alvo |
 | --- | --- |
@@ -271,7 +273,7 @@ Cores: OCUPADO (fase foco) = `is-ocupado` + `presence-busy` (vermelho); Disponí
 | Carbo (`c`) | 250 g |
 | Gordura (`f`) | 65 g |
 
-**Cardápio (`DIET_MENU`, kg-vivi-page.js:20-44).** 4 refeições, cada uma com seus alimentos, opções de quantidade e perfil nutricional aproximado (cozidos). `per: "unit"` = valores por unidade; `per: "100g"` = valores por 100 g (a quantidade em gramas é escalonada por `q/100`). `FOOD_NUTRI` indexa por `${refeição.alimento}`.
+**Cardápio (`DIET_MENU`).** 4 refeições, cada uma com seus alimentos, opções de quantidade e perfil nutricional aproximado. `per: "unit"` = valores por unidade; `per: "100g"` = valores por 100 g. `FOOD_NUTRI` indexa por `${refeição.alimento}`. O Vini recebe adicionalmente `almoco.salada` (25 kcal, 1,5 g P, 5 g C e 0,3 g G por 100 g).
 
 | Refeição (key) | Alimentos (opções · `per`) — kcal / P / C / G |
 | --- | --- |
@@ -280,7 +282,7 @@ Cores: OCUPADO (fase foco) = `is-ocupado` + `presence-busy` (vermelho); Disponí
 | **Almoço** (`almoco` ☀️) | Arroz [50,100,150] g → 130 / 2,7 / 28 / 0,3 · Feijão [50,100,150] g → 80 / 5 / 14 / 0,5 · Carne [50,100,150] g → 220 / 26 / 0 / 12 · Frango [50,100,150] g → 165 / 31 / 0 / 3,6 · Peixe [50,100,150] g → 130 / 26 / 0 / 3 |
 | **Janta** (`janta` 🌙) | Mesmos 5 alimentos do almoço (arroz, feijão, carne, frango, peixe), todos `per:"100g"`, opções [50,100,150] g e valores idênticos |
 
-**Arquivos.** `kg-vivi.html`, `js/kg-vivi-page.js`, `js/weight-storage.js`, `js/diet-storage.js`.
+**Arquivos.** `kg-vini.html`, `kg-vivi.html`, `js/kg-vini-page.js`, `js/kg-vivi-page.js`, `js/weight-storage.js`, `js/diet-storage.js`.
 
 ### Vivi
 
@@ -384,7 +386,7 @@ Todas as coleções têm um módulo de storage próprio com fallback automático
 - `habitos-days-v1` (days), `habitos-transactions-v1` (transactions), `habitos-config-points-v1` (config).
 - `habitos-diet-logs-v1` (diet), `habitos-weight-logs-v1` (weight), `habitos-pomodoro-sessions-v1` (sessões pomodoro), `habitos-stretch-sessions-v1` (sessões de alongamento).
 - Prefixos por usuário (concatenam o userId): `habitos-pomodoro-cfg-`, `habitos-presence-`, `habitos-weight-height-` (altura, default 1,63 m), `habitos-weight-seeded-` (flag de seed).
-- Estado de UI/sessão: `habitos-auth-uid` (cache do UID logado), `habitos-presence-active-user` (usuário ativo no Status), `habitos-kg-section` (aba Peso/Dieta). Há ainda a chave legada `habitos-vini-vic`.
+- Estado de UI/sessão: `habitos-auth-uid` (cache do UID logado), `habitos-presence-active-user` (usuário ativo no Status), `habitos-kg-section` (aba Peso/Dieta da Vivi) e `habitos-kg-section-vinicius` (aba do Vini). Há ainda a chave legada `habitos-vini-vic`.
 
 ## Regras do Firestore
 
@@ -429,7 +431,7 @@ A whitelist de e-mails aqui é a mesma de `AUTHORIZED_EMAILS` em `auth.js` — a
 
 ## Design system (CSS)
 
-`css/style.css` é o único arquivo de estilos (~3183 linhas), sem framework, mobile-first e **dark-only** (não há `prefers-color-scheme` nem `data-theme`).
+`css/style.css` é o único arquivo de estilos (~3191 linhas), sem framework, mobile-first e **dark-only** (não há `prefers-color-scheme` nem `data-theme`).
 
 ### Variáveis de `:root`
 

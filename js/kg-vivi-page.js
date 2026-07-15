@@ -1,5 +1,7 @@
-// Página "Kg Vivi": duas seções — Peso (registro + gráfico + IMC) e Dieta
-// (checklist de café/almoço/janta com histórico).
+// Implementação compartilhada das páginas "Kg Vivi" e "Kg Vini".
+// O usuário vem de data-kg-user no <body>; na ausência, mantém Vivi como padrão.
+// São duas seções: Peso (registro + gráfico + IMC) e Dieta
+// (checklist de refeições, histórico e estatísticas no Kg Vini).
 
 import { setupAuthGate, renderAuthFooter } from "./auth.js";
 import { mountNavMenu } from "./nav-menu.js";
@@ -10,8 +12,10 @@ import {
 } from "./weight-storage.js";
 import { getDietDay, setDietDay, getDietMap } from "./diet-storage.js";
 
-const USER = "victoria";
-const SECTION_KEY = "habitos-kg-section";
+const USER = document.body.dataset.kgUser === "vinicius" ? "vinicius" : "victoria";
+const IS_VINI = USER === "vinicius";
+const PERSON_NAME = IS_VINI ? "Vini" : "Vivi";
+const SECTION_KEY = IS_VINI ? "habitos-kg-section-vinicius" : "habitos-kg-section";
 
 // Cardápio: cada refeição tem alimentos, cada alimento tem opções de quantidade
 // e um perfil nutricional. `per: "unit"` = valores por unidade; `per: "100g"`
@@ -42,6 +46,21 @@ const DIET_MENU = [
     { key: "peixe",  label: "Peixe (g)",  options: [50, 100, 150], per: "100g", kcal: 130, p: 26,  c: 0,  f: 3 },
   ]},
 ];
+
+// No Kg Vini o almoço também acompanha salada em gramas.
+// Valores aproximados por 100 g de uma salada simples, sem molho pesado.
+if (IS_VINI) {
+  DIET_MENU.find((meal) => meal.key === "almoco")?.foods.push({
+    key: "salada",
+    label: "Salada (g)",
+    options: [50, 100, 150],
+    per: "100g",
+    kcal: 25,
+    p: 1.5,
+    c: 5,
+    f: 0.3,
+  });
+}
 
 // Índice alimento-id -> perfil nutricional (pra somar rápido).
 const FOOD_NUTRI = {};
@@ -77,7 +96,7 @@ const WD = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"];
 const stateData = {
   section: "peso",       // "peso" | "dieta"
   entries: [],
-  height: DEFAULT_HEIGHT_M,
+  height: IS_VINI ? null : DEFAULT_HEIGHT_M,
   dietFoods: {},         // mapa { "refeição.alimento": quantidade } do dia atual
   dietMap: {},           // date -> foods (histórico)
 };
@@ -146,7 +165,7 @@ function renderWeight() {
   const entries = stateData.entries;
   const latest = entries[entries.length - 1] || null;
   const prev = entries[entries.length - 2] || null;
-  const defaultWeight = latest ? latest.weight : 44.6;
+  const defaultWeight = latest ? latest.weight : (IS_VINI ? "" : 44.6);
 
   el.innerHTML = `
     ${heroHTML(latest, prev)}
@@ -157,7 +176,7 @@ function renderWeight() {
         <label class="kg-field">
           <span class="kg-label">Peso (kg)</span>
           <input type="number" inputmode="decimal" step="0.1" min="0" id="kg-weight"
-                 class="kg-weight-input" value="${defaultWeight}" />
+                 class="kg-weight-input" value="${defaultWeight}" placeholder="ex.: 80,0" />
         </label>
         <label class="kg-check">
           <input type="checkbox" id="kg-fasting" checked />
@@ -181,7 +200,7 @@ function renderWeight() {
       <label class="kg-field kg-height">
         <span class="kg-label">Altura (m)</span>
         <input type="number" inputmode="decimal" step="0.01" min="0.5" max="2.5"
-               id="kg-height" class="kg-height-input" value="${stateData.height}" />
+               id="kg-height" class="kg-height-input" value="${stateData.height ?? ""}" placeholder="ex.: 1,75" />
       </label>
     </section>
 
@@ -254,6 +273,7 @@ function chartHTML(entries) {
 function imcHTML(latest) {
   const h = stateData.height;
   if (!latest) return `<p class="muted" style="padding:8px">Registre um peso pra calcular o IMC.</p>`;
+  if (!h) return `<p class="muted" style="padding:8px">Informe a altura abaixo para calcular o IMC.</p>`;
   const v = bmi(latest.weight, h);
   const c = bmiClass(v);
   const normalLo = 18.5 * h * h, normalHi = 24.9 * h * h;
@@ -278,7 +298,7 @@ function imcHTML(latest) {
         <span class="kg-stat-tag">${toNormalTxt}</span>
       </div>
     </div>
-    <p class="muted kg-imc-note">Classificação OMS pra altura de ${String(h).replace(".", ",")} m. É só referência, não é avaliação médica.</p>`;
+    <p class="muted kg-imc-note">Classificação OMS para ${PERSON_NAME}, considerando altura de ${String(h).replace(".", ",")} m. É só referência, não é avaliação médica.</p>`;
 }
 
 function listHTML(entries) {
@@ -377,7 +397,9 @@ function renderDiet() {
     <section class="block">
       <div class="block-head"><h2>Histórico</h2></div>
       <div id="diet-hist-wrap">${dietHistoryHTML()}</div>
-    </section>`;
+    </section>
+
+    ${IS_VINI ? `<div id="diet-stats-wrap">${dietStatsSectionHTML()}</div>` : ""}`;
 
   bindDiet();
 }
@@ -459,6 +481,124 @@ function dietHistoryHTML() {
   }).join("")}</div>`;
 }
 
+function dietStatsSectionHTML() {
+  const today = todayISO();
+  const map = { ...stateData.dietMap, [today]: stateData.dietFoods };
+  const recordedDays = Object.entries(map)
+    .filter(([, foods]) => Object.keys(foods || {}).length > 0)
+    .sort(([a], [b]) => a.localeCompare(b));
+
+  if (recordedDays.length === 0) {
+    return `
+      <section class="block">
+        <div class="block-head"><h2>📊 Estatísticas da alimentação</h2></div>
+        <div class="stat-card">
+          <p class="muted" style="font-size:13px;margin:0">Marque os alimentos para começar a formar as estatísticas.</p>
+        </div>
+      </section>`;
+  }
+
+  const foodStats = {};
+  const mealStats = Object.fromEntries(DIET_MENU.map((meal) => [meal.key, {
+    label: meal.label,
+    icon: meal.icon,
+    days: new Set(),
+    selections: 0,
+  }]));
+  const totals = { kcal: 0, p: 0, c: 0, f: 0, selections: 0 };
+
+  for (const [date, foods] of recordedDays) {
+    const nutrition = computeNutrition(foods);
+    totals.kcal += nutrition.kcal;
+    totals.p += nutrition.p;
+    totals.c += nutrition.c;
+    totals.f += nutrition.f;
+
+    for (const [id, rawQuantity] of Object.entries(foods)) {
+      const quantity = Number(rawQuantity) || 0;
+      const info = FOOD_NUTRI[id];
+      if (!info || quantity <= 0) continue;
+      const mealKey = id.split(".")[0];
+      if (!foodStats[id]) {
+        const meal = mealStats[mealKey];
+        foodStats[id] = {
+          id,
+          label: `${meal?.icon || "🍽️"} ${info.label}`,
+          info,
+          days: 0,
+          quantity: 0,
+        };
+      }
+      foodStats[id].days += 1;
+      foodStats[id].quantity += quantity;
+      totals.selections += 1;
+      if (mealStats[mealKey]) {
+        mealStats[mealKey].days.add(date);
+        mealStats[mealKey].selections += 1;
+      }
+    }
+  }
+
+  const dayCount = recordedDays.length;
+  const avg = (value) => Math.round(value / dayCount);
+  const topFoods = Object.values(foodStats)
+    .sort((a, b) => b.days - a.days || b.quantity - a.quantity)
+    .slice(0, 8);
+  const salad = foodStats["almoco.salada"] || { days: 0, quantity: 0 };
+  const saladAvg = salad.days > 0 ? Math.round(salad.quantity / salad.days) : 0;
+
+  const foodRows = topFoods.map((food) => {
+    const quantity = food.info.per === "100g"
+      ? `${Math.round(food.quantity)} g`
+      : `${Math.round(food.quantity)} un.`;
+    return `
+      <div class="stat-row">
+        <span class="stat-label">${food.label}</span>
+        <span class="stat-value">${food.days}d <span class="muted" style="font-size:11px;font-weight:500">· ${quantity}</span></span>
+      </div>`;
+  }).join("");
+
+  const mealRows = DIET_MENU.map((meal) => {
+    const stat = mealStats[meal.key];
+    return `
+      <div class="stat-row">
+        <span class="stat-label">${meal.icon} ${meal.label}</span>
+        <span class="stat-value">${stat.days.size}d <span class="muted" style="font-size:11px;font-weight:500">· ${stat.selections} itens</span></span>
+      </div>`;
+  }).join("");
+
+  return `
+    <section class="block">
+      <div class="block-head">
+        <h2>📊 Estatísticas da alimentação</h2>
+        <span class="muted" style="font-size:11px">por dia registrado</span>
+      </div>
+      <div class="stat-card diet-stats-card">
+        <div class="kpi-grid">
+          <div class="kpi"><div class="kpi-value">${dayCount}</div><div class="kpi-label">dias registrados</div></div>
+          <div class="kpi"><div class="kpi-value">${avg(totals.kcal)}</div><div class="kpi-label">kcal médias / dia</div></div>
+          <div class="kpi"><div class="kpi-value">${avg(totals.p)}g</div><div class="kpi-label">proteína média / dia</div></div>
+          <div class="kpi"><div class="kpi-value">${avg(totals.c)}g</div><div class="kpi-label">carbo médio / dia</div></div>
+          <div class="kpi"><div class="kpi-value">${avg(totals.f)}g</div><div class="kpi-label">gordura média / dia</div></div>
+          <div class="kpi"><div class="kpi-value">${totals.selections}</div><div class="kpi-label">alimentos marcados</div></div>
+        </div>
+
+        <h3 class="stats-subhead">🥗 Salada no almoço</h3>
+        <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr)">
+          <div class="kpi"><div class="kpi-value">${salad.days}</div><div class="kpi-label">dias com salada</div></div>
+          <div class="kpi"><div class="kpi-value">${Math.round(salad.quantity)}g</div><div class="kpi-label">total consumido</div></div>
+          <div class="kpi"><div class="kpi-value">${saladAvg}g</div><div class="kpi-label">média por consumo</div></div>
+        </div>
+
+        <h3 class="stats-subhead">Por refeição</h3>
+        ${mealRows}
+
+        <h3 class="stats-subhead">Mais consumidos</h3>
+        ${foodRows}
+      </div>
+    </section>`;
+}
+
 function bindDiet() {
   document.querySelectorAll(".food-chip").forEach((chip) => {
     chip.addEventListener("click", () => {
@@ -486,6 +626,8 @@ function bindDiet() {
       if (count) count.textContent = countItems(stateData.dietFoods);
       const hist = document.getElementById("diet-hist-wrap");
       if (hist) hist.innerHTML = dietHistoryHTML();
+      const stats = document.getElementById("diet-stats-wrap");
+      if (stats) stats.innerHTML = dietStatsSectionHTML();
 
       persistDiet();
     });
@@ -504,6 +646,7 @@ async function persistDiet() {
 
 // ─── Seed inicial do peso ─────────────────────────────────────────────
 async function seedIfEmpty() {
+  if (IS_VINI) return;
   if (stateData.entries.length > 0 || wasSeeded(USER)) return;
   const yest = offsetISO(-1), today = todayISO();
   try {
@@ -525,7 +668,7 @@ document.addEventListener("DOMContentLoaded", () => {
       try {
         renderAuthFooter(user);
         try { const s = localStorage.getItem(SECTION_KEY); if (s === "peso" || s === "dieta") stateData.section = s; } catch {}
-        stateData.height = loadHeight(USER);
+        stateData.height = loadHeight(USER, IS_VINI ? null : DEFAULT_HEIGHT_M);
         stateData.entries = await getWeightEntries(USER);
         await seedIfEmpty();
         stateData.dietFoods = await getDietDay(USER, todayISO());
