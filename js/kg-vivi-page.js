@@ -11,6 +11,14 @@ import {
   wasSeeded, markSeeded,
 } from "./weight-storage.js";
 import { getDietDay, setDietDay, getDietMap } from "./diet-storage.js";
+import { loadViniDietTracker, renderViniDietTracker } from "./vini-diet-ui.js";
+import {
+  DEFAULT_TRACKING_SCOPE,
+  TRACKING_SCOPE,
+  filterDateMapForTrackingScope,
+  filterRecordsForTrackingScope,
+  mountTrackingScopeControl,
+} from "./tracking-cycle.js";
 
 const USER = document.body.dataset.kgUser === "vinicius" ? "vinicius" : "victoria";
 const IS_VINI = USER === "vinicius";
@@ -99,6 +107,7 @@ const stateData = {
   height: IS_VINI ? null : DEFAULT_HEIGHT_M,
   dietFoods: {},         // mapa { "refeição.alimento": quantidade } do dia atual
   dietMap: {},           // date -> foods (histórico)
+  trackingScope: DEFAULT_TRACKING_SCOPE,
 };
 
 // ─── Helpers de data ──────────────────────────────────────────────────
@@ -140,10 +149,19 @@ function render() {
         <button data-section="dieta" class="seg-btn">🍽️ Dieta</button>
       </div>
     </div>
+    <div id="kg-cycle-scope"></div>
     <div id="kg-section"></div>`;
 
   root.querySelectorAll("#kg-section-seg .seg-btn").forEach((btn) => {
     btn.addEventListener("click", () => selectSection(btn.dataset.section));
+  });
+  mountTrackingScopeControl("kg-cycle-scope", {
+    scope: stateData.trackingScope,
+    userIds: [USER],
+    onChange: (nextScope) => {
+      stateData.trackingScope = nextScope;
+      render();
+    },
   });
   selectSection(stateData.section);
 }
@@ -162,13 +180,14 @@ function selectSection(section) {
 function renderWeight() {
   const el = document.getElementById("kg-section");
   if (!el) return;
-  const entries = stateData.entries;
+  const entries = filterRecordsForTrackingScope(stateData.entries, USER, stateData.trackingScope);
   const latest = entries[entries.length - 1] || null;
   const prev = entries[entries.length - 2] || null;
-  const defaultWeight = latest ? latest.weight : (IS_VINI ? "" : 44.6);
+  const baseline = entries[0] || null;
+  const defaultWeight = latest ? latest.weight : "";
 
   el.innerHTML = `
-    ${heroHTML(latest, prev)}
+    ${heroHTML(latest, prev, baseline)}
 
     <section class="block">
       <div class="block-head"><h2>Registrar pesagem</h2></div>
@@ -212,9 +231,12 @@ function renderWeight() {
   bindWeight();
 }
 
-function heroHTML(latest, prev) {
+function heroHTML(latest, prev, baseline) {
   if (!latest) {
-    return `<section class="kg-hero"><span class="kg-hero-empty">Sem registros ainda — registre a primeira pesagem 👇</span></section>`;
+    const emptyLabel = stateData.trackingScope === TRACKING_SCOPE.CYCLE
+      ? "Sem pesagens no ciclo atual — registre o novo ponto de partida 👇"
+      : "Sem registros ainda — registre a primeira pesagem 👇";
+    return `<section class="kg-hero"><span class="kg-hero-empty">${emptyLabel}</span></section>`;
   }
   let delta = "";
   if (prev) {
@@ -223,10 +245,19 @@ function heroHTML(latest, prev) {
     const txt = d === 0 ? "sem mudança" : `${arrow} ${fmtWeight(Math.abs(d))} kg vs anterior`;
     delta = `<span class="kg-hero-delta">${txt}</span>`;
   }
+  let cycleDelta = "";
+  if (baseline && baseline.id !== latest.id) {
+    const d = latest.weight - baseline.weight;
+    const arrow = d > 0 ? "↑" : d < 0 ? "↓" : "→";
+    const period = stateData.trackingScope === TRACKING_SCOPE.CYCLE ? "início do ciclo" : "primeiro registro";
+    const txt = d === 0 ? `sem mudança desde o ${period}` : `${arrow} ${fmtWeight(Math.abs(d))} kg desde o ${period}`;
+    cycleDelta = `<span class="kg-hero-cycle-delta">${txt}</span>`;
+  }
   return `
     <section class="kg-hero">
       <span class="kg-hero-value">${fmtWeight(latest.weight)}<small>kg</small></span>
       ${delta}
+      ${cycleDelta}
       <span class="kg-hero-sub">${fmtDateBR(latest.date)}${latest.fasting ? " · em jejum" : ""}</span>
     </section>`;
 }
@@ -375,6 +406,11 @@ function renderDiet() {
   const el = document.getElementById("kg-section");
   if (!el) return;
 
+  if (IS_VINI) {
+    renderViniDietTracker(el, { scope: stateData.trackingScope });
+    return;
+  }
+
   el.innerHTML = `
     <section class="block">
       <div class="block-head"><h2>Resumo de hoje</h2></div>
@@ -399,7 +435,7 @@ function renderDiet() {
       <div id="diet-hist-wrap">${dietHistoryHTML()}</div>
     </section>
 
-    ${IS_VINI ? `<div id="diet-stats-wrap">${dietStatsSectionHTML()}</div>` : ""}`;
+    <div id="diet-stats-wrap">${dietStatsSectionHTML()}</div>`;
 
   bindDiet();
 }
@@ -465,7 +501,11 @@ function mealHTML(meal) {
 
 function dietHistoryHTML() {
   const today = todayISO();
-  const map = { ...stateData.dietMap, [today]: stateData.dietFoods };
+  const map = filterDateMapForTrackingScope(
+    { ...stateData.dietMap, [today]: stateData.dietFoods },
+    USER,
+    stateData.trackingScope
+  );
   const days = Object.keys(map)
     .filter((d) => Object.keys(map[d] || {}).length > 0)
     .sort((a, b) => b.localeCompare(a)); // mais recente primeiro
@@ -483,7 +523,11 @@ function dietHistoryHTML() {
 
 function dietStatsSectionHTML() {
   const today = todayISO();
-  const map = { ...stateData.dietMap, [today]: stateData.dietFoods };
+  const map = filterDateMapForTrackingScope(
+    { ...stateData.dietMap, [today]: stateData.dietFoods },
+    USER,
+    stateData.trackingScope
+  );
   const recordedDays = Object.entries(map)
     .filter(([, foods]) => Object.keys(foods || {}).length > 0)
     .sort(([a], [b]) => a.localeCompare(b));
@@ -583,12 +627,13 @@ function dietStatsSectionHTML() {
           <div class="kpi"><div class="kpi-value">${totals.selections}</div><div class="kpi-label">alimentos marcados</div></div>
         </div>
 
-        <h3 class="stats-subhead">🥗 Salada no almoço</h3>
-        <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr)">
-          <div class="kpi"><div class="kpi-value">${salad.days}</div><div class="kpi-label">dias com salada</div></div>
-          <div class="kpi"><div class="kpi-value">${Math.round(salad.quantity)}g</div><div class="kpi-label">total consumido</div></div>
-          <div class="kpi"><div class="kpi-value">${saladAvg}g</div><div class="kpi-label">média por consumo</div></div>
-        </div>
+        ${IS_VINI ? `
+          <h3 class="stats-subhead">🥗 Salada no almoço</h3>
+          <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr)">
+            <div class="kpi"><div class="kpi-value">${salad.days}</div><div class="kpi-label">dias com salada</div></div>
+            <div class="kpi"><div class="kpi-value">${Math.round(salad.quantity)}g</div><div class="kpi-label">total consumido</div></div>
+            <div class="kpi"><div class="kpi-value">${saladAvg}g</div><div class="kpi-label">média por consumo</div></div>
+          </div>` : ""}
 
         <h3 class="stats-subhead">Por refeição</h3>
         ${mealRows}
@@ -671,11 +716,15 @@ document.addEventListener("DOMContentLoaded", () => {
         stateData.height = loadHeight(USER, IS_VINI ? null : DEFAULT_HEIGHT_M);
         stateData.entries = await getWeightEntries(USER);
         await seedIfEmpty();
-        stateData.dietFoods = await getDietDay(USER, todayISO());
-        stateData.dietMap = await getDietMap(USER);
+        if (IS_VINI) {
+          await loadViniDietTracker();
+        } else {
+          stateData.dietFoods = await getDietDay(USER, todayISO());
+          stateData.dietMap = await getDietMap(USER);
+        }
         render();
       } catch (err) {
-        console.error("Erro ao inicializar Kg Vivi:", err);
+        console.error(`Erro ao inicializar Kg ${PERSON_NAME}:`, err);
         const root = document.getElementById("kg-content");
         if (root && !root.children.length) {
           root.innerHTML = `<section class="block"><div class="stat-card">

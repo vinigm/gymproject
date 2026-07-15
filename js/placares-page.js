@@ -7,8 +7,15 @@ import {
   loadAndApplyConfig,
   aggregateByWeek, aggregateByMonth,
 } from "./points-utils.js";
+import {
+  DEFAULT_TRACKING_SCOPE,
+  filterDataByUserForTrackingScope,
+  mountTrackingScopeControl,
+} from "./tracking-cycle.js";
 
 const AVATAR_CLASS = { vinicius: "avatar--vini", victoria: "avatar--vic" };
+let _allData = { vinicius: [], victoria: [] };
+let _trackingScope = DEFAULT_TRACKING_SCOPE;
 
 function compareBuckets(vMap, cMap) {
   const all = new Set([...vMap.keys(), ...cMap.keys()]);
@@ -97,12 +104,29 @@ function renderScoreboards(scores) {
   }).join("");
 }
 
+function renderCurrentScoreboards() {
+  const scopedData = filterDataByUserForTrackingScope(_allData, _trackingScope);
+  renderScoreboards(computeScores(scopedData));
+}
+
+function renderTrackingControl() {
+  mountTrackingScopeControl("scoreboards-cycle-scope", {
+    scope: _trackingScope,
+    onChange: (nextScope) => {
+      _trackingScope = nextScope;
+      renderTrackingControl();
+      renderCurrentScoreboards();
+    },
+  });
+}
+
 async function initPlacaresPage(user) {
   renderAuthFooter(user);
+  renderTrackingControl();
   try {
     await loadAndApplyConfig();
-    const data = await loadAllData();
-    renderScoreboards(computeScores(data));
+    _allData = await loadAllData();
+    renderCurrentScoreboards();
   } catch (err) {
     console.error(err);
     document.getElementById("scoreboards").innerHTML =

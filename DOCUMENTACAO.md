@@ -1,6 +1,6 @@
 # Documentação — Hábitos · Vini & Vivi
 
-Projeto pessoal de um casal (Vinicius e Victoria) para registrar e gamificar hábitos do dia a dia. É um PWA de página única por seção, sem framework nem build: HTML, CSS e JavaScript puro (ES modules) servidos estáticos. Os dados vivem no Firebase Firestore (com login Google restrito aos dois) e, quando o Firebase não está configurado, tudo cai automaticamente para o `localStorage` do próprio navegador. Além do registro de hábitos, o app calcula pontos, tem uma lojinha de prêmios com carteira, placares Vini x Vivi, recordes, estatísticas, ferramentas de foco (Pomodoro e Alongamento guiado), um painel de presença/foco para tablet e o acompanhamento de peso e dieta da Vivi.
+Projeto pessoal de um casal (Vinicius e Victoria) para registrar e gamificar hábitos do dia a dia. É um PWA de página única por seção, sem framework nem build: HTML, CSS e JavaScript puro (ES modules) servidos estáticos. Os dados vivem no Firebase Firestore (com login Google restrito aos dois) e, quando o Firebase não está configurado, tudo cai automaticamente para o `localStorage` do próprio navegador. Além do registro de hábitos, o app calcula pontos, tem uma lojinha de prêmios com carteira, placares Vini x Vivi, recordes, estatísticas, ferramentas de foco (Pomodoro e Alongamento guiado), um painel de presença/foco para tablet e o acompanhamento de peso e dieta dos dois.
 
 ## Stack & arquitetura
 
@@ -65,7 +65,7 @@ No iPhone/Android, abrir o site no navegador e usar "Adicionar à tela de iníci
 | `alongamento.html` | Ferramenta de alongamento guiado (timer com auto-avanço) |
 | `pomodoro.html` | Timer Pomodoro (foco/pausas) com estatísticas por usuário |
 | `presence.html` | Status/presença (painel de foco Pomodoro para tablet, tempo real) |
-| `kg-vini.html` | Peso + dieta do Vini, com salada no almoço e estatísticas alimentares |
+| `kg-vini.html` | Peso + plano alimentar estruturado do Vini, com kcal/macros e estatísticas semanais |
 | `kg-vivi.html` | Peso + dieta da Vivi (registro, gráfico, IMC, alimentos) |
 | `config.html` | Configuração da tabela de pontos/prêmios (persistida em `config/points`) |
 
@@ -83,6 +83,7 @@ No iPhone/Android, abrir o site no navegador e usar "Adicionar à tela de iníci
 | `points-config.js` | Tabela de pontos (`POINTS`), prêmios (`REWARDS`/`REWARDS_VICTORIA`), extras, datas de início e funções de override/reset |
 | `points-engine.js` | `pointsForDay(day)`: único ponto de cálculo dos pontos de um dia |
 | `points-utils.js` | Helpers puros: `loadAndApplyConfig`, breakdown, agregações, recordes, totais |
+| `tracking-cycle.js` | Ciclo de acompanhamento e filtros de escopo (`Ciclo atual` x `Histórico completo`) sem apagar dados |
 | `points-page.js` | Página Pontos |
 | `casal-page.js` | Loja do casal |
 | `victoria-page.js` | Loja pessoal da Vivi |
@@ -98,8 +99,10 @@ No iPhone/Android, abrir o site no navegador e usar "Adicionar à tela de iníci
 | `presence-storage.js` | Storage de `presence` (tempo real via `onSnapshot`) |
 | `kg-vivi-page.js` | Implementação compartilhada das páginas de peso + dieta de Vini e Vivi |
 | `kg-vini-page.js` | Entrada do Kg Vini; reutiliza a implementação compartilhada |
+| `vini-diet-plan.js` | Catálogo versionado do plano do Vini, valores nutricionais e cálculos puros |
+| `vini-diet-ui.js` | Checklist do plano do Vini, hidratação, histórico e estatísticas diárias/semanais/ciclo |
 | `weight-storage.js` | Storage de `weight_logs` + altura/seed em localStorage |
-| `diet-storage.js` | Storage de `diet_logs` |
+| `diet-storage.js` | Storage de `diet_logs`, incluindo o mapa legado `foods` e o plano estruturado `plan` |
 | `stats.js` | **Código morto/legado** — não importado por nenhum HTML |
 | `calendar.js` | **Código morto/legado** — não importado por nenhum HTML |
 
@@ -107,11 +110,14 @@ No iPhone/Android, abrir o site no navegador e usar "Adicionar à tela de iníci
 
 | Arquivo | Papel |
 | --- | --- |
-| `css/style.css` | Design system single-file (~3191 linhas, dark theme) |
+| `css/style.css` | Design system single-file (~3463 linhas, dark theme) |
 | `service-worker.js` | Cache network-first, offline fallback |
 | `manifest.webmanifest` | Manifest PWA |
 | `README.md` | Guia de setup/deploy |
 | `PROCESSO.md` | História e arquitetura do projeto |
+| `DIETA_VINI.md` | Fonte auditável do plano alimentar do Vini e decisões da integração com o tracker |
+| `dieta_vini/` | 21 screenshots-fonte do plano alimentar (19 conteúdos únicos) |
+| `tests/vini-diet-plan.test.mjs` | Testes dos cálculos, snapshots, opcionais, hidratação e arroz + purê |
 
 ## Boot & autenticação
 
@@ -205,29 +211,29 @@ Em seguida o nav é posicionado logo abaixo da `.topbar`: `setOffsets()` mede `t
 
 **O que faz.** `recordes.html`: melhor dia/semana/mês de cada um, com detalhamento, e banner do recordista geral de cada período.
 
-**Como funciona por baixo.** `getBestDay`/`getBestWeek`/`getBestMonth` percorrem os dias de cada usuário, usam `breakdownForDays` para pegar total e linhas, pulam períodos sem itens e guardam o de maior total. `renderRecordsBanner` mostra o dono do recorde geral de dia/semana/mês (`findTopByPeriod` compara os dois usuários). `renderRecords` mostra os cards Melhor dia/semana/mês por pessoa.
+**Como funciona por baixo.** `getBestDay`/`getBestWeek`/`getBestMonth` percorrem os dias de cada usuário, usam `breakdownForDays` para pegar total e linhas, pulam períodos sem itens e guardam o de maior total. Antes do cálculo, `filterDataByUserForTrackingScope` aplica o ciclo atual (padrão) ou libera o histórico completo. `renderRecordsBanner` mostra o dono do recorde geral de dia/semana/mês (`findTopByPeriod` compara os dois usuários). `renderRecords` mostra os cards Melhor dia/semana/mês por pessoa.
 
-**Arquivos.** `js/records-page.js`, `recordes.html`, `js/points-utils.js`.
+**Arquivos.** `js/records-page.js`, `recordes.html`, `js/points-utils.js`, `js/tracking-cycle.js`.
 
 ### Placares
 
 **O que faz.** `placares.html`: comparação Vini x Vivi por dias, semanas e meses.
 
-**Como funciona por baixo.** `computeScores` usa `compareBuckets(vMap, cMap)`, que conta em quantos **baldes** cada um teve mais pontos (vitória por balde; empate não conta para ninguém). `days` compara `pointsForDay` por data; `weeks`/`months` usam `aggregateByWeek`/`aggregateByMonth` (soma por segunda-feira da semana / por `YYYY-MM`). `renderScoreboards` mostra 3 cards (Dias/Semanas/Meses) com headline ("X ganhando por N…", "Empate" ou "Sem placares ainda") e o placar V × Vivi.
+**Como funciona por baixo.** `computeScores` usa `compareBuckets(vMap, cMap)`, que conta em quantos **baldes** cada um teve mais pontos (vitória por balde; empate não conta para ninguém). `days` compara `pointsForDay` por data; `weeks`/`months` usam `aggregateByWeek`/`aggregateByMonth` (soma por segunda-feira da semana / por `YYYY-MM`). O conjunto recebido abre filtrado pelo ciclo atual; o seletor permite recalcular com o histórico completo. `renderScoreboards` mostra 3 cards (Dias/Semanas/Meses) com headline ("X ganhando por N…", "Empate" ou "Sem placares ainda") e o placar V × Vivi.
 
-**Arquivos.** `js/placares-page.js`, `placares.html`, `js/points-utils.js`.
+**Arquivos.** `js/placares-page.js`, `placares.html`, `js/points-utils.js`, `js/tracking-cycle.js`.
 
 ### Stats
 
-**O que faz.** `stats.html`: estatísticas por pessoa, com toggle Vini/Vivi (`#stats-user-seg`) e janela de 7/30/90 dias (`#vstat-range`).
+**O que faz.** `stats.html`: estatísticas por pessoa, com toggle Vini/Vivi (`#stats-user-seg`), janela de 7/30/90 dias (`#vstat-range`) e seletor entre ciclo atual e histórico completo.
 
-**Como funciona por baixo.** `initStatsPage` faz `renderAuthFooter`, `setupToggle()`, aguarda `loadAndApplyConfig()` e, via `Promise.all`, busca `getRange(u, APP_START_DATE, todayISO())` dos dois usuários + `getStretchSessions(u)`; guarda em `_daysByUser`/`_stretchByUser` e chama `render()`. Os dados são buscados inteiros; estatísticas de "período" filtram por `rangeStart`, enquanto totais/streaks/recordes usam tudo.
+**Como funciona por baixo.** `initStatsPage` faz `renderAuthFooter`, `setupToggle()`, aguarda `loadAndApplyConfig()` e, via `Promise.all`, busca `getRange(u, APP_START_DATE, todayISO())` dos dois usuários + `getStretchSessions(u)`; guarda em `_daysByUser`/`_stretchByUser` e chama `render()`. Os dados são sempre buscados inteiros. Por padrão, `filterRecordsForTrackingScope` limita totais, médias, streaks, recordes, modalidades e sessões ao ciclo iniciado em **2026-07-15**; `Histórico completo` volta a usar `APP_START_DATE` sem reler ou alterar o banco.
 
 Seções renderizadas, nesta ordem: **Pontos** (total, média/dia, semana, mês) · **Recordes** · **Resumo do período** (dias ativos, dias de exercício, % refeições limpas, média de água, cigarros) · **Sequências (atual · recorde)** (exercício, sem fumar, sem refri, sem sobremesa) · **Totais desde o início** · **Outros hábitos** · **Exercícios por modalidade** · **Alimentação** · **Cigarros & Nicotina** · **Jiu-jítsu** (só Vini) · **Pilates** (só Vivi) · **Alongamento** · **Academia**.
 
-Gráficos: medidor semicircular SVG (`semiDonut`, refeições limpas x sujas), barras por dia da semana (`dowChart`), barras horizontais empilhadas por grupo muscular/DOW (`gymDowBars`), barras normalizadas de refeições por DOW (`mealDowChart`), somatório por DOW (`dowSumChart`, cigarros/chiclete), mini-calendário mensal com badges (`gymCalendar`) e barra de progresso (`bar`). Streaks: `currentStreak` anda para trás desde hoje; `bestStreak` anda para frente desde `APP_START_DATE`.
+Gráficos: medidor semicircular SVG (`semiDonut`, refeições limpas x sujas), barras por dia da semana (`dowChart`), barras horizontais empilhadas por grupo muscular/DOW (`gymDowBars`), barras normalizadas de refeições por DOW (`mealDowChart`), somatório por DOW (`dowSumChart`, cigarros/chiclete), mini-calendário mensal com badges (`gymCalendar`) e barra de progresso (`bar`). Streaks: `currentStreak` anda para trás desde hoje; `bestStreak` anda para frente desde o início do escopo selecionado.
 
-**Arquivos.** `js/stats-page.js`, `stats.html`, `js/points-utils.js`, `js/points-engine.js`, `js/storage.js`, `js/stretch-storage.js`. (`js/stats.js` e `js/calendar.js` são código morto — ver Modelo de dados/observações.)
+**Arquivos.** `js/stats-page.js`, `stats.html`, `js/points-utils.js`, `js/points-engine.js`, `js/storage.js`, `js/stretch-storage.js`, `js/tracking-cycle.js`. (`js/stats.js` e `js/calendar.js` são código morto — ver Modelo de dados/observações.)
 
 ### Alongamento
 
@@ -257,14 +263,15 @@ Cores: OCUPADO (fase foco) = `is-ocupado` + `presence-busy` (vermelho); Disponí
 
 ### Kg Vini e Kg Vivi (peso + dieta)
 
-**O que faz.** `kg-vivi.html` e `kg-vini.html`: acompanhamento individual de peso (registro, gráfico e IMC) e dieta do dia (alimentos por refeição, resumo nutricional, metas e histórico). O atributo `data-kg-user="victoria|vinicius"` do `<body>` define o usuário e separa os dados pelo `userId`.
+**O que faz.** `kg-vivi.html` e `kg-vini.html`: acompanhamento individual de peso (registro, gráfico e IMC) e alimentação. O atributo `data-kg-user="victoria|vinicius"` do `<body>` define o usuário e separa os dados pelo `userId`. A Vivi mantém o tracker genérico por alimentos; o Vini usa o plano prescrito e versionado em `DIETA_VINI.md`.
 
 **Como funciona por baixo.** A implementação é compartilhada por `kg-vivi-page.js`; `kg-vini-page.js` é a entrada da nova página. O seletor `#kg-section-seg` ("⚖️ Peso" / "🍽️ Dieta") usa `habitos-kg-section` para Vivi e `habitos-kg-section-vinicius` para Vini.
 
-- **Peso** — `renderWeight()` monta hero, formulário, gráfico, IMC e últimos registros. O registro continua sem horário e separado por usuário. A Vivi preserva o seed inicial de **45,2 kg ontem** e **44,6 kg hoje**; o Vini começa sem peso ou altura inventados e preenche os dados antes do cálculo de IMC.
-- **Dieta** — `renderDiet()` monta resumo, metas, alimentos e histórico. `computeNutrition` soma kcal/proteína/carbo/gordura e `setDietDay` persiste por usuário/data. No Vini, o almoço também inclui salada [50,100,150] g. O final da página dele mostra dias registrados, médias de kcal/proteína, quantidade de alimentos, consumo de salada, frequência por refeição e alimentos mais consumidos.
+- **Peso** — `renderWeight()` monta hero, formulário, gráfico, IMC e últimos registros. O registro continua sem horário e separado por usuário. Gráfico, comparação e lista abrem no ciclo atual; o hero também mostra a variação desde a primeira pesagem do ciclo. `Histórico completo` recupera visualmente todas as pesagens anteriores.
+- **Dieta da Vivi** — `renderDiet()` monta o cardápio genérico, resumo, metas provisórias, histórico e estatísticas. `computeNutrition` soma kcal/proteína/carbo/gordura e `setDietDay` persiste o mapa `foods` por usuário/data.
+- **Dieta do Vini** — `renderViniDietTracker()` monta navegação por data, resumo nutricional, opções completas por refeição, checklist por alimento, hidratação, semana, ciclo e histórico editável. O plano `vini-nutri-2026-07-v1` tem 4 refeições principais para aderência (café, almoço, lanche e jantar); pré/pós-treino e belisco são contextuais. Cada mudança chama `withViniDietSummary` antes de `setViniDietPlanDay`, preservando um snapshot de kcal/macros junto da escolha e dos itens marcados.
 
-**Metas diárias (`GOALS`).** Valores **provisórios** (comentário explícito no código: "Quando tiver os certos, troque só aqui"; a UI mostra a nota "metas provisórias — ajuste quando tiver os números certos"):
+**Metas diárias da Vivi (`GOALS`).** Valores **provisórios** (comentário explícito no código: "Quando tiver os certos, troque só aqui"; a UI mostra a nota "metas provisórias — ajuste quando tiver os números certos"):
 
 | Meta | Valor-alvo |
 | --- | --- |
@@ -273,7 +280,7 @@ Cores: OCUPADO (fase foco) = `is-ocupado` + `presence-busy` (vermelho); Disponí
 | Carbo (`c`) | 250 g |
 | Gordura (`f`) | 65 g |
 
-**Cardápio (`DIET_MENU`).** 4 refeições, cada uma com seus alimentos, opções de quantidade e perfil nutricional aproximado. `per: "unit"` = valores por unidade; `per: "100g"` = valores por 100 g. `FOOD_NUTRI` indexa por `${refeição.alimento}`. O Vini recebe adicionalmente `almoco.salada` (25 kcal, 1,5 g P, 5 g C e 0,3 g G por 100 g).
+**Cardápio genérico da Vivi (`DIET_MENU`).** 4 refeições, cada uma com seus alimentos, opções de quantidade e perfil nutricional aproximado. `per: "unit"` = valores por unidade; `per: "100g"` = valores por 100 g. `FOOD_NUTRI` indexa por `${refeição.alimento}`.
 
 | Refeição (key) | Alimentos (opções · `per`) — kcal / P / C / G |
 | --- | --- |
@@ -282,7 +289,11 @@ Cores: OCUPADO (fase foco) = `is-ocupado` + `presence-busy` (vermelho); Disponí
 | **Almoço** (`almoco` ☀️) | Arroz [50,100,150] g → 130 / 2,7 / 28 / 0,3 · Feijão [50,100,150] g → 80 / 5 / 14 / 0,5 · Carne [50,100,150] g → 220 / 26 / 0 / 12 · Frango [50,100,150] g → 165 / 31 / 0 / 3,6 · Peixe [50,100,150] g → 130 / 26 / 0 / 3 |
 | **Janta** (`janta` 🌙) | Mesmos 5 alimentos do almoço (arroz, feijão, carne, frango, peixe), todos `per:"100g"`, opções [50,100,150] g e valores idênticos |
 
-**Arquivos.** `kg-vini.html`, `kg-vivi.html`, `js/kg-vini-page.js`, `js/kg-vivi-page.js`, `js/weight-storage.js`, `js/diet-storage.js`.
+**Plano do Vini (`VINI_MEALS`).** A estrutura contém pré-treino, café da manhã, 5 opções de almoço, 5 opções de lanche, pós-treino, 5 opções de jantar e belisco. As porções vêm dos screenshots. Alimentos simples usam referências compatíveis com TACO/TBCA; rótulos não capturados e receitas compostas ficam marcados como estimativas. Itens “à vontade” são registráveis, mas não entram na soma nutricional.
+
+**Estatísticas do Vini.** O dia mostra kcal/macros consumidos contra as opções selecionadas, aderência das 4 refeições principais e hidratação. A semana da data selecionada mostra dias registrados, kcal totais e médias, macros totais e médios, distribuição energética P/C/G, aderência e comparação com a semana anterior. O ciclo mostra médias, água, melhor sequência, marcos de dias, aderência por refeição e opções mais escolhidas. Tudo respeita `Ciclo atual` x `Histórico completo`.
+
+**Arquivos.** `kg-vini.html`, `kg-vivi.html`, `js/kg-vini-page.js`, `js/kg-vivi-page.js`, `js/vini-diet-plan.js`, `js/vini-diet-ui.js`, `js/weight-storage.js`, `js/diet-storage.js`, `js/tracking-cycle.js`, `DIETA_VINI.md`.
 
 ### Vivi
 
@@ -360,7 +371,10 @@ Todas as coleções têm um módulo de storage próprio com fallback automático
 
 - **Doc ID**: `${userId}_${date}` (via `keyOf`) — 1 doc por usuário por dia.
 - **Módulo**: `js/diet-storage.js` (`COL = "diet_logs"`).
-- **Campos**: `userId`, `date` (`YYYY-MM-DD`), `foods` (mapa `{ "refeição.alimento": quantidade }`, ex.: `{ "cafe.ovo": 2, "almoco.arroz": 100 }`), `updatedAt` (serverTimestamp). `cleanFoods` remove quantidades ≤ 0.
+- **Campos comuns**: `userId`, `date` (`YYYY-MM-DD`) e `updatedAt` (serverTimestamp).
+- **Tracker genérico/legado**: `foods` (mapa `{ "refeição.alimento": quantidade }`, ex.: `{ "cafe.ovo": 2, "almoco.arroz": 100 }`). `cleanFoods` remove quantidades ≤ 0.
+- **Plano do Vini**: `planVersion` e `plan`, contendo `{ version, meals, hydrationMl, trainingDay, summary }`. Cada `meals[mealId]` guarda `{ optionId, checked[] }`. `summary` guarda o snapshot de `consumed`, `planned`, aderência, refeições completas e hidratação.
+- **Compatibilidade**: `setDietDay` e `setViniDietPlanDay` usam `setDoc(..., {merge:true})`; portanto `foods` e `plan` coexistem e nenhum registro do formato anterior é apagado.
 
 ### Regras de pontuação (`DEFAULT_POINTS`)
 
@@ -379,7 +393,9 @@ Todas as coleções têm um módulo de storage próprio com fallback automático
 
 ### Constantes globais
 
-`USERS = ["vinicius","victoria"]`, `APP_START_DATE = "2026-05-18"`, `CATEGORY_START_DATES = { academia:"2026-05-18", jiujitsu:"2026-06-08", pilates:"2026-06-09" }`. Projeto Firebase: `gymproject-12fff`.
+`USERS = ["vinicius","victoria"]`, `APP_START_DATE = "2026-05-18"`, `CATEGORY_START_DATES = { academia:"2026-05-18", jiujitsu:"2026-06-08", pilates:"2026-06-09" }`. `TRACKING_CYCLES` define para os dois o ciclo `nutri-2026-07`, iniciado em `2026-07-15` e ainda sem data final. Projeto Firebase: `gymproject-12fff`.
+
+O ciclo é somente uma camada de leitura: `days`, `stretch_sessions`, `weight_logs` e `diet_logs` continuam completos. Stats, Recordes, Placares e Kg abrem em `Ciclo atual` e oferecem `Histórico completo`. A página Pontos, as carteiras, compras e saldos de recompensas **não** usam esse filtro e continuam acumulados desde `APP_START_DATE`.
 
 ### Principais chaves de localStorage (prefixo `habitos-`)
 
@@ -447,7 +463,7 @@ Amarelos (`#fbbf24`/`#fcd34d`/`#fde68a`) e roxos/azuis de gradiente **não têm 
 
 - **Chips**: `.chip` (base), `.chip.is-on` (fundo accent), variantes `.chip--good.is-on` (verde), `.chip--bad.is-on` (vermelho), `.chip--num` (escala numérica; `data-value="0"` verde, `"5"/"6"` vermelho para cigarros). Grades `.chip-grid` + modificadores `--1/--2/--3/--5/--6/--7` (não há `--4`; grids de 4 usam layout ad-hoc). `.exercise-stack` empilha chips + blocos condicionais.
 - **Blocos condicionais**: `.gym-detail`/`.jiu-detail`/`.stretch-detail`/`.jiu-spar`, revelados por `.person-card.has-gym`/`.has-jiu`/`.has-stretch`/`.has-jiu-session`.
-- **Segmented control**: `.seg > .seg-btn`, ativo `.seg-btn.is-on`; underline por pessoa via `.seg-btn[data-user=...].is-on`. `.stats-user-seg` é a variante full-width.
+- **Segmented control**: `.seg > .seg-btn`, ativo `.seg-btn.is-on`; underline por pessoa via `.seg-btn[data-user=...].is-on`. `.stats-user-seg` é a variante full-width. O ciclo reutiliza o padrão em `.tracking-scope-seg` dentro de `.tracking-cycle-card`.
 - **Cards de pessoa**: `.person-card` (border-top colorido por `data-user`), `.person-head`/`.person-name`, estado `.has-pending` (anel accent).
 - **Avatares**: `.avatar` + `.avatar--vini`/`.avatar--vic` + tamanhos `--md/--sm/--xs`.
 - **Estrutura de página**: `.page`, `.topbar`/`.brand`/`.topbar-date`/`.topbar-right`/`.points-badge`, `.nav-menu`/`.nav-item`/`.nav-item.is-active`, `.block`/`.block-head` (wrapper de seção). `.stats-toggle-bar` sticky usa `top: var(--stack-top)`.
@@ -469,9 +485,9 @@ Breakpoints: `@media (max-width:359px)` compacta chips; `(max-width:420/480px)` 
 
 ### Service Worker
 
-`service-worker.js`, estratégia **network-first** com fallback offline. `CACHE = "habitos-shell-v16"`. No `install` faz `self.skipWaiting()`; no `activate` deleta todos os caches com nome diferente de `CACHE` e chama `self.clients.claim()`. No `fetch`: deixa passar direto hosts que contenham `googleapis.com`, `firebaseio.com` ou `gstatic.com`, e métodos diferentes de GET; para o resto faz `fetch(req, { cache: "no-store" })`, clona a resposta para o cache em background e, se a rede falhar, responde com `caches.match(req)`. Isso garante versão fresca quando online e evita ficar preso em versão antiga após deploy. O SW é registrado por `index.html` no evento `load`.
+`service-worker.js`, estratégia **network-first** com fallback offline. `CACHE = "habitos-shell-v18"`. No `install` faz `self.skipWaiting()`; no `activate` deleta todos os caches com nome diferente de `CACHE` e chama `self.clients.claim()`. No `fetch`: deixa passar direto hosts que contenham `googleapis.com`, `firebaseio.com` ou `gstatic.com`, e métodos diferentes de GET; para o resto faz `fetch(req, { cache: "no-store" })`, clona a resposta para o cache em background e, se a rede falhar, responde com `caches.match(req)`. Isso garante versão fresca quando online e evita ficar preso em versão antiga após deploy. O SW é registrado por `index.html` no evento `load`.
 
-Para invalidar caches antigos num deploy, é preciso **incrementar manualmente o nome do cache** (`habitos-shell-v16`) — o número é a versão efetiva do shell. Em rede lenta mas presente não há timeout: o app espera a rede em vez de servir o cache.
+Para invalidar caches antigos num deploy, é preciso **incrementar manualmente o nome do cache** (`habitos-shell-v18`) — o número é a versão efetiva do shell. Em rede lenta mas presente não há timeout: o app espera a rede em vez de servir o cache.
 
 ### Wake Lock
 

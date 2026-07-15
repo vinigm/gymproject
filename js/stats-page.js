@@ -13,6 +13,13 @@ import {
   mondayOfWeek,
 } from "./points-utils.js";
 import { mountNavMenu } from "./nav-menu.js";
+import {
+  DEFAULT_TRACKING_SCOPE,
+  TRACKING_SCOPE,
+  filterRecordsForTrackingScope,
+  mountTrackingScopeControl,
+  trackingScopeStart,
+} from "./tracking-cycle.js";
 
 const NAMES = { vinicius: "Vini", victoria: "Vivi" };
 const ACCENTS = { vinicius: "var(--vini)", victoria: "var(--vic)" };
@@ -34,6 +41,7 @@ let _daysByUser = { vinicius: [], victoria: [] };
 let _stretchByUser = { vinicius: [], victoria: [] };
 let _currentUser = "vinicius";
 let _currentRange = "30";
+let _trackingScope = DEFAULT_TRACKING_SCOPE;
 
 const pad = (n) => String(n).padStart(2, "0");
 function shiftISO(iso, delta) {
@@ -70,22 +78,22 @@ function smokeFreeStatus(d) { if (!d) return "skip"; const c = d.cigarettes; if 
 function sodaFreeStatus(d)  { if (!d) return "skip"; if (!d.soda) return "skip"; return d.soda === "nao" ? "satisfied" : "broken"; }
 function dessertFreeStatus(d){ if (!d) return "skip"; if (!d.dessert) return "skip"; return d.dessert === "nao" ? "satisfied" : "broken"; }
 
-function currentStreak(byDate, statusFn) {
+function currentStreak(byDate, statusFn, startDate = APP_START_DATE) {
   let streak = 0;
   let cursor = todayISO();
   const todayStatus = statusFn(byDate.get(cursor));
   if (todayStatus === "broken") return 0;
   if (todayStatus === "skip") cursor = shiftISO(cursor, -1);
-  while (cursor >= APP_START_DATE) {
+  while (cursor >= startDate) {
     const s = statusFn(byDate.get(cursor));
     if (s === "satisfied") { streak++; cursor = shiftISO(cursor, -1); }
     else break;
   }
   return streak;
 }
-function bestStreak(byDate, statusFn) {
+function bestStreak(byDate, statusFn, startDate = APP_START_DATE) {
   let best = 0, run = 0;
-  let cursor = APP_START_DATE;
+  let cursor = startDate;
   const today = todayISO();
   while (cursor <= today) {
     const s = statusFn(byDate.get(cursor));
@@ -291,7 +299,7 @@ function computeGymStats(days) {
   };
 }
 
-function gymSectionHtml(stats, ACCENT, extrasByDate = new Map()) {
+function gymSectionHtml(stats, ACCENT, extrasByDate = new Map(), startDate = CATEGORY_START_DATES.academia) {
   const {
     total, groupCounts, daysWithoutGroups, gymDays,
     activeWeeks, activeMonths,
@@ -332,7 +340,7 @@ function gymSectionHtml(stats, ACCENT, extrasByDate = new Map()) {
             <div class="kpi-label">treinos / mês ativo</div>
           </div>
         </div>
-        <p class="muted stats-meta">${startInfoLine(CATEGORY_START_DATES.academia, activeWeeks, activeMonths)}</p>
+        <p class="muted stats-meta">${startInfoLine(startDate, activeWeeks, activeMonths)}</p>
 
         ${total === 0 ? '<p class="muted" style="font-size:12px;margin:8px 0 0">sem treinos de academia ainda</p>' : `
           <h3 class="stats-subhead">Por grupo muscular</h3>
@@ -557,7 +565,7 @@ function computePilatesStats(days) {
   };
 }
 
-function pilatesSectionHtml(stats, ACCENT) {
+function pilatesSectionHtml(stats, ACCENT, startDate = CATEGORY_START_DATES.pilates) {
   const { total, pilatesDays, activeWeeks, activeMonths, avgPerActiveWeek, avgPerActiveMonth } = stats;
   return `
     <section class="block">
@@ -568,7 +576,7 @@ function pilatesSectionHtml(stats, ACCENT) {
           <div class="kpi"><div class="kpi-value">${fmtN(avgPerActiveWeek)}</div><div class="kpi-label">aulas / semana ativa</div></div>
           <div class="kpi"><div class="kpi-value">${fmtN(avgPerActiveMonth)}</div><div class="kpi-label">aulas / mês ativo</div></div>
         </div>
-        <p class="muted stats-meta">${startInfoLine(CATEGORY_START_DATES.pilates, activeWeeks, activeMonths)}</p>
+        <p class="muted stats-meta">${startInfoLine(startDate, activeWeeks, activeMonths)}</p>
 
         ${total === 0 ? '<p class="muted" style="font-size:12px;margin:8px 0 0">sem aulas de pilates ainda</p>' : `
           <h3 class="stats-subhead">Aulas por dia da semana</h3>
@@ -579,7 +587,7 @@ function pilatesSectionHtml(stats, ACCENT) {
   `;
 }
 
-function jiuSectionHtml(stats, ACCENT) {
+function jiuSectionHtml(stats, ACCENT, startDate = CATEGORY_START_DATES.jiujitsu) {
   const {
     totalTrainings, totalMinutes, totalSparMin, jiuDays,
     activeWeeks, activeMonths,
@@ -597,7 +605,7 @@ function jiuSectionHtml(stats, ACCENT) {
           <div class="kpi"><div class="kpi-value">${fmtHours(totalSparMin)}</div><div class="kpi-label">luta total</div></div>
           <div class="kpi"><div class="kpi-value">${Math.round(avgSparPerTraining)}<span class="muted" style="font-size:12px;font-weight:500">min</span></div><div class="kpi-label">luta / treino (média)</div></div>
         </div>
-        <p class="muted stats-meta">${startInfoLine(CATEGORY_START_DATES.jiujitsu, activeWeeks, activeMonths)}</p>
+        <p class="muted stats-meta">${startInfoLine(startDate, activeWeeks, activeMonths)}</p>
 
         <h3 class="stats-subhead">Médias por semana ativa</h3>
         <div class="stat-row"><span class="stat-label">📅 Treinos</span><span class="stat-value">${fmtN(avgTrainingsPerActiveWeek)}</span></div>
@@ -626,18 +634,18 @@ function kpiRow(value, label, suffix = "") {
 }
 
 // ─── Cigarros & Chicletes de Nicotina ────────────────────────────────
-function computeCigStats(days) {
+function computeCigStats(days, statsStartDate = APP_START_DATE) {
   const byDate = new Map(days.map(d => [d.date, d]));
   const today = todayISO();
 
-  // statusFn pra streak de "sem fumar": missing day = otimista (assumido sem fumar)
+  // Só conta "sem fumar" quando o dia foi explicitamente registrado com zero.
   const noSmokeStatus = (d) => {
-    if (!d) return "satisfied";
+    if (!d || d.cigarettes == null || d.cigarettes === "") return "skip";
     const c = Number(d.cigarettes);
     return (c > 0) ? "broken" : "satisfied";
   };
-  const curNoSmoke = currentStreak(byDate, noSmokeStatus);
-  const bestNoSmoke = bestStreak(byDate, noSmokeStatus);
+  const curNoSmoke = currentStreak(byDate, noSmokeStatus, statsStartDate);
+  const bestNoSmoke = bestStreak(byDate, noSmokeStatus, statsStartDate);
 
   // Acumuladores
   let totalCigs = 0, totalGum = 0;
@@ -675,8 +683,8 @@ function computeCigStats(days) {
     if (d.date >= monthStart) { monthCigs += c; monthGum += g; }
   }
 
-  // Dias decorridos desde APP_START_DATE pras médias
-  const totalDays = Math.max(1, daysBetweenInclusive(APP_START_DATE, today));
+  // Dias decorridos dentro do escopo atual pras médias
+  const totalDays = Math.max(1, daysBetweenInclusive(statsStartDate, today));
   const weeksElapsed = Math.max(1, totalDays / 7);
   const monthsElapsed = Math.max(1, totalDays / 30);
 
@@ -714,7 +722,7 @@ function dowSumChart(values, accentColor) {
   `;
 }
 
-function cigSectionHtml(stats, ACCENT) {
+function cigSectionHtml(stats, ACCENT, scopeSinceLabel = "desde o início") {
   const {
     totalCigs, totalGum, curNoSmoke, bestNoSmoke,
     todayCigs, weekCigs, monthCigs,
@@ -739,7 +747,7 @@ function cigSectionHtml(stats, ACCENT) {
         <div class="stat-row"><span class="stat-label">🚬 Esta semana</span><span class="stat-value">${weekCigs}</span></div>
         <div class="stat-row"><span class="stat-label">🚬 Este mês</span><span class="stat-value">${monthCigs}</span></div>
 
-        <h3 class="stats-subhead">Médias (desde o início)</h3>
+        <h3 class="stats-subhead">Médias (${scopeSinceLabel})</h3>
         <div class="stat-row"><span class="stat-label">Por dia</span><span class="stat-value">${fmtN(avgCigsPerDay)}</span></div>
         <div class="stat-row"><span class="stat-label">Por semana</span><span class="stat-value">${fmtN(avgCigsPerWeek)}</span></div>
         <div class="stat-row"><span class="stat-label">Por mês</span><span class="stat-value">${fmtN(avgCigsPerMonth)}</span></div>
@@ -771,12 +779,22 @@ function cigSectionHtml(stats, ACCENT) {
 function render() {
   const USER = _currentUser;
   const ACCENT = ACCENTS[USER];
-  const _days = _daysByUser[USER];
+  const statsStartDate = trackingScopeStart(USER, _trackingScope, APP_START_DATE);
+  const _days = filterRecordsForTrackingScope(_daysByUser[USER], USER, _trackingScope);
+  const stretchSessions = filterRecordsForTrackingScope(_stretchByUser[USER], USER, _trackingScope);
+  const scopeSinceLabel = _trackingScope === TRACKING_SCOPE.CYCLE ? "no ciclo atual" : "desde o início";
+  const scopeTotalTitle = _trackingScope === TRACKING_SCOPE.CYCLE
+    ? "Totais · ciclo atual"
+    : "Totais · histórico completo";
+  const scopeSectionLabel = _trackingScope === TRACKING_SCOPE.CYCLE ? "Ciclo atual" : "Histórico completo";
+  const categoryStartDate = (category) => (
+    CATEGORY_START_DATES[category] > statsStartDate ? CATEGORY_START_DATES[category] : statsStartDate
+  );
   const el = document.getElementById("vstat-content");
   const days = Number(_currentRange);
   const end = todayISO();
   let rangeStart = shiftISO(end, -(days - 1));
-  if (rangeStart < APP_START_DATE) rangeStart = APP_START_DATE;
+  if (rangeStart < statsStartDate) rangeStart = statsStartDate;
   const totalDays = daysBetweenInclusive(rangeStart, end);
 
   const byDate = new Map(_days.map(d => [d.date, d]));
@@ -821,18 +839,18 @@ function render() {
   const totalPts = totalEarnedByUser(_days);
   const ptsWeek = pointsInPeriod(_days, "weekly");
   const ptsMonth = pointsInPeriod(_days, "monthly");
-  const daysSinceStart = Math.max(1, daysBetweenInclusive(APP_START_DATE, end));
+  const daysSinceStart = Math.max(1, daysBetweenInclusive(statsStartDate, end));
   const avgPtsDay = Math.round(totalPts / daysSinceStart);
 
   // ----- streaks (atual + recorde) -----
-  const exCur = currentStreak(byDate, exStatus);
-  const exBest = bestStreak(byDate, exStatus);
-  const smokeCur = currentStreak(byDate, smokeFreeStatus);
-  const smokeBest = bestStreak(byDate, smokeFreeStatus);
-  const sodaCur = currentStreak(byDate, sodaFreeStatus);
-  const sodaBest = bestStreak(byDate, sodaFreeStatus);
-  const dessertCur = currentStreak(byDate, dessertFreeStatus);
-  const dessertBest = bestStreak(byDate, dessertFreeStatus);
+  const exCur = currentStreak(byDate, exStatus, statsStartDate);
+  const exBest = bestStreak(byDate, exStatus, statsStartDate);
+  const smokeCur = currentStreak(byDate, smokeFreeStatus, statsStartDate);
+  const smokeBest = bestStreak(byDate, smokeFreeStatus, statsStartDate);
+  const sodaCur = currentStreak(byDate, sodaFreeStatus, statsStartDate);
+  const sodaBest = bestStreak(byDate, sodaFreeStatus, statsStartDate);
+  const dessertCur = currentStreak(byDate, dessertFreeStatus, statsStartDate);
+  const dessertBest = bestStreak(byDate, dessertFreeStatus, statsStartDate);
 
   // ----- modalidades (range) -----
   const modalidades = Object.keys(EX_LABELS)
@@ -876,7 +894,7 @@ function render() {
         <div class="kpi-grid">
           <div class="kpi">
             <div class="kpi-value">${totalPts}</div>
-            <div class="kpi-label">total desde o início</div>
+            <div class="kpi-label">total ${scopeSinceLabel}</div>
           </div>
           <div class="kpi">
             <div class="kpi-value">${avgPtsDay}</div>
@@ -940,7 +958,7 @@ function render() {
     </section>
 
     <section class="block">
-      <div class="block-head"><h2>Totais · desde o início</h2><span class="muted" style="font-size:11px">X / dias registrados</span></div>
+      <div class="block-head"><h2>${scopeTotalTitle}</h2><span class="muted" style="font-size:11px">X / dias registrados</span></div>
       <div class="stat-card" style="border-top:3px solid ${ACCENT}">
         <div class="stat-row"><span class="stat-label">🚭 Dias sem fumar</span><span class="stat-value">${diasSemFumarTotal}<span class="muted" style="font-weight:500;font-size:12px">/${cigReg}</span></span></div>
         <div class="stat-row"><span class="stat-label">🥤 Dias sem refrigerante</span><span class="stat-value">${diasSemRefri}<span class="muted" style="font-weight:500;font-size:12px">/${sodaReg}</span></span></div>
@@ -969,7 +987,7 @@ function render() {
       <div class="block-head"><h2>Alimentação</h2></div>
       <div class="stat-card" style="border-top:3px solid ${ACCENT}">
         ${(() => {
-          const ms = monthStartClamped();
+          const ms = monthStartClamped(statsStartDate);
           let cM = 0, sM = 0, cAll = 0, sAll = 0;
           for (const d of _days) {
             for (const slot of ["lunch", "dinner"]) {
@@ -985,7 +1003,7 @@ function render() {
           return `
             <h3 class="stats-subhead">Mês atual</h3>
             ${semiDonut(cM, sM)}
-            <h3 class="stats-subhead">Desde o início</h3>
+            <h3 class="stats-subhead">${scopeSectionLabel}</h3>
             ${semiDonut(cAll, sAll)}
             <h3 class="stats-subhead">Refeições por dia da semana</h3>
             ${mealDowChart(_days)}
@@ -994,26 +1012,27 @@ function render() {
       </div>
     </section>
 
-    ${cigSectionHtml(computeCigStats(_days), ACCENT)}
+    ${cigSectionHtml(computeCigStats(_days, statsStartDate), ACCENT, scopeSinceLabel)}
 
-    ${USER === "vinicius" ? jiuSectionHtml(computeJiuStats(_days), ACCENT) : ""}
+    ${USER === "vinicius" ? jiuSectionHtml(computeJiuStats(_days), ACCENT, categoryStartDate("jiujitsu")) : ""}
 
-    ${USER === "victoria" ? pilatesSectionHtml(computePilatesStats(_days), ACCENT) : ""}
+    ${USER === "victoria" ? pilatesSectionHtml(computePilatesStats(_days), ACCENT, categoryStartDate("pilates")) : ""}
 
-    ${stretchSectionHtml(computeStretchStats(_stretchByUser[USER] || []), ACCENT)}
+    ${stretchSectionHtml(computeStretchStats(stretchSessions), ACCENT)}
 
     ${gymSectionHtml(
       computeGymStats(_days),
       ACCENT,
-      buildExtrasByDate(_days)
+      buildExtrasByDate(_days),
+      categoryStartDate("academia")
     )}
   `;
 }
 
-function monthStartClamped() {
+function monthStartClamped(startDate = APP_START_DATE) {
   const t = new Date();
   const first = `${t.getFullYear()}-${pad(t.getMonth() + 1)}-01`;
-  return first < APP_START_DATE ? APP_START_DATE : first;
+  return first < startDate ? startDate : first;
 }
 
 function setupToggle() {
@@ -1022,14 +1041,28 @@ function setupToggle() {
       _currentUser = btn.dataset.user;
       document.querySelectorAll("#stats-user-seg .seg-btn")
         .forEach(b => b.classList.toggle("is-on", b.dataset.user === _currentUser));
+      renderTrackingControl();
       render();
     });
+  });
+}
+
+function renderTrackingControl() {
+  mountTrackingScopeControl("stats-cycle-scope", {
+    scope: _trackingScope,
+    userIds: [_currentUser],
+    onChange: (nextScope) => {
+      _trackingScope = nextScope;
+      renderTrackingControl();
+      render();
+    },
   });
 }
 
 async function initStatsPage(user) {
   renderAuthFooter(user);
   setupToggle();
+  renderTrackingControl();
   const select = document.getElementById("vstat-range");
   select.addEventListener("change", () => { _currentRange = select.value; render(); });
   try {

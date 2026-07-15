@@ -1554,6 +1554,67 @@ body.is-loading::after {
   font-size: 14px;
 }
 
+/* === CICLO DE ACOMPANHAMENTO === */
+.tracking-cycle-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  margin: 0 0 22px;
+  padding: 13px 14px;
+  background:
+    linear-gradient(135deg, rgba(96, 165, 250, 0.09), rgba(244, 114, 182, 0.07)),
+    var(--card);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.tracking-cycle-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.tracking-cycle-kicker {
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+.tracking-cycle-copy strong {
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.25;
+}
+.tracking-cycle-copy strong small {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+.tracking-cycle-copy > span:last-child {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.35;
+}
+.tracking-scope-seg { flex: none; }
+.tracking-scope-seg .seg-btn {
+  min-height: 38px;
+  padding: 7px 10px;
+  white-space: nowrap;
+}
+.tracking-scope-seg .seg-btn.is-on { box-shadow: inset 0 -2px 0 var(--accent); }
+body[data-kg-user] .tracking-cycle-card { border-left-color: var(--kg-accent); }
+body[data-kg-user] .tracking-cycle-kicker { color: var(--kg-accent); }
+body[data-kg-user] .tracking-scope-seg .seg-btn.is-on { box-shadow: inset 0 -2px 0 var(--kg-accent); }
+
+@media (max-width: 620px) {
+  .tracking-cycle-card { grid-template-columns: 1fr; }
+  .tracking-scope-seg { display: flex; width: 100%; }
+  .tracking-scope-seg .seg-btn { flex: 1; white-space: normal; }
+}
+
 /* === CALENDÁRIO DINÂMICO (points.html) === */
 .dcal-nav {
   display: flex; align-items: center; gap: 6px;
@@ -3043,6 +3104,7 @@ body.presence-fullscreen .presence-fs-exit { display: flex; }
 .kg-hero-value { font-size: clamp(44px, 13vw, 72px); font-weight: 900; line-height: 1; color: var(--kg-accent); }
 .kg-hero-value small { font-size: .35em; font-weight: 700; color: var(--muted); margin-left: 4px; }
 .kg-hero-delta { font-size: 13px; font-weight: 700; margin-top: 2px; color: var(--accent); }
+.kg-hero-cycle-delta { font-size: 12px; font-weight: 700; color: var(--kg-accent); }
 .kg-hero-sub { font-size: 12px; color: var(--muted); }
 .kg-hero-empty { font-size: 13px; color: var(--muted); text-align: center; }
 
@@ -3188,4 +3250,214 @@ body.presence-fullscreen .presence-fs-exit { display: flex; }
   .kg-hero-value { font-size: 84px; }
   .kg-stat-value { font-size: 24px; }
   .nutri-macro b { font-size: 20px; }
+}
+
+/* === KG VINI — PLANO ALIMENTAR E ESTATÍSTICAS === */
+.vini-date-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 22px;
+  padding: 14px;
+  background: linear-gradient(135deg, rgba(96, 165, 250, .12), rgba(96, 165, 250, .03)), var(--card);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--kg-accent);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.vini-date-copy { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.vini-date-kicker { color: var(--kg-accent); font-size: 10px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; }
+.vini-date-copy strong { font-size: 15px; text-transform: capitalize; }
+.vini-save-status { min-height: 15px; color: var(--good); font-size: 11px; font-weight: 700; }
+.vini-save-status.is-error { color: var(--bad); }
+.vini-date-nav { display: flex; align-items: center; gap: 6px; }
+.vini-date-nav input {
+  min-height: 40px;
+  padding: 8px 10px;
+  color: var(--text);
+  background: var(--card-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font: inherit;
+  font-size: 12px;
+  color-scheme: dark;
+}
+.vini-date-arrow { min-width: 40px; min-height: 40px; padding: 6px; font-size: 22px; }
+.vini-today-btn { min-height: 40px; }
+.vini-date-arrow:disabled, .vini-week-day:disabled, .vini-water-actions .chip:disabled { opacity: .32; cursor: not-allowed; }
+
+.vini-day-summary {
+  padding: 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--kg-accent);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.vini-kcal-hero { display: flex; flex-direction: column; align-items: center; text-align: center; }
+.vini-kcal-value { color: var(--kg-accent); font-size: clamp(42px, 12vw, 64px); font-weight: 900; line-height: 1; }
+.vini-kcal-unit { margin-top: 3px; color: var(--text); font-size: 13px; font-weight: 800; }
+.vini-kcal-plan { margin-top: 3px; color: var(--muted); font-size: 11px; }
+.vini-summary-macros { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 16px; }
+.vini-macro-card { padding: 10px; background: var(--card-2); border: 1px solid var(--border); border-radius: 12px; }
+.vini-macro-card > div:first-child { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; }
+.vini-macro-card > div:first-child span { font-size: 11px; font-weight: 900; }
+.vini-macro-card strong { color: var(--text); font-size: 17px; }
+.vini-macro-card small { display: block; min-height: 27px; margin: 3px 0 7px; color: var(--muted); font-size: 9px; line-height: 1.35; }
+.vini-macro-p > div:first-child span { color: var(--good); }
+.vini-macro-c > div:first-child span { color: var(--water); }
+.vini-macro-f > div:first-child span { color: #fbbf24; }
+.vini-macro-p .goal-fill { background: var(--good); }
+.vini-macro-c .goal-fill { background: var(--water); }
+.vini-macro-f .goal-fill { background: #fbbf24; }
+.vini-adherence-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 10px; }
+.vini-progress-card { padding: 10px; background: rgba(255,255,255,.02); border: 1px solid var(--border); border-radius: 12px; }
+.vini-progress-card > div:first-child { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 7px; }
+.vini-progress-card strong { color: var(--kg-accent); font-size: 17px; }
+.vini-progress-card span { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .04em; }
+.vini-progress-card .goal-fill, .vini-stat-progress .goal-fill, .vini-milestone .goal-fill { background: var(--kg-accent); }
+.vini-water-fill { background: var(--water) !important; }
+.vini-nutri-alert { margin: 12px 0 0; color: #fbbf24; font-size: 11px; text-align: center; }
+
+.vini-meal-list { display: flex; flex-direction: column; gap: 12px; }
+.vini-meal-card {
+  overflow: hidden;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+}
+.vini-meal-card.has-progress { border-color: rgba(96,165,250,.45); }
+.vini-meal-card.is-complete { border-color: rgba(52,211,153,.65); }
+.vini-meal-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 14px; background: rgba(255,255,255,.018); }
+.vini-meal-title { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.vini-meal-icon { display: grid; width: 34px; height: 34px; place-items: center; flex: none; background: var(--card-2); border-radius: 10px; font-size: 18px; }
+.vini-meal-title div { display: flex; flex-direction: column; min-width: 0; }
+.vini-meal-title strong { font-size: 14px; }
+.vini-meal-title small { color: var(--muted); font-size: 10px; }
+.vini-meal-pct { flex: none; color: var(--muted); font-size: 11px; font-weight: 800; }
+.vini-meal-card.is-complete .vini-meal-pct { color: var(--good); }
+.vini-option-picker { display: flex; gap: 7px; overflow-x: auto; padding: 0 14px 12px; scrollbar-width: thin; }
+.vini-option-btn {
+  min-height: 38px;
+  flex: 0 0 auto;
+  padding: 8px 11px;
+  color: var(--muted);
+  background: var(--card-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.vini-option-btn.is-on { color: #fff; background: var(--kg-accent-selected); border-color: var(--kg-accent); }
+.vini-option-empty { margin: 0; padding: 2px 14px 14px; color: var(--muted); font-size: 12px; }
+.vini-option-detail { padding: 0 14px 14px; }
+.vini-option-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-top: 2px; }
+.vini-option-head > div { display: flex; flex-direction: column; min-width: 0; }
+.vini-option-head strong { font-size: 13px; }
+.vini-option-head span { margin-top: 2px; color: var(--muted); font-size: 10px; line-height: 1.3; }
+.vini-mark-all { min-height: 36px; flex: none; padding: 7px 10px; font-size: 10px; }
+.vini-option-note { margin: 8px 0 0; color: var(--water); font-size: 10px; line-height: 1.35; }
+.vini-food-list { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+.vini-food-check {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 50px;
+  padding: 9px 10px;
+  color: var(--text);
+  text-align: left;
+  background: var(--card-2);
+  border: 1px solid var(--border);
+  border-radius: 11px;
+}
+.vini-food-check.is-on { background: rgba(52,211,153,.08); border-color: rgba(52,211,153,.55); }
+.vini-food-box { display: grid; width: 24px; height: 24px; place-items: center; color: #07150f; background: transparent; border: 2px solid var(--muted); border-radius: 7px; font-size: 14px; font-weight: 900; }
+.vini-food-check.is-on .vini-food-box { background: var(--good); border-color: var(--good); }
+.vini-food-copy { display: flex; flex-direction: column; min-width: 0; }
+.vini-food-copy strong { overflow: hidden; font-size: 12px; line-height: 1.3; text-overflow: ellipsis; }
+.vini-food-copy strong em { color: var(--water); font-size: 8px; font-style: normal; letter-spacing: .05em; text-transform: uppercase; }
+.vini-food-copy small { margin-top: 2px; color: var(--muted); font-size: 10px; }
+.vini-food-nutri { color: var(--muted); font-size: 10px; font-weight: 700; white-space: nowrap; }
+.vini-food-check.is-on .vini-food-nutri { color: var(--good); }
+.vini-estimate-note { margin: 7px 0 0; color: var(--muted); font-size: 9px; line-height: 1.35; }
+.vini-clear-meal { margin-top: 9px; padding: 0; color: var(--bad); background: none; border: 0; font-size: 10px; text-decoration: underline; }
+
+.vini-water-card { padding: 16px; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
+.vini-water-value { display: flex; align-items: baseline; justify-content: center; gap: 6px; margin-bottom: 10px; }
+.vini-water-value strong { color: var(--water); font-size: 34px; line-height: 1; }
+.vini-water-value span { color: var(--muted); font-size: 11px; }
+.vini-water-actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 12px; }
+.vini-water-actions .chip { min-height: 38px; padding: 6px; }
+.vini-water-input-label { display: grid; grid-template-columns: 1fr 100px auto; align-items: center; gap: 8px; margin-top: 12px; color: var(--muted); font-size: 11px; }
+.vini-water-input-label input { width: 100%; min-height: 38px; padding: 7px 9px; color: var(--text); background: var(--card-2); border: 1px solid var(--border); border-radius: 9px; font: inherit; text-align: right; }
+.vini-training-check { margin-top: 14px; font-size: 12px; }
+.vini-water-note { margin: 12px 0 0; color: var(--muted); font-size: 11px; text-align: center; }
+.vini-water-note.is-good { color: var(--good); }
+
+.vini-week-card { border-top: 3px solid var(--kg-accent); }
+.vini-week-macros { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.vini-week-macros > div { display: flex; flex-direction: column; gap: 2px; padding: 10px; background: var(--card-2); border: 1px solid var(--border); border-radius: 10px; }
+.vini-week-macros span { color: var(--muted); font-size: 9px; text-transform: uppercase; }
+.vini-week-macros strong { font-size: 16px; }
+.vini-week-macros small { color: var(--muted); font-size: 9px; line-height: 1.3; }
+.vini-macro-distribution { display: flex; height: 8px; overflow: hidden; margin-top: 12px; background: var(--card-2); border-radius: 999px; }
+.vini-macro-distribution span { display: block; height: 100%; }
+.vini-macro-distribution .is-p { background: var(--good); }
+.vini-macro-distribution .is-c { background: var(--water); }
+.vini-macro-distribution .is-f { background: #fbbf24; }
+.vini-macro-legend { display: flex; justify-content: center; gap: 12px; margin-top: 5px; font-size: 9px; font-weight: 800; }
+.vini-macro-legend .is-p { color: var(--good); }
+.vini-macro-legend .is-c { color: var(--water); }
+.vini-macro-legend .is-f { color: #fbbf24; }
+.vini-week-strip { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.vini-week-day { display: flex; min-width: 0; flex-direction: column; align-items: center; gap: 2px; padding: 7px 2px; color: var(--muted); background: var(--card-2); border: 1px solid var(--border); border-radius: 9px; }
+.vini-week-day.has-data { color: var(--text); }
+.vini-week-day.is-selected { border-color: var(--kg-accent); box-shadow: inset 0 -2px 0 var(--kg-accent); }
+.vini-week-day span { font-size: 8px; text-transform: uppercase; }
+.vini-week-day b { font-size: 12px; }
+.vini-week-day small { overflow: hidden; max-width: 100%; font-size: 7px; text-overflow: ellipsis; white-space: nowrap; }
+.vini-week-day em { min-height: 9px; color: var(--good); font-size: 8px; font-style: normal; font-weight: 800; }
+.vini-week-compare { margin: 12px 0 0; color: var(--muted); font-size: 10px; text-align: center; }
+.vini-milestone { margin-top: 12px; padding: 12px; background: rgba(96,165,250,.06); border: 1px solid rgba(96,165,250,.25); border-radius: 11px; }
+.vini-milestone > div:first-child { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 7px; }
+.vini-milestone strong { font-size: 12px; }
+.vini-milestone span { color: var(--muted); font-size: 10px; }
+.vini-stat-progress { margin: 10px 0; }
+.vini-stat-progress > div:first-child { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 5px; font-size: 11px; }
+.vini-stat-progress strong { color: var(--kg-accent); }
+
+.vini-history-list { display: flex; flex-direction: column; gap: 6px; }
+.vini-history-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 10px; width: 100%; padding: 11px 12px; color: var(--text); text-align: left; background: var(--card); border: 1px solid var(--border); border-radius: 11px; }
+.vini-history-row.is-selected { border-color: var(--kg-accent); }
+.vini-history-date, .vini-history-nutri { display: flex; flex-direction: column; min-width: 0; }
+.vini-history-date strong { font-size: 12px; text-transform: capitalize; }
+.vini-history-date small, .vini-history-nutri small { margin-top: 2px; color: var(--muted); font-size: 9px; }
+.vini-history-nutri { text-align: right; }
+.vini-history-nutri strong { font-size: 12px; }
+.vini-history-score { display: grid; width: 42px; height: 42px; place-items: center; color: var(--kg-accent); background: var(--kg-accent-soft); border-radius: 50%; font-size: 11px; font-weight: 900; }
+
+@media (max-width: 620px) {
+  .vini-date-card { grid-template-columns: 1fr; }
+  .vini-date-nav { width: 100%; }
+  .vini-date-nav input { flex: 1; min-width: 0; }
+}
+
+@media (max-width: 440px) {
+  .vini-summary-macros { grid-template-columns: 1fr; }
+  .vini-macro-card small { min-height: 0; }
+  .vini-adherence-grid { grid-template-columns: 1fr; }
+  .vini-option-head { align-items: flex-start; flex-direction: column; }
+  .vini-mark-all { width: 100%; }
+  .vini-food-check { grid-template-columns: auto minmax(0, 1fr); }
+  .vini-food-nutri { grid-column: 2; }
+  .vini-water-actions { grid-template-columns: repeat(2, 1fr); }
+  .vini-week-macros { grid-template-columns: 1fr; }
+  .vini-history-row { grid-template-columns: minmax(0, 1fr) auto; }
+  .vini-history-nutri { grid-column: 1; text-align: left; }
+  .vini-history-score { grid-column: 2; grid-row: 1 / span 2; }
 }

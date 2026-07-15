@@ -7,9 +7,16 @@ import {
   getBestDay, getBestWeek, getBestMonth,
   fmtDayFull, fmtWeekRange, fmtMonth, fmtPts,
 } from "./points-utils.js";
+import {
+  DEFAULT_TRACKING_SCOPE,
+  filterDataByUserForTrackingScope,
+  mountTrackingScopeControl,
+} from "./tracking-cycle.js";
 
 const NAMES = { vinicius: "Vinicius", victoria: "Vivi" };
 const AVATAR_CLASS = { vinicius: "avatar--vini", victoria: "avatar--vic" };
+let _allData = { vinicius: [], victoria: [] };
+let _trackingScope = DEFAULT_TRACKING_SCOPE;
 
 function computeAllRecords(dataByUser) {
   return Object.fromEntries(USERS.map(u => [u, {
@@ -137,14 +144,31 @@ function renderRecords(allRecords) {
   el.innerHTML = cols;
 }
 
+function renderCurrentRecords() {
+  const scopedData = filterDataByUserForTrackingScope(_allData, _trackingScope);
+  const allRecords = computeAllRecords(scopedData);
+  renderRecordsBanner(allRecords);
+  renderRecords(allRecords);
+}
+
+function renderTrackingControl() {
+  mountTrackingScopeControl("records-cycle-scope", {
+    scope: _trackingScope,
+    onChange: (nextScope) => {
+      _trackingScope = nextScope;
+      renderTrackingControl();
+      renderCurrentRecords();
+    },
+  });
+}
+
 async function initRecordsPage(user) {
   renderAuthFooter(user);
+  renderTrackingControl();
   try {
     await loadAndApplyConfig();
-    const data = await loadAllData();
-    const allRecords = computeAllRecords(data);
-    renderRecordsBanner(allRecords);
-    renderRecords(allRecords);
+    _allData = await loadAllData();
+    renderCurrentRecords();
   } catch (err) {
     console.error(err);
     document.getElementById("records").innerHTML =
