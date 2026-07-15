@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import {
   RUN_KM_OPTIONS,
+  isTrackerMultiGroup,
   normalizeRunKm,
   normalizeTrackerDay,
   toggleTrackerValue,
@@ -9,6 +10,8 @@ import {
 
 const expected = [2.5, 3, 4, 5, 6, 7, 8, 9, 10];
 assert.deepEqual(RUN_KM_OPTIONS, expected);
+assert.equal(isTrackerMultiGroup("exercises"), true);
+assert.equal(isTrackerMultiGroup("run_km"), false);
 assert.equal(normalizeRunKm(undefined), null);
 assert.equal(normalizeRunKm("2.5"), 2.5);
 assert.equal(normalizeRunKm(2), null);
@@ -40,5 +43,11 @@ for (const [, contents] of groups) {
   const values = [...contents.matchAll(/data-value="([^"]+)"/g)].map((match) => Number(match[1]));
   assert.deepEqual(values, expected);
 }
+
+// Regressão: paintCard precisa consultar a regra exportada; uma referência
+// local inexistente impede Academia, Corrida, Jiu e Alongamento de abrirem.
+const trackerSource = await readFile(new URL("../js/tracker.js", import.meta.url), "utf8");
+assert.match(trackerSource, /isTrackerMultiGroup\(group\)/);
+assert.doesNotMatch(trackerSource, /\bMULTI_GROUPS\b/);
 
 console.log("tracker-run-distance: ok");

@@ -1,6 +1,6 @@
 import { getDay, saveDay } from "./storage.js";
 import { getState, USERS } from "./app.js";
-import { normalizeTrackerDay, toggleTrackerValue } from "./tracker-model.js";
+import { isTrackerMultiGroup, normalizeTrackerDay, toggleTrackerValue } from "./tracker-model.js";
 
 // Snapshot por usuário do que está NO BANCO (após carregar/salvar)
 const saved = {};
@@ -55,7 +55,7 @@ function paintCard(userId) {
     const group = grid.dataset.group;
     grid.querySelectorAll(".chip").forEach(chip => {
       const v = chip.dataset.value;
-      const on = MULTI_GROUPS.has(group)
+      const on = isTrackerMultiGroup(group)
         ? (d[group] || []).includes(v)
         : (d[group] != null && String(d[group]) === v);
       chip.classList.toggle("is-on", on);

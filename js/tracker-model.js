@@ -6,6 +6,10 @@ export const RUN_KM_OPTIONS = Object.freeze([2.5, 3, 4, 5, 6, 7, 8, 9, 10]);
 const MULTI_GROUPS = new Set(["exercises", "extras", "gym_groups"]);
 const NUMERIC_GROUPS = new Set(["jiu_spar_min", "stretch_min", "run_km"]);
 
+export function isTrackerMultiGroup(group) {
+  return MULTI_GROUPS.has(group);
+}
+
 function nullableNumber(value) {
   return value === "" || value == null ? null : Number(value);
 }
@@ -37,7 +41,7 @@ export function normalizeTrackerDay(day = {}) {
 export function toggleTrackerValue(day, group, rawValue) {
   const value = String(rawValue);
 
-  if (MULTI_GROUPS.has(group)) {
+  if (isTrackerMultiGroup(group)) {
     if (!Array.isArray(day[group])) day[group] = [];
     const index = day[group].indexOf(value);
     if (index >= 0) {
