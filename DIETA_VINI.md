@@ -310,9 +310,10 @@ Os screenshots permitem reconstruir a estrutura e as porções, mas ainda não p
 
 Estas diretrizes orientam a implementação atual:
 
-- O usuário escolhe uma opção completa por refeição.
-- Itens de opções diferentes não são combinados automaticamente.
-- Itens opcionais, como o morango, podem ser marcados separadamente.
+- No tracker, cada alimento é marcado individualmente e recebe sua quantidade consumida; itens de opções diferentes podem ser combinados conforme o consumo real.
+- A visualização `Dieta Oficial` preserva separadamente as composições completas sugeridas pela nutricionista e é somente para consulta.
+- Nenhuma ação na `Dieta Oficial` cria, altera ou remove registros.
+- Itens opcionais, como o morango, podem ser marcados separadamente no tracker.
 - Pré-treino e pós-treino devem ser ativados conforme o treino do dia.
 - Alimentos com substituições devem aceitar alternativas somente quando elas forem conhecidas.
 - Valores nutricionais devem ficar em um catálogo separado da estrutura do plano, com fonte registrada.
@@ -352,11 +353,13 @@ Estas diretrizes orientam a implementação atual:
 - **15/07/2026:** plano levado ao Kg Vini com opções completas, checklist por item, hidratação, snapshots nutricionais, cálculos diários/semanais e estatísticas do ciclo.
 - **15/07/2026:** interface revisada para checkboxes independentes por alimento; o formato anterior por opção permanece compatível e é migrado automaticamente na leitura.
 - **15/07/2026:** cada alimento passou a ter quantidade ajustável (unidades, fatias, medidas, gramas ou ml), com recálculo proporcional dos macros e migração dos registros v1/v2.
+- **15/07/2026:** adicionada a visualização somente de consulta `Dieta Oficial`, com as 18 composições completas dos screenshots e a orientação de hidratação. O Pro Force e o Natural Whey são exibidos como alternativas da mesma opção, conforme o print original.
 
 ## 15. Implementação no tracker
 
 - Catálogo versionado: `js/vini-diet-plan.js`, versão `vini-nutri-2026-07-v3`.
 - Interface e estatísticas: `js/vini-diet-ui.js`.
+- Consulta oficial: `VINI_OFFICIAL_MEALS` preserva as composições completas dos prints; não contém checkboxes, não grava dados e consolida os screenshots duplicados.
 - Persistência: campo `plan` nos documentos existentes de `diet_logs`, sem remover o mapa legado `foods`.
 - Cada dia guarda checkboxes individuais agrupados por momento alimentar, a quantidade selecionada para cada alimento, hidratação, indicação de treino e um snapshot dos totais nutricionais.
 - O snapshot impede que uma futura revisão dos valores de referência altere retroativamente kcal e macros já registrados.

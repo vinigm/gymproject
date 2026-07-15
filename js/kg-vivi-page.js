@@ -12,6 +12,7 @@ import {
 } from "./weight-storage.js";
 import { getDietDay, setDietDay, getDietMap } from "./diet-storage.js";
 import { loadViniDietTracker, renderViniDietTracker } from "./vini-diet-ui.js";
+import { renderViniOfficialDiet } from "./vini-official-diet.js";
 import {
   DEFAULT_TRACKING_SCOPE,
   TRACKING_SCOPE,
@@ -158,8 +159,13 @@ function render() {
   mountTrackingScopeControl("kg-cycle-scope", {
     scope: stateData.trackingScope,
     userIds: [USER],
+    includeOfficialDiet: IS_VINI,
     onChange: (nextScope) => {
       stateData.trackingScope = nextScope;
+      if (nextScope === TRACKING_SCOPE.OFFICIAL_DIET) {
+        stateData.section = "dieta";
+        try { localStorage.setItem(SECTION_KEY, "dieta"); } catch {}
+      }
       render();
     },
   });
@@ -167,6 +173,12 @@ function render() {
 }
 
 function selectSection(section) {
+  if (section === "peso" && stateData.trackingScope === TRACKING_SCOPE.OFFICIAL_DIET) {
+    stateData.trackingScope = TRACKING_SCOPE.CYCLE;
+    stateData.section = "peso";
+    render();
+    return;
+  }
   stateData.section = section;
   try { localStorage.setItem(SECTION_KEY, section); } catch {}
   document.querySelectorAll("#kg-section-seg .seg-btn").forEach((b) => {
@@ -407,7 +419,8 @@ function renderDiet() {
   if (!el) return;
 
   if (IS_VINI) {
-    renderViniDietTracker(el, { scope: stateData.trackingScope });
+    if (stateData.trackingScope === TRACKING_SCOPE.OFFICIAL_DIET) renderViniOfficialDiet(el);
+    else renderViniDietTracker(el, { scope: stateData.trackingScope });
     return;
   }
 

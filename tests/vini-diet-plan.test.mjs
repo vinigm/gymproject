@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import {
   VINI_FOOD_GROUPS,
   VINI_MEALS,
+  VINI_OFFICIAL_MEALS,
   VINI_PLAN_VERSION,
   VINI_REQUIRED_MEALS,
   calculateViniDietDay,
@@ -9,6 +10,8 @@ import {
   normalizeViniDietDay,
   withViniDietSummary,
 } from "../js/vini-diet-plan.js";
+import { TRACKING_SCOPE, trackingScopeCopy } from "../js/tracking-cycle.js";
+import { viniOfficialDietHTML } from "../js/vini-official-diet.js";
 
 const group = (id) => VINI_FOOD_GROUPS.find((entry) => entry.id === id);
 const food = (groupId, baseId) => group(groupId).foods.find((entry) => entry.baseId === baseId);
@@ -20,6 +23,7 @@ assert.equal(empty.mainMealsLogged, 0);
 assert.equal(empty.consumed.kcal, 0);
 assert.equal(VINI_PLAN_VERSION, "vini-nutri-2026-07-v3");
 assert.equal(VINI_FOOD_GROUPS.length, 7);
+assert.equal(trackingScopeCopy(TRACKING_SCOPE.OFFICIAL_DIET).title, "Dieta Oficial");
 
 for (const foodGroup of VINI_FOOD_GROUPS) {
   const ids = foodGroup.foods.map((entry) => entry.id);
@@ -45,6 +49,42 @@ for (const meal of VINI_MEALS) {
     }
   }
 }
+
+// A consulta oficial consolida a alternativa de produto proteico do mesmo
+// screenshot e, por isso, representa 18 refeições completas dos prints.
+assert.equal(VINI_OFFICIAL_MEALS.flatMap((meal) => meal.options).length, 18);
+assert.deepEqual(
+  VINI_OFFICIAL_MEALS.flatMap((meal) => meal.options.map((option) => option.source)),
+  [
+    "IMG_3063.PNG", "IMG_3064.PNG",
+    "IMG_3065.PNG", "IMG_3066.PNG", "IMG_3068.PNG", "IMG_3069.PNG", "IMG_3070.PNG",
+    "IMG_3071.PNG", "IMG_3072.PNG", "IMG_3073.PNG", "IMG_3074.PNG", "IMG_3075.PNG",
+    "IMG_3076.PNG", "IMG_3077.PNG", "IMG_3079.PNG", "IMG_3080.PNG", "IMG_3081.PNG",
+    "IMG_3082.PNG",
+  ],
+);
+const officialSnack = VINI_OFFICIAL_MEALS.find((meal) => meal.id === "lanche_tarde");
+assert.equal(officialSnack.options.length, 4);
+assert.equal(officialSnack.options[0].source, "IMG_3071.PNG");
+assert.match(officialSnack.options[0].items[0].label, /Pro Force Piracanjuba/);
+assert.match(officialSnack.options[0].items[0].label, /Natural Whey Verde Campo/);
+assert.equal(officialSnack.options[0].items[0].portion, "1 unidade(s) ou 250g");
+for (const meal of VINI_OFFICIAL_MEALS) {
+  for (const option of meal.options) {
+    assert.match(option.source, /^IMG_\d{4}\.PNG$/);
+    assert.ok(option.items.every((entry) => entry.label && entry.portion), `Consulta incompleta: ${option.id}`);
+  }
+}
+const officialHTML = viniOfficialDietHTML();
+assert.equal((officialHTML.match(/class="vini-official-option"/g) || []).length, 18);
+assert.equal((officialHTML.match(/class="vini-official-meal"/g) || []).length, 7);
+assert.match(officialHTML, /Consumo médio de 2,5 litros de água/);
+assert.match(officialHTML, /IMG_3083\.PNG/);
+assert.match(officialHTML, /6 colher\(es\) de sopa cheia\(s\) ou 150g/);
+assert.match(officialHTML, /Ovo de galinha `frito`/);
+assert.match(officialHTML, /Morango congelado \(opcional\)/);
+assert.doesNotMatch(officialHTML, /Morango congelado \(opcional\).*<em>opcional<\/em>/s);
+assert.doesNotMatch(officialHTML, /<(?:button|input|select|textarea)\b/i);
 
 // Cada alimento pode ser marcado sozinho, inclusive misturando itens que antes
 // pertenciam a opções diferentes da mesma refeição.
@@ -106,6 +146,20 @@ const migratedV2 = normalizeViniDietDay({
 assert.deepEqual(migratedV2.foods.almoco, [rice.id, puree.id]);
 assert.equal(migratedV2.amounts.almoco.arroz, 100);
 assert.equal(migratedV2.amounts.almoco.pure_batata, 105);
+
+// A transcrição mais fiel das porções não pode alterar quantidades gravadas
+// nos antigos IDs compostos por unidade, medida ou volume.
+const migratedV2Compound = normalizeViniDietDay({
+  version: "vini-nutri-2026-07-v2",
+  foods: {
+    pre_treino: ["cafe__200_ml"],
+    cafe_manha: ["pao__2_fatias_50_g"],
+    lanche_tarde: ["whey__1_5_medida_23_3_g"],
+  },
+});
+assert.equal(migratedV2Compound.amounts.pre_treino.cafe, 200);
+assert.equal(migratedV2Compound.amounts.cafe_manha.pao, 2);
+assert.equal(migratedV2Compound.amounts.lanche_tarde.whey, 1.5);
 
 const freeSalad = food("jantar", "tomate_repolho");
 const bolognese = food("jantar", "macarrao_bolonhesa");

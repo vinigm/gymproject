@@ -4,6 +4,7 @@
 export const TRACKING_SCOPE = Object.freeze({
   CYCLE: "cycle",
   ALL: "all",
+  OFFICIAL_DIET: "official-diet",
 });
 
 export const DEFAULT_TRACKING_SCOPE = TRACKING_SCOPE.CYCLE;
@@ -77,6 +78,12 @@ export function fmtTrackingDate(iso) {
 }
 
 export function trackingScopeCopy(scope = DEFAULT_TRACKING_SCOPE) {
+  if (scope === TRACKING_SCOPE.OFFICIAL_DIET) {
+    return {
+      title: "Dieta Oficial",
+      note: "Consulta das opções completas enviadas pela nutricionista; nada pode ser marcado ou alterado aqui.",
+    };
+  }
   return scope === TRACKING_SCOPE.ALL
     ? {
         title: "Histórico completo",
@@ -91,30 +98,40 @@ export function trackingScopeCopy(scope = DEFAULT_TRACKING_SCOPE) {
 export function mountTrackingScopeControl(containerId, {
   scope = DEFAULT_TRACKING_SCOPE,
   userIds = ["vinicius", "victoria"],
+  includeOfficialDiet = false,
   onChange = () => {},
 } = {}) {
   const el = document.getElementById(containerId);
   if (!el) return;
 
-  const activeScope = scope === TRACKING_SCOPE.ALL ? TRACKING_SCOPE.ALL : TRACKING_SCOPE.CYCLE;
+  const validScopes = includeOfficialDiet
+    ? [TRACKING_SCOPE.CYCLE, TRACKING_SCOPE.ALL, TRACKING_SCOPE.OFFICIAL_DIET]
+    : [TRACKING_SCOPE.CYCLE, TRACKING_SCOPE.ALL];
+  const activeScope = validScopes.includes(scope) ? scope : TRACKING_SCOPE.CYCLE;
   const copy = trackingScopeCopy(activeScope);
   const starts = [...new Set(userIds.map((userId) => trackingCycleFor(userId)?.startDate).filter(Boolean))];
-  const startText = activeScope === TRACKING_SCOPE.ALL
-    ? "desde o primeiro registro"
-    : (starts.length === 1 ? `desde ${fmtTrackingDate(starts[0])}` : "por pessoa");
+  const startText = activeScope === TRACKING_SCOPE.OFFICIAL_DIET
+    ? "somente consulta"
+    : activeScope === TRACKING_SCOPE.ALL
+      ? "desde o primeiro registro"
+      : (starts.length === 1 ? `desde ${fmtTrackingDate(starts[0])}` : "por pessoa");
+  const kicker = activeScope === TRACKING_SCOPE.OFFICIAL_DIET ? "Plano da nutricionista" : "Novo acompanhamento";
 
   el.innerHTML = `
-    <section class="tracking-cycle-card" aria-label="Escopo das estatísticas">
+    <section class="tracking-cycle-card" aria-label="Visualização do acompanhamento">
       <div class="tracking-cycle-copy">
-        <span class="tracking-cycle-kicker">Novo acompanhamento</span>
+        <span class="tracking-cycle-kicker">${kicker}</span>
         <strong>${copy.title} <small>${startText}</small></strong>
         <span>${copy.note}</span>
       </div>
-      <div class="seg tracking-scope-seg" role="group" aria-label="Período das estatísticas">
+      <div class="seg tracking-scope-seg" role="group" aria-label="Visualização do acompanhamento">
         <button type="button" class="seg-btn${activeScope === TRACKING_SCOPE.CYCLE ? " is-on" : ""}"
                 data-tracking-scope="cycle" aria-pressed="${activeScope === TRACKING_SCOPE.CYCLE}">Ciclo atual</button>
         <button type="button" class="seg-btn${activeScope === TRACKING_SCOPE.ALL ? " is-on" : ""}"
                 data-tracking-scope="all" aria-pressed="${activeScope === TRACKING_SCOPE.ALL}">Histórico completo</button>
+        ${includeOfficialDiet ? `
+          <button type="button" class="seg-btn${activeScope === TRACKING_SCOPE.OFFICIAL_DIET ? " is-on" : ""}"
+                  data-tracking-scope="official-diet" aria-pressed="${activeScope === TRACKING_SCOPE.OFFICIAL_DIET}">Dieta Oficial</button>` : ""}
       </div>
     </section>`;
 

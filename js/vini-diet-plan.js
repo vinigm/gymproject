@@ -19,23 +19,23 @@ function item(id, label, portion, nutri, extra = {}) {
 
 const COMMON = Object.freeze({
   vegetables50: item("vegetais", "Verdura ou legumes", "50 g", nutrition(15, 0.7, 3, 0.1)),
-  oliveOil5: item("azeite", "Azeite de oliva extravirgem", "5 ml", nutrition(41, 0, 0, 4.6)),
-  rice150: item("arroz", "Arroz branco cozido", "150 g", nutrition(192, 3.8, 42.2, 0.3)),
-  rice100: item("arroz", "Arroz branco cozido", "100 g", nutrition(128, 2.5, 28.1, 0.2)),
+  oliveOil5: item("azeite", "Azeite de oliva extravirgem", "1 colher de sobremesa rasa · 5 ml", nutrition(41, 0, 0, 4.6)),
+  rice150: item("arroz", "Arroz branco cozido", "6 colheres de sopa cheias · 150 g", nutrition(192, 3.8, 42.2, 0.3)),
+  rice100: item("arroz", "Arroz branco cozido", "4 colheres de sopa cheias · 100 g", nutrition(128, 2.5, 28.1, 0.2)),
   chicken150: item("frango", "Frango grelhado", "150 g", nutrition(239, 48, 0, 3.8)),
   chicken130: item("frango", "Frango grelhado", "130 g", nutrition(207, 41.6, 0, 3.3)),
   chicken120: item("frango", "Frango grelhado", "120 g", nutrition(191, 38.4, 0, 3)),
   puree105: item(
     "pure_batata",
     "Purê de batata inglesa com sal",
-    "105 g",
+    "3 colheres de sopa cheias · 105 g",
     nutrition(116, 2, 17.6, 4.2, "recipe-estimate"),
     { estimatedRecipe: true }
   ),
   pancake240: item(
     "panqueca_carne",
     "Panqueca com carne moída, molho de tomate e sal",
-    "3 unidades · 240 g",
+    "3 unidades médias · 240 g",
     nutrition(432, 28, 45, 16, "recipe-estimate"),
     { estimatedRecipe: true }
   ),
@@ -71,8 +71,8 @@ export const VINI_MEALS = Object.freeze([
     options: Object.freeze([
       option("pre_treino", "Banana + café", "IMG_3063.PNG", [
         item("banana", "Banana", "2 unidades médias · 80 g", nutrition(78, 1, 20.8, 0.1)),
-        item("cafe", "Café coado suave", "200 ml", nutrition(2, 0.2, 0, 0)),
-      ], "Antes da corrida e/ou da musculação."),
+        item("cafe", "Café coado (suave)", "1 xícara de chá · 200 ml", nutrition(2, 0.2, 0, 0)),
+      ], "Antes da corrida (manhã) e/ou antes da musculação (tarde)."),
     ]),
   }),
   Object.freeze({
@@ -83,9 +83,9 @@ export const VINI_MEALS = Object.freeze([
     options: Object.freeze([
       option("cafe_manha", "Composição prescrita", "IMG_3064.PNG", [
         item("ovos", "Ovos mexidos", "3 unidades · 150 g", nutrition(216, 18.9, 1.2, 14.4)),
-        item("chia", "Semente de chia", "15 g", nutrition(73, 2.5, 6.3, 4.6)),
+        item("chia", "Semente de chia", "1 colher de sopa cheia · 15 g", nutrition(73, 2.5, 6.3, 4.6)),
         item("pao", "Pão de forma", "2 fatias · 50 g", nutrition(127, 4.7, 22, 1.9)),
-        item("requeijao", "Requeijão light", "15 g", nutrition(25, 1.6, 1, 1.6, "label-estimate")),
+        item("requeijao", "Requeijão light", "½ colher de sopa cheia · 15 g", nutrition(25, 1.6, 1, 1.6, "label-estimate")),
       ]),
     ]),
   }),
@@ -107,7 +107,7 @@ export const VINI_MEALS = Object.freeze([
       ]),
       option("almoco_arroz_pure", "Arroz + purê + frango", "IMG_3068.PNG", [
         COMMON.vegetables50, COMMON.oliveOil5, COMMON.rice100, COMMON.puree105, COMMON.chicken150,
-      ], "Arroz e purê aparecem juntos nesta opção."),
+      ]),
       option("almoco_panqueca", "Panqueca + suco", "IMG_3069.PNG", [
         COMMON.pancake240, COMMON.pineappleJuice250,
       ]),
@@ -124,30 +124,30 @@ export const VINI_MEALS = Object.freeze([
     required: true,
     options: Object.freeze([
       option("lanche_proforce_maca", "Pro Force + maçã", "IMG_3071.PNG", [
-        item("pro_force", "Pro Force Piracanjuba", "1 unidade · 250 g", nutrition(160, 23, 13, 1.8, "label-estimate")),
+        item("pro_force", "Pro Force Piracanjuba (23 g proteína)", "1 unidade · 250 g", nutrition(160, 23, 13, 1.8, "label-estimate")),
         item("maca", "Maçã", "1 unidade média · 130 g", nutrition(73, 0.4, 19.8, 0.3)),
       ]),
       option("lanche_verde_campo_maca", "Natural Whey + maçã", "IMG_3071.PNG", [
-        item("natural_whey", "Natural Whey Verde Campo", "1 unidade · 250 g", nutrition(170, 21, 16, 2.5, "label-estimate")),
+        item("natural_whey", "Iogurte proteico (21 g proteína) Natural Whey Verde Campo", "1 unidade · 250 g", nutrition(170, 21, 16, 2.5, "label-estimate")),
         item("maca", "Maçã", "1 unidade média · 130 g", nutrition(73, 0.4, 19.8, 0.3)),
       ]),
       option("lanche_vitamina_whey", "Vitamina com whey", "IMG_3072.PNG", [
-        item("leite", "Leite semidesnatado", "200 ml", nutrition(92, 6.4, 9.6, 3.2)),
-        item("whey", "100% Pure Whey Protein", "1,5 medida · 23,3 g", nutrition(90, 17.3, 2.3, 1.1, "label-estimate")),
+        item("leite", "Leite semidesnatado", "1 copo médio · 200 ml", nutrition(92, 6.4, 9.6, 3.2)),
+        item("whey", "100% Pure Whey Protein (Probiótica)", "1,5 medida · 23,3 g", nutrition(90, 17.3, 2.3, 1.1, "label-estimate")),
         item("banana", "Banana", "1 unidade média · 40 g", nutrition(39, 0.5, 10.4, 0.1)),
         item("morango", "Morango congelado", "3 unidades · 36 g", nutrition(11, 0.3, 2.5, 0.1), { optional: true }),
-        item("farelo_aveia", "Farelo de aveia", "10 g", nutrition(25, 1.7, 6.6, 0.7)),
+        item("farelo_aveia", "Farelo de aveia", "1 colher de sopa · 10 g", nutrition(25, 1.7, 6.6, 0.7)),
       ]),
       option("lanche_crepioca_frango", "Crepioca com frango", "IMG_3073.PNG", [
         item("crepioca", "Crepioca", "1 porção · 80 g", nutrition(160, 6, 25, 4, "recipe-estimate"), { estimatedRecipe: true }),
-        item("requeijao", "Requeijão light", "30 g", nutrition(50, 3.2, 2, 3.2, "label-estimate")),
-        item("frango", "Frango desfiado", "60 g", nutrition(96, 19.2, 0, 1.5)),
+        item("requeijao", "Requeijão light", "1 colher de sopa cheia · 30 g", nutrition(50, 3.2, 2, 3.2, "label-estimate")),
+        item("frango", "Frango desfiado", "3 colheres de sopa cheias · 60 g", nutrition(96, 19.2, 0, 1.5)),
       ]),
       option("lanche_ovos_pao", "Ovos com pão", "IMG_3074.PNG", [
         item("ovos", "Ovos mexidos", "3 unidades · 150 g", nutrition(216, 18.9, 1.2, 14.4)),
         item("pao", "Pão de forma", "2 fatias · 50 g", nutrition(127, 4.7, 22, 1.9)),
-        item("requeijao", "Requeijão light", "15 g", nutrition(25, 1.6, 1, 1.6, "label-estimate")),
-      ], "Também pode ser preparado como pastinha de ovo."),
+        item("requeijao", "Requeijão light", "½ colher de sopa cheia · 15 g", nutrition(25, 1.6, 1, 1.6, "label-estimate")),
+      ], "Ovos mexidos ou pastinha de ovo (amassar e misturar bem com o requeijão, sal, temperinhos)."),
     ]),
   }),
   Object.freeze({
@@ -158,7 +158,7 @@ export const VINI_MEALS = Object.freeze([
     contextual: true,
     options: Object.freeze([
       option("pos_treino_whey", "Whey", "IMG_3075.PNG", [
-        item("whey", "100% Pure Whey Protein", "2 medidas · 31 g", nutrition(120, 23, 3, 1.5, "label-estimate")),
+        item("whey", "100% Pure Whey Protein (Probiótica)", "2 medidas · 31 g", nutrition(120, 23, 3, 1.5, "label-estimate")),
       ]),
     ]),
   }),
@@ -180,7 +180,7 @@ export const VINI_MEALS = Object.freeze([
       ]),
       option("jantar_arroz_pure", "Arroz + purê + frango", "IMG_3079.PNG", [
         COMMON.vegetables50, COMMON.oliveOil5, COMMON.rice100, COMMON.puree105, COMMON.chicken150,
-      ], "Arroz e purê aparecem juntos nesta opção."),
+      ]),
       option("jantar_panqueca", "Panqueca + suco", "IMG_3080.PNG", [
         COMMON.pancake240, COMMON.pineappleJuice250,
       ]),
@@ -206,6 +206,98 @@ export const VINI_MEALS = Object.freeze([
 export const VINI_REQUIRED_MEALS = Object.freeze(
   VINI_MEALS.filter((meal) => meal.required).map((meal) => meal.id)
 );
+
+// Redação literal exibida no aplicativo da nutricionista. O tracker usa
+// unidades normalizadas para calcular, enquanto a consulta preserva inclusive
+// os plurais e o "ou" apresentados nos screenshots.
+const OFFICIAL_PORTIONS = Object.freeze({
+  "IMG_3063.PNG": Object.freeze({ banana: "2 unidade(s) média(s) ou 80g", cafe: "1 xícara(s) chá ou 200ml" }),
+  "IMG_3064.PNG": Object.freeze({ ovos: "3 unidade(s) média(s) ou 150g", chia: "1 colher(es) de sopa cheia(s) ou 15g", pao: "2 fatia(s) ou 50g", requeijao: "½ colher(es) de sopa cheia(s) ou 15g" }),
+  "IMG_3065.PNG": Object.freeze({ vegetais: "50 grama(s)", azeite: "1 colher(es) de sobremesa rasa(s) ou 5ml", arroz: "6 colher(es) de sopa cheia(s) ou 150g", frango: "150 grama(s)" }),
+  "IMG_3066.PNG": Object.freeze({ vegetais: "50 grama(s)", azeite: "1 colher(es) de sobremesa rasa(s) ou 5ml", arroz: "6 colher(es) de sopa cheia(s) ou 150g", frango: "120 grama(s)", ovo_frito: "1 unidade(s) média(s) ou 50g" }),
+  "IMG_3068.PNG": Object.freeze({ vegetais: "50 grama(s)", azeite: "1 colher(es) de sobremesa rasa(s) ou 5ml", arroz: "4 colher(es) de sopa cheia(s) ou 100g", pure_batata: "3 colher(es) de sopa cheia(s) ou 105g", frango: "150 grama(s)" }),
+  "IMG_3069.PNG": Object.freeze({ panqueca_carne: "3 unidade(s) média(s) ou 240g", suco_abacaxi: "250 mililitro(s)" }),
+  "IMG_3070.PNG": Object.freeze({ macarrao_bolonhesa: "350 grama(s)", salada_vontade: "À vontade" }),
+  "IMG_3072.PNG": Object.freeze({ leite: "1 copo(s) médio(s) ou 200ml", whey: "1.5 medida(s) ou 23.3g", banana: "1 unidade(s) média(s) ou 40g", morango: "3 unidade(s) média(s) ou 36g", farelo_aveia: "1 colher(es) de sopa ou 10g" }),
+  "IMG_3073.PNG": Object.freeze({ crepioca: "1 porção ou 80g", requeijao: "1 colher(es) de sopa cheia(s) ou 30g", frango: "3 colher(es) de sopa cheia(s) ou 60g" }),
+  "IMG_3074.PNG": Object.freeze({ ovos: "3 unidade(s) média(s) ou 150g", pao: "2 fatia(s) ou 50g", requeijao: "½ colher(es) de sopa cheia(s) ou 15g" }),
+  "IMG_3075.PNG": Object.freeze({ whey: "2 medida(s) ou 31g" }),
+  "IMG_3076.PNG": Object.freeze({ vegetais: "50 grama(s)", azeite: "1 colher(es) de sobremesa rasa(s) ou 5ml", arroz: "6 colher(es) de sopa cheia(s) ou 150g", frango: "150 grama(s)" }),
+  "IMG_3077.PNG": Object.freeze({ vegetais: "50 grama(s)", azeite: "1 colher(es) de sobremesa rasa(s) ou 5ml", arroz: "6 colher(es) de sopa cheia(s) ou 150g", frango: "130 grama(s)", feijao_lentilha: "1 concha(s) rasa(s) ou 80g" }),
+  "IMG_3079.PNG": Object.freeze({ vegetais: "50 grama(s)", azeite: "1 colher(es) de sobremesa rasa(s) ou 5ml", arroz: "4 colher(es) de sopa cheia(s) ou 100g", pure_batata: "3 colher(es) de sopa cheia(s) ou 105g", frango: "150 grama(s)" }),
+  "IMG_3080.PNG": Object.freeze({ panqueca_carne: "3 unidade(s) média(s) ou 240g", suco_abacaxi: "250 mililitro(s)" }),
+  "IMG_3081.PNG": Object.freeze({ macarrao_bolonhesa: "350 grama(s)", salada_vontade: "À vontade" }),
+  "IMG_3082.PNG": Object.freeze({ chocolate: "15 grama(s)" }),
+});
+
+const OFFICIAL_LABELS = Object.freeze({
+  ovo_frito: "Ovo de galinha `frito`",
+  salada_vontade: "Tomate cereja e repolho",
+  morango: "Morango congelado (opcional)",
+});
+
+const OFFICIAL_DESCRIPTIONS = Object.freeze({
+  "IMG_3063.PNG": "Antes da corrida (manhã) e/ou antes da musculação (tarde)",
+  "IMG_3074.PNG": "Ovos mexidos ou pastinha de ovo (amassar e misturar bem com o requeijão, sal, temperinhos)",
+});
+
+const OFFICIAL_MEAL_LABELS = Object.freeze({
+  pre_treino: "Pré-treino (30 min antes)",
+  lanche_tarde: "16:00 - Lanche da tarde",
+  belisco: '"Beliscos" eventuais',
+});
+
+function officialOption(option_) {
+  const portions = OFFICIAL_PORTIONS[option_.source] || {};
+  return Object.freeze({
+    ...option_,
+    description: OFFICIAL_DESCRIPTIONS[option_.source] ?? option_.description,
+    items: Object.freeze(option_.items.map((entry) => Object.freeze({
+      ...entry,
+      label: OFFICIAL_LABELS[entry.id] || entry.label,
+      portion: portions[entry.id] || entry.portion,
+    }))),
+  });
+}
+
+// Visualização fiel ao aplicativo da nutricionista. No lanche das 16h o
+// Pro Force e o Natural Whey aparecem como alternativas dentro da mesma
+// refeição, embora o tracker os exponha separadamente para registro.
+export const VINI_OFFICIAL_MEALS = Object.freeze(VINI_MEALS.map((meal) => {
+  if (meal.id !== "lanche_tarde") {
+    return Object.freeze({
+      ...meal,
+      label: OFFICIAL_MEAL_LABELS[meal.id] || meal.label,
+      options: Object.freeze(meal.options.map(officialOption)),
+    });
+  }
+  const remainingOptions = meal.options.filter((entry) => (
+    !["lanche_proforce_maca", "lanche_verde_campo_maca"].includes(entry.id)
+  ));
+  const officialProteinSnack = Object.freeze({
+    id: "lanche_produto_proteico_maca",
+    label: "Produto proteico + maçã",
+    source: "IMG_3071.PNG",
+    description: "",
+    items: Object.freeze([
+      Object.freeze({
+        id: "produto_proteico",
+        label: "Pro Force Piracanjuba (23g proteína) ou Iogurte proteico (21g proteína) Natural Whey Verde Campo",
+        portion: "1 unidade(s) ou 250g",
+      }),
+      Object.freeze({
+        id: "maca",
+        label: "Maçã",
+        portion: "1 unidade(s) média(s) ou 130g",
+      }),
+    ]),
+  });
+  return Object.freeze({
+    ...meal,
+    label: OFFICIAL_MEAL_LABELS[meal.id] || meal.label,
+    options: Object.freeze([officialProteinSnack, ...remainingOptions.map(officialOption)]),
+  });
+}));
 
 export const VINI_HYDRATION = Object.freeze({
   baseMl: 2500,
@@ -433,12 +525,40 @@ function cleanSummary(summary) {
   };
 }
 
+function quantityFromLegacyFoodId(legacyFoodId, unit) {
+  const suffix = String(legacyFoodId || "").split("__")[1] || "";
+  const patterns = {
+    un: /^(\d+)(?:_(\d+))?_unidade/,
+    fatia: /^(\d+)(?:_(\d+))?_fatia/,
+    medida: /^(\d+)(?:_(\d+))?_medida/,
+    porcao: /^(\d+)(?:_(\d+))?_porcao/,
+    g: /(\d+)(?:_(\d+))?_g$/,
+    ml: /(\d+)(?:_(\d+))?_ml$/,
+  };
+  const match = suffix.match(patterns[unit]);
+  if (!match) return null;
+  const value = Number(`${match[1]}${match[2] ? `.${match[2]}` : ""}`);
+  return Number.isFinite(value) && value > 0 ? value : null;
+}
+
 function legacyFoodDescriptor(groupId, legacyFoodId) {
   const meal = mealForId(groupId);
+  const baseId = String(legacyFoodId || "").split("__")[0];
+  const rule = QUANTITY_RULES[baseId];
+  const inferredAmount = rule ? quantityFromLegacyFoodId(legacyFoodId, rule.unit) : null;
+  const candidates = [];
   for (const option_ of meal?.options || []) {
-    const entry = option_.items.find((candidate) => foodEntryId(candidate) === legacyFoodId);
-    if (entry) return { id: entry.id, amount: null, entry };
+    for (const entry of option_.items) {
+      if (entry.id === baseId && !candidates.some((candidate) => candidate.portion === entry.portion)) candidates.push(entry);
+      if (foodEntryId(entry) === legacyFoodId) {
+        return { id: entry.id, amount: quantityFromEntry(entry, rule?.unit || "g"), entry };
+      }
+    }
   }
+  const entry = candidates.find((candidate) => (
+    inferredAmount !== null && quantityFromEntry(candidate, rule?.unit || "g") === inferredAmount
+  )) || candidates[0];
+  if (entry) return { id: entry.id, amount: inferredAmount, entry };
   return null;
 }
 
@@ -474,7 +594,7 @@ export function normalizeViniDietDay(raw) {
         return {
           id: legacy.id,
           rawId: rawFoodId,
-          amount: rule ? quantityFromEntry(legacy.entry, rule.unit) : null,
+          amount: legacy.amount ?? (rule ? quantityFromEntry(legacy.entry, rule.unit) : null),
         };
       }).filter(Boolean);
     }
