@@ -82,6 +82,7 @@ No iPhone/Android, abrir o site no navegador e usar "Adicionar à tela de iníci
 | `storage.js` | Camada de dados de `days`, `transactions` e `config` (Firestore x localStorage) |
 | `history.js` | Histórico do mês corrente na página principal (grid de 6 hábitos) |
 | `points-config.js` | Tabela de pontos (`POINTS`), prêmios (`REWARDS`/`REWARDS_VICTORIA`), extras, datas de início e funções de override/reset |
+| `water-options.js` | Fonte compartilhada das opções de hidratação (0,5–5 L), formatação, conversão e pontos padrão |
 | `points-engine.js` | `pointsForDay(day)`: único ponto de cálculo dos pontos de um dia |
 | `points-utils.js` | Helpers puros: `loadAndApplyConfig`, breakdown, agregações, recordes, totais |
 | `tracking-cycle.js` | Ciclo de acompanhamento e filtros de escopo (`Ciclo atual` x `Histórico completo`) sem apagar dados; no Kg Vini também monta o acesso à `Dieta Oficial` |
@@ -120,6 +121,7 @@ No iPhone/Android, abrir o site no navegador e usar "Adicionar à tela de iníci
 | `dieta_vini/` | 21 screenshots-fonte do plano alimentar (19 conteúdos únicos) |
 | `tests/vini-diet-plan.test.mjs` | Testes dos cálculos, snapshots, opcionais, hidratação e arroz + purê |
 | `tests/tracker-run-distance.test.mjs` | Testes das opções, seleção, troca e limpeza da distância de corrida |
+| `tests/water-options.test.mjs` | Testes das opções de água nos dois cards, conversão em litros e pontuação |
 
 ## Boot & autenticação
 
@@ -311,9 +313,9 @@ Cores: OCUPADO (fase foco) = `is-ocupado` + `presence-busy` (vermelho); Disponí
 
 **O que faz.** `config.html`: edita ao vivo a tabela de pontos e prêmios, persistindo em `config/points`.
 
-**Como funciona por baixo.** `initConfigPage` faz reset aos defaults (`resetPoints`/`resetExtrasMeta`/`resetRewards`), `loadConfigOverrides()`, aplica `applyPoints`/`applyExtrasCustom`/`applyRewardsFromOverride`, chama `renderForm()` e liga submit=`handleSave` e `#btn-config-reset`=`handleReset`. `SECTIONS` define os blocos: 💪 Exercícios, 🧘 Alongamento por duração, 💧 Hidratação (keys com ponto escapado, ex. `water.0\.5L`), 🍽️ Refeições, 🚬 Cigarros/Nicotina, 🍰 Sobremesa, 🥤 Refrigerante, ✨ Outros hábitos (`dynamic:"extras"`), 🎁 Recompensas (`dynamic:"rewards"`). `buildOverride()` monta um objeto **enxuto** (só o que difere do default): campos alterados, `extras`/`extras_custom`, `rewards_shared`/`rewards_victoria`. `handleSave` chama `saveConfigOverrides(override)` e reaplica em runtime; `handleReset` chama `clearConfigOverrides` + reset. Os overrides valem globalmente — os pontos são recalculados na hora por `pointsForDay`.
+**Como funciona por baixo.** `initConfigPage` faz reset aos defaults (`resetPoints`/`resetExtrasMeta`/`resetRewards`), `loadConfigOverrides()`, aplica `applyPoints`/`applyExtrasCustom`/`applyRewardsFromOverride`, chama `renderForm()` e liga submit=`handleSave` e `#btn-config-reset`=`handleReset`. `SECTIONS` define os blocos: 💪 Exercícios, 🧘 Alongamento por duração, 💧 Hidratação (gerada por `WATER_LITRES_OPTIONS`, com keys escapadas), 🍽️ Refeições, 🚬 Cigarros/Nicotina, 🍰 Sobremesa, 🥤 Refrigerante, ✨ Outros hábitos (`dynamic:"extras"`), 🎁 Recompensas (`dynamic:"rewards"`). `buildOverride()` monta um objeto **enxuto** (só o que difere do default): campos alterados, `extras`/`extras_custom`, `rewards_shared`/`rewards_victoria`. `handleSave` chama `saveConfigOverrides(override)` e reaplica em runtime; `handleReset` chama `clearConfigOverrides` + reset. Os overrides valem globalmente — os pontos são recalculados na hora por `pointsForDay`.
 
-**Arquivos.** `js/config-page.js`, `config.html`, `js/points-config.js`, `js/points-utils.js`, `js/storage.js`.
+**Arquivos.** `js/config-page.js`, `config.html`, `js/points-config.js`, `js/water-options.js`, `js/points-utils.js`, `js/storage.js`.
 
 ## Modelo de dados
 
@@ -323,7 +325,7 @@ Todas as coleções têm um módulo de storage próprio com fallback automático
 
 - **Doc ID**: `${userId}_${YYYY-MM-DD}` (ex.: `vinicius_2026-07-15`), via `dayKey(userId, date)`.
 - **Módulo**: `js/storage.js` (`COL = "days"`). Leitura por `getDoc` direto; `getRange` faz `Promise.all` de `getDoc` por ID (não usa query — decisão explícita para não travar sob as regras).
-- **Campos**: `userId` ("vinicius"|"victoria"), `date`, `exercises` (string[]), `gym_groups` (string[]), `extras` (string[]), `run_km` (Number ∈ {2.5, 3, 4, 5, 6, 7, 8, 9, 10}|null), `water` ("0.5L"|"1L"|"1.5L"|"2L"|null), `lunch`/`dinner` ("limpo"|"sujo"|null), `dessert` ("sim"|"nao"|null), `soda` ("sim"|"nao"|null), `cigarettes` (string "0".."6"|null), `nicotine_gum` (string "0".."10"|null), `jiu_session` ("6h30"|"12h"|"16h30"|"19h30"|"Sab11"|null), `jiu_spar_min` (Number ∈ {15, 20, 25, 30, 35, 40, 45, 50, 60}|null), `stretch_min` (Number 5/10/15|null), `updatedAt` (serverTimestamp no Firebase / ISO string no local).
+- **Campos**: `userId` ("vinicius"|"victoria"), `date`, `exercises` (string[]), `gym_groups` (string[]), `extras` (string[]), `run_km` (Number ∈ {2.5, 3, 4, 5, 6, 7, 8, 9, 10}|null), `water` ("0.5L"|"1L"|"1.5L"|"2L"|"2.5L"|"3L"|"3.5L"|"4L"|"4.5L"|"5L"|null), `lunch`/`dinner` ("limpo"|"sujo"|null), `dessert` ("sim"|"nao"|null), `soda` ("sim"|"nao"|null), `cigarettes` (string "0".."6"|null), `nicotine_gum` (string "0".."10"|null), `jiu_session` ("6h30"|"12h"|"16h30"|"19h30"|"Sab11"|null), `jiu_spar_min` (Number ∈ {15, 20, 25, 30, 35, 40, 45, 50, 60}|null), `stretch_min` (Number 5/10/15|null), `updatedAt` (serverTimestamp no Firebase / ISO string no local).
 - **Valores dos grupos**: `exercises` — Vini: academia, corrida, jiujitsu, alongamento; Vivi: academia, corrida, yoga, pilates, bicicleta, alongamento. `run_km` (radio, nos dois cards): 2.5, 3, 4, 5, 6, 7, 8, 9, 10. `gym_groups`: costa, triceps, peito, biceps, perna, ombro, lombar, abdominal. `jiu_session` (radio, só card Vini): 6h30, 12h, 16h30, 19h30, Sab11. `jiu_spar_min` (radio→Number, só Vini): 15, 20, 25, 30, 35, 40, 45, 50, 60. `extras`: keys de `EXTRAS_META` (marmita, vegetais, fruta, cafe, mercado, escada, leitura, conversa, skincare, suplemento + custom).
 - **Observação**: `emptyDay()` inicializa `{userId, date, exercises:[], run_km:null, water:null, lunch:null, dinner:null, updatedAt:null}` — os demais campos só existem no doc depois de marcados.
 
@@ -382,7 +384,7 @@ Todas as coleções têm um módulo de storage próprio com fallback automático
 
 - exercises: academia 50, corrida 70, yoga 70, jiujitsu 50, pilates 50, bicicleta 50, alongamento 0.
 - stretch: "5"→15, "10"→30, "15"→45.
-- water: "0.5L"→5, "1L"→10, "1.5L"→15, "2L"→20.
+- water: 0,5–5 L em intervalos de 0,5 L, com 10 pontos por litro (5–50 pontos).
 - meals.lunch/dinner: limpo +15, sujo −15.
 - cigarettes: −15 por cigarro (multiplica pela quantidade). nicotine_gum: 0 (default).
 - dessert: nao +50, sim 0. soda: nao +70, sim −10.
@@ -487,9 +489,9 @@ Breakpoints: `@media (max-width:359px)` compacta chips; `(max-width:420/480px)` 
 
 ### Service Worker
 
-`service-worker.js`, estratégia **network-first** com fallback offline. `CACHE = "habitos-shell-v23"`. No `install` faz `self.skipWaiting()`; no `activate` deleta todos os caches com nome diferente de `CACHE` e chama `self.clients.claim()`. No `fetch`: deixa passar direto hosts que contenham `googleapis.com`, `firebaseio.com` ou `gstatic.com`, e métodos diferentes de GET; para o resto faz `fetch(req, { cache: "no-store" })`, clona a resposta para o cache em background e, se a rede falhar, responde com `caches.match(req)`. Isso garante versão fresca quando online e evita ficar preso em versão antiga após deploy. O SW é registrado por `index.html` no evento `load`.
+`service-worker.js`, estratégia **network-first** com fallback offline. `CACHE = "habitos-shell-v24"`. No `install` faz `self.skipWaiting()`; no `activate` deleta todos os caches com nome diferente de `CACHE` e chama `self.clients.claim()`. No `fetch`: deixa passar direto hosts que contenham `googleapis.com`, `firebaseio.com` ou `gstatic.com`, e métodos diferentes de GET; para o resto faz `fetch(req, { cache: "no-store" })`, clona a resposta para o cache em background e, se a rede falhar, responde com `caches.match(req)`. Isso garante versão fresca quando online e evita ficar preso em versão antiga após deploy. O SW é registrado por `index.html` no evento `load`.
 
-Para invalidar caches antigos num deploy, é preciso **incrementar manualmente o nome do cache** (`habitos-shell-v23`) — o número é a versão efetiva do shell. Em rede lenta mas presente não há timeout: o app espera a rede em vez de servir o cache.
+Para invalidar caches antigos num deploy, é preciso **incrementar manualmente o nome do cache** (`habitos-shell-v24`) — o número é a versão efetiva do shell. Em rede lenta mas presente não há timeout: o app espera a rede em vez de servir o cache.
 
 ### Wake Lock
 

@@ -1,5 +1,6 @@
 import { getRange } from "./storage.js";
 import { todayISO, USERS, APP_START_DATE } from "./app.js";
+import { waterLitres } from "./water-options.js";
 
 const EX_LABELS = {
   academia: "Academia", corrida: "Corrida", yoga: "Yoga",
@@ -43,13 +44,6 @@ function daysBetweenInclusive(startISO, endISO) {
   const s = new Date(sy, sm - 1, sd);
   const e = new Date(ey, em - 1, ed);
   return Math.round((e - s) / 86400000) + 1;
-}
-
-function waterLitres(v) {
-  if (v === "1L") return 1;
-  if (v === "1.5L") return 1.5;
-  if (v === "2L") return 2;
-  return 0;
 }
 
 function fmtLitres(n) {

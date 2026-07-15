@@ -16,6 +16,7 @@ import {
 import { setupAuthGate, renderAuthFooter } from "./auth.js";
 import { mountNavMenu } from "./nav-menu.js";
 import { loadConfigOverrides, saveConfigOverrides, clearConfigOverrides } from "./storage.js";
+import { WATER_LITRES_OPTIONS, formatWaterLitres, waterKey } from "./water-options.js";
 
 const SECTIONS = [
   {
@@ -39,12 +40,10 @@ const SECTIONS = [
   },
   {
     title: "💧 Hidratação",
-    fields: [
-      { path: "water.0\\.5L", label: "0,5L" },
-      { path: "water.1L",     label: "1L"   },
-      { path: "water.1\\.5L", label: "1,5L" },
-      { path: "water.2L",     label: "2L"   },
-    ],
+    fields: WATER_LITRES_OPTIONS.map((litres) => ({
+      path: `water.${waterKey(litres).replace(".", "\\.")}`,
+      label: `${formatWaterLitres(litres)}L`,
+    })),
   },
   {
     title: "🍽️ Refeições",

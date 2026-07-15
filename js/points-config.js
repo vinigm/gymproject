@@ -1,3 +1,5 @@
+import { DEFAULT_WATER_POINTS } from "./water-options.js";
+
 // ─────────────────────────────────────────────────────────────────────
 //  DATAS DE INÍCIO POR CATEGORIA
 // ---------------------------------------------------------------------
@@ -74,14 +76,9 @@ export const DEFAULT_POINTS = {
     "15": 45,
   },
 
-  // Pontos pela QUANTIDADE de água marcada no dia.
-  // Só uma das quatro opções é marcada por dia.
-  water: {
-    "0.5L":  5,
-    "1L":   10,
-    "1.5L": 15,
-    "2L":   20,
-  },
+  // Pontos pela QUANTIDADE de água marcada no dia (10 pontos por litro).
+  // Só uma opção é marcada por dia.
+  water: DEFAULT_WATER_POINTS,
 
   // Pontos por REFEIÇÃO (almoço/janta).
   // limpo = positivo, sujo = negativo.

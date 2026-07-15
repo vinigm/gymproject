@@ -356,7 +356,7 @@ days/{userId}_{YYYY-MM-DD} = {
   exercises: ["academia", "corrida", ...],
   run_km: 2.5 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | null,
   extras: ["marmita", "leitura", ...],
-  water: "1L" | "1.5L" | "2L" | "0.5L" | null,
+  water: "0.5L" | "1L" | "1.5L" | "2L" | "2.5L" | "3L" | "3.5L" | "4L" | "4.5L" | "5L" | null,
   lunch: "limpo" | "sujo" | null,
   dinner: "limpo" | "sujo" | null,
   cigarettes: "0" .. "6" | null,

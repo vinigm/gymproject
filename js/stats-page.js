@@ -20,6 +20,7 @@ import {
   mountTrackingScopeControl,
   trackingScopeStart,
 } from "./tracking-cycle.js";
+import { waterLitres } from "./water-options.js";
 
 const NAMES = { vinicius: "Vini", victoria: "Vivi" };
 const ACCENTS = { vinicius: "var(--vini)", victoria: "var(--vic)" };
@@ -56,13 +57,6 @@ function daysBetweenInclusive(a, b) {
   return Math.round((new Date(by, bm - 1, bd) - new Date(ay, am - 1, ad)) / 86400000) + 1;
 }
 const pct = (n, d) => (d ? Math.round((n / d) * 100) : 0);
-function waterLitres(v) {
-  if (v === "0.5L") return 0.5;
-  if (v === "1L") return 1;
-  if (v === "1.5L") return 1.5;
-  if (v === "2L") return 2;
-  return 0;
-}
 function fmtLitres(n) {
   return n.toFixed(1).replace(".", ",") + "L";
 }

@@ -5,7 +5,7 @@
 //   date: 'YYYY-MM-DD',
 //   exercises: string[],
 //   run_km: 2.5 | 3 | ... | 10 | null,
-//   water:  '1L' | '1.5L' | '2L' | null,
+//   water:  '0.5L' | '1L' | ... | '5L' | null,
 //   lunch:  'limpo' | 'sujo' | null,
 //   dinner: 'limpo' | 'sujo' | null,
 //   updatedAt: timestamp

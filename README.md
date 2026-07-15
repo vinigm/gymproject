@@ -146,6 +146,7 @@ GymProject/
     ├── app.js              # controle de views e perfil
     ├── tracker.js          # registro do dia
     ├── tracker-model.js    # regras puras das seleções e detalhes
+    ├── water-options.js    # opções, conversão e pontos de hidratação
     ├── stats.js            # estatísticas
     └── calendar.js         # calendário mensal
 ```
@@ -160,7 +161,7 @@ ID do documento: `${userId}_${YYYY-MM-DD}` (ex.: `vinicius_2026-05-18`).
   date: "YYYY-MM-DD",
   exercises: ("academia"|"corrida"|"yoga"|"jiujitsu"|"bicicleta")[],
   run_km: 2.5 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | null,
-  water:  "1L" | "1.5L" | "2L" | null,
+  water:  "0.5L" | "1L" | "1.5L" | "2L" | "2.5L" | "3L" | "3.5L" | "4L" | "4.5L" | "5L" | null,
   lunch:  "limpo" | "sujo" | null,
   dinner: "limpo" | "sujo" | null,
   updatedAt: Timestamp
