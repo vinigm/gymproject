@@ -4,14 +4,16 @@ import {
 } from "./diet-storage.js";
 import { filterDateMapForTrackingScope } from "./tracking-cycle.js";
 import {
+  VINI_FOOD_GROUPS,
   VINI_HYDRATION,
-  VINI_MEALS,
+  VINI_PLAN_VERSION,
   VINI_REQUIRED_MEALS,
   calculateViniDietDay,
   emptyViniDietDay,
+  foodForGroup,
+  formatFoodQuantity,
   normalizeViniDietDay,
-  optionForMeal,
-  optionNutrition,
+  nutritionForFoodQuantity,
   withViniDietSummary,
 } from "./vini-diet-plan.js";
 
@@ -133,6 +135,8 @@ function queuePersist(date, payload) {
 
 function mutateCurrentDay(mutator) {
   const draft = currentDay();
+  draft.version = VINI_PLAN_VERSION;
+  draft.meals = {};
   draft.summary = null;
   mutator(draft);
   const payload = withViniDietSummary(draft);
@@ -170,11 +174,12 @@ function renderTracker() {
 
     <section class="block vini-plan-block">
       <div class="block-head">
-        <h2>Plano do dia</h2>
-        <span class="muted" style="font-size:11px">${summary.completedMeals}/${summary.requiredMeals} principais completas</span>
+        <h2>Alimentos de hoje</h2>
+        <span class="muted" style="font-size:11px">${summary.itemsChecked} marcado${summary.itemsChecked === 1 ? "" : "s"}</span>
       </div>
-      <div class="vini-meal-list">
-        ${VINI_MEALS.map((meal) => mealHTML(meal, day, summary)).join("")}
+      <p class="vini-checklist-help">Marque somente cada alimento que você realmente comeu.</p>
+      <div class="vini-food-groups">
+        ${VINI_FOOD_GROUPS.map((group) => foodGroupHTML(group, day)).join("")}
       </div>
     </section>
 
@@ -211,7 +216,6 @@ function dateNavigatorHTML(isToday) {
 
 function dailySummaryHTML(summary) {
   const consumed = summary.consumed;
-  const planned = summary.planned;
   return `
     <section class="block">
       <div class="block-head"><h2>Resumo do dia</h2></div>
@@ -219,22 +223,17 @@ function dailySummaryHTML(summary) {
         <div class="vini-kcal-hero">
           <span class="vini-kcal-value">${formatNumber(consumed.kcal)}</span>
           <span class="vini-kcal-unit">kcal registradas</span>
-          <span class="vini-kcal-plan">${planned.kcal > 0 ? `de ~${formatNumber(planned.kcal)} kcal nas opções escolhidas` : "escolha as opções do dia"}</span>
+          <span class="vini-kcal-plan">soma dos alimentos marcados</span>
         </div>
         <div class="vini-summary-macros">
-          ${macroSummaryHTML("Proteína", "P", consumed.p, planned.p, "vini-macro-p")}
-          ${macroSummaryHTML("Carboidrato", "C", consumed.c, planned.c, "vini-macro-c")}
-          ${macroSummaryHTML("Gordura", "G", consumed.f, planned.f, "vini-macro-f")}
+          ${macroSummaryHTML("Proteína", "P", consumed.p, "vini-macro-p")}
+          ${macroSummaryHTML("Carboidrato", "C", consumed.c, "vini-macro-c")}
+          ${macroSummaryHTML("Gordura", "G", consumed.f, "vini-macro-f")}
         </div>
-        <div class="vini-adherence-grid">
-          <div class="vini-progress-card">
-            <div><strong>${summary.adherencePct}%</strong><span>aderência alimentar</span></div>
-            <div class="goal-bar"><div class="goal-fill" style="width:${pctWidth(summary.adherencePct)}%"></div></div>
-          </div>
-          <div class="vini-progress-card">
-            <div><strong>${Math.min(999, summary.hydrationPct)}%</strong><span>hidratação</span></div>
-            <div class="goal-bar"><div class="goal-fill vini-water-fill" style="width:${pctWidth(summary.hydrationPct)}%"></div></div>
-          </div>
+        <div class="vini-log-kpis">
+          <div><strong>${summary.itemsChecked}</strong><span>alimentos marcados</span></div>
+          <div><strong>${summary.mainMealsLogged}/${summary.requiredMeals}</strong><span>momentos principais</span></div>
+          <div><strong>${Math.min(999, summary.hydrationPct)}%</strong><span>hidratação</span></div>
         </div>
         ${summary.unquantifiedItemsChecked ? `<p class="vini-nutri-alert">${summary.unquantifiedItemsChecked} item “à vontade” foi marcado, mas não entrou nos macros por não ter quantidade definida.</p>` : ""}
         <p class="muted nutri-note">Valores nutricionais estimados. Porções vêm da nutricionista; receitas e rótulos ainda serão refinados quando tivermos os dados exatos.</p>
@@ -242,89 +241,65 @@ function dailySummaryHTML(summary) {
     </section>`;
 }
 
-function macroSummaryHTML(label, short, value, planned, cls) {
-  const pct = planned > 0 ? (value / planned) * 100 : 0;
+function macroSummaryHTML(label, short, value, cls) {
   return `
     <div class="vini-macro-card ${cls}">
       <div><span>${short}</span><strong>${formatMacro(value)} g</strong></div>
-      <small>${label}${planned > 0 ? ` · ~${formatMacro(planned)} g planejados` : ""}</small>
-      <div class="goal-bar"><div class="goal-fill" style="width:${pctWidth(pct)}%"></div></div>
+      <small>${label}</small>
     </div>`;
 }
 
-function mealHTML(meal, day, summary) {
-  const saved = day.meals[meal.id] || null;
-  const actualOption = optionForMeal(meal, saved?.optionId);
-  const displayOption = actualOption || (meal.options.length === 1 ? meal.options[0] : null);
-  const result = summary.meals[meal.id];
-  const completion = Math.round((result?.completion || 0) * 100);
-  const stateClass = result?.complete ? " is-complete" : actualOption ? " has-progress" : "";
-  const optionalLabel = meal.required ? "principal" : "contextual";
-
+function foodGroupHTML(group, day) {
+  const selected = new Set(day.foods[group.id] || []);
+  const selectedCount = selected.size;
+  const hasRecipeEstimate = group.foods.some((food) => food.estimatedRecipe);
+  const hasUnquantified = group.foods.some((food) => food.unquantified);
   return `
-    <article class="vini-meal-card${stateClass}" data-meal-card="${meal.id}">
-      <header class="vini-meal-head">
-        <div class="vini-meal-title">
-          <span class="vini-meal-icon">${meal.icon}</span>
-          <div><strong>${meal.label}</strong><small>${meal.time ? `${meal.time} · ` : ""}${optionalLabel}</small></div>
+    <article class="vini-food-group-card${selectedCount ? " has-food" : ""}">
+      <header class="vini-food-group-head">
+        <div>
+          <span>${group.icon}</span>
+          <div><strong>${group.label}</strong><small>${group.time || (group.required ? "refeição principal" : "quando consumir")}</small></div>
         </div>
-        <span class="vini-meal-pct">${result?.complete ? "✓ completa" : `${completion}%`}</span>
+        <b>${selectedCount ? `${selectedCount} marcado${selectedCount === 1 ? "" : "s"}` : "nenhum"}</b>
       </header>
-      ${meal.options.length > 1 ? optionPickerHTML(meal, actualOption) : ""}
-      ${displayOption ? optionDetailHTML(meal, displayOption, saved) : `
-        <p class="vini-option-empty">Escolha a opção consumida para liberar os alimentos.</p>`}
+      <div class="vini-checkbox-list">
+        ${group.foods.map((food) => foodCheckboxHTML(
+          group,
+          food,
+          selected.has(food.id),
+          day.amounts[group.id]?.[food.id] ?? food.defaultQuantity
+        )).join("")}
+      </div>
+      ${hasRecipeEstimate ? `<p class="vini-estimate-note">* Receitas sem ficha técnica usam macros provisórios.</p>` : ""}
+      ${hasUnquantified ? `<p class="vini-estimate-note">* Item “à vontade” é salvo, mas não entra nos macros.</p>` : ""}
     </article>`;
 }
 
-function optionPickerHTML(meal, selectedOption) {
+function foodCheckboxHTML(group, food, isChecked, amount) {
+  const nutrition = nutritionForFoodQuantity(food, amount);
+  const prescribed = food.variants.map((variant) => variant.portion).join(" / ");
   return `
-    <div class="vini-option-picker" role="group" aria-label="Opções de ${meal.label}">
-      ${meal.options.map((option_) => `
-        <button class="vini-option-btn${selectedOption?.id === option_.id ? " is-on" : ""}"
-                data-meal="${meal.id}" data-option="${option_.id}">${option_.label}</button>`).join("")}
+    <div class="vini-food-entry${isChecked ? " is-checked" : ""}">
+      <label class="vini-checkbox-row${isChecked ? " is-checked" : ""}">
+        <input type="checkbox" data-food-checkbox data-group="${group.id}" data-food="${food.id}" ${isChecked ? "checked" : ""} />
+        <span class="vini-checkbox-copy">
+          <strong>${food.label}${food.optional ? " <em>opcional</em>" : ""}</strong>
+          <small>${isChecked && !food.unquantified ? `Registrado: ${formatFoodQuantity(food, amount)} · ` : ""}Referência: ${prescribed}</small>
+        </span>
+        <span class="vini-checkbox-nutri">${nutrition ? `~${formatNumber(nutrition.kcal)} kcal` : "não calculado"}</span>
+      </label>
+      ${food.quantityChoices.length ? `
+        <div class="vini-quantity-picker" role="group" aria-label="Quantidade de ${food.label}">
+          <span>${isChecked ? "Quantidade registrada" : "Escolha quanto comeu"}</span>
+          <div class="vini-quantity-options">
+            ${food.quantityChoices.map((choice) => `
+              <button type="button" class="vini-quantity-btn${isChecked && Number(amount) === choice ? " is-on" : ""}"
+                      data-food-quantity data-group="${group.id}" data-food="${food.id}" data-amount="${choice}"
+                      aria-pressed="${isChecked && Number(amount) === choice}">${formatFoodQuantity(food, choice)}</button>`).join("")}
+          </div>
+        </div>` : ""}
     </div>`;
-}
-
-function optionDetailHTML(meal, option_, saved) {
-  const checked = new Set(saved?.optionId === option_.id ? saved.checked : []);
-  const requiredItems = option_.items.filter((entry) => !entry.optional);
-  const allRequiredChecked = requiredItems.length > 0 && requiredItems.every((entry) => checked.has(entry.id));
-  const total = optionNutrition(option_);
-  const hasRecipeEstimate = option_.items.some((entry) => entry.estimatedRecipe);
-  const hasUnquantified = option_.items.some((entry) => entry.unquantified);
-  return `
-    <div class="vini-option-detail">
-      <div class="vini-option-head">
-        <div>
-          <strong>${option_.label}</strong>
-          <span>~${formatNumber(total.kcal)} kcal · P ${formatMacro(total.p)}g · C ${formatMacro(total.c)}g · G ${formatMacro(total.f)}g</span>
-        </div>
-        <button class="ghost-btn vini-mark-all" data-mark-all data-meal="${meal.id}" data-option="${option_.id}">
-          ${allRequiredChecked ? "Limpar" : "Marcar refeição"}
-        </button>
-      </div>
-      ${option_.description ? `<p class="vini-option-note">${option_.description}</p>` : ""}
-      <div class="vini-food-list">
-        ${option_.items.map((entry) => itemHTML(meal, option_, entry, checked.has(entry.id))).join("")}
-      </div>
-      ${hasRecipeEstimate ? `<p class="vini-estimate-note">* Receita sem ficha técnica: macro provisório.</p>` : ""}
-      ${hasUnquantified ? `<p class="vini-estimate-note">* Item “à vontade” é registrado, mas fica fora da soma nutricional.</p>` : ""}
-      ${meal.options.length > 1 && saved?.optionId ? `<button class="vini-clear-meal" data-clear-meal data-meal="${meal.id}">Limpar escolha</button>` : ""}
-    </div>`;
-}
-
-function itemHTML(meal, option_, entry, isChecked) {
-  const nutri = entry.nutrition;
-  return `
-    <button class="vini-food-check${isChecked ? " is-on" : ""}"
-            data-food-check data-meal="${meal.id}" data-option="${option_.id}" data-item="${entry.id}">
-      <span class="vini-food-box">${isChecked ? "✓" : ""}</span>
-      <span class="vini-food-copy">
-        <strong>${entry.label}${entry.optional ? " <em>opcional</em>" : ""}</strong>
-        <small>${entry.portion}</small>
-      </span>
-      <span class="vini-food-nutri">${nutri ? `~${formatNumber(nutri.kcal)} kcal` : "sem quantidade"}</span>
-    </button>`;
 }
 
 function hydrationHTML(day, summary) {
@@ -361,19 +336,24 @@ function hydrationHTML(day, summary) {
 
 function recordsInScope() {
   return Object.entries(currentMapInScope())
-    .map(([date, day]) => ({ date, day, summary: calculateViniDietDay(day, { useSnapshot: true }) }))
+    .map(([date, raw]) => {
+      const day = normalizeViniDietDay(raw);
+      return { date, day, summary: calculateViniDietDay(day, { useSnapshot: true }) };
+    })
     .filter((entry) => entry.summary.hasData)
     .sort((a, b) => a.date.localeCompare(b.date));
 }
 
 function aggregateRecords(records) {
   const totals = { kcal: 0, p: 0, c: 0, f: 0 };
-  let adherence = 0;
+  let foods = 0;
+  let mainMealMoments = 0;
   let hydration = 0;
   let hydrationHits = 0;
   for (const entry of records) {
     sumNutrition(totals, entry.summary.consumed);
-    adherence += entry.summary.adherencePct;
+    foods += entry.summary.itemsChecked;
+    mainMealMoments += entry.summary.mainMealsLogged;
     hydration += entry.summary.hydrationMl;
     if (entry.summary.hydrationMl >= entry.summary.hydrationTargetMl) hydrationHits += 1;
   }
@@ -381,7 +361,9 @@ function aggregateRecords(records) {
     days: records.length,
     totals,
     averages: divideNutrition(totals, records.length),
-    adherenceAvg: records.length ? Math.round(adherence / records.length) : 0,
+    foodsTotal: foods,
+    foodsAvg: records.length ? Math.round((foods / records.length) * 10) / 10 : 0,
+    mainMealMomentsAvg: records.length ? Math.round((mainMealMoments / records.length) * 10) / 10 : 0,
     hydrationAvg: records.length ? Math.round(hydration / records.length) : 0,
     hydrationHits,
   };
@@ -415,7 +397,7 @@ function weeklyHTML() {
             <div class="kpi"><div class="kpi-value">${stats.days}/7</div><div class="kpi-label">dias registrados</div></div>
             <div class="kpi"><div class="kpi-value">${formatNumber(stats.totals.kcal)}</div><div class="kpi-label">kcal na semana</div></div>
             <div class="kpi"><div class="kpi-value">${formatNumber(stats.averages.kcal)}</div><div class="kpi-label">kcal médias / registro</div></div>
-            <div class="kpi"><div class="kpi-value">${stats.adherenceAvg}%</div><div class="kpi-label">aderência média</div></div>
+            <div class="kpi"><div class="kpi-value">${formatNumber(stats.foodsAvg, 1)}</div><div class="kpi-label">alimentos / registro</div></div>
           </div>
           <h3 class="stats-subhead">Macros da semana</h3>
           <div class="vini-week-macros">
@@ -461,7 +443,7 @@ function weekStripHTML(start, records) {
               data-open-date="${date}" ${date > todayISO() ? "disabled" : ""}>
         <span>${weekdayShort(date)}</span><b>${fmtDateBR(date).slice(0, 2)}</b>
         <small>${entry ? `${formatNumber(entry.summary.consumed.kcal)} kcal` : "—"}</small>
-        <em>${entry ? `${entry.summary.adherencePct}%` : ""}</em>
+        <em>${entry ? `${entry.summary.itemsChecked} itens` : ""}</em>
       </button>`;
   }).join("")}</div>`;
 }
@@ -478,26 +460,24 @@ function cycleStatsHTML() {
 
   const stats = aggregateRecords(records);
   const streak = streakStats(records.map((entry) => entry.date));
-  const optionCounts = {};
-  const mealCompletion = Object.fromEntries(VINI_REQUIRED_MEALS.map((mealId) => [mealId, { sum: 0, days: 0 }]));
+  const foodCounts = {};
+  const groupFrequency = Object.fromEntries(VINI_REQUIRED_MEALS.map((groupId) => [groupId, 0]));
   for (const entry of records) {
-    for (const meal of VINI_MEALS) {
-      const selected = entry.day.meals?.[meal.id];
-      if (selected?.optionId) {
-        const option_ = optionForMeal(meal, selected.optionId);
-        const key = `${meal.id}.${selected.optionId}`;
-        if (!optionCounts[key]) optionCounts[key] = { meal, option: option_, count: 0 };
-        optionCounts[key].count += 1;
-      }
-      if (meal.required) {
-        mealCompletion[meal.id].sum += entry.summary.meals[meal.id]?.completion || 0;
-        mealCompletion[meal.id].days += 1;
+    for (const group of VINI_FOOD_GROUPS) {
+      const selected = new Set(entry.day.foods?.[group.id] || []);
+      if (group.required && selected.size) groupFrequency[group.id] += 1;
+      for (const foodId of selected) {
+        const food = foodForGroup(group, foodId);
+        if (!food) continue;
+        const key = `${group.id}.${food.id}`;
+        if (!foodCounts[key]) foodCounts[key] = { group, food, count: 0, totalAmount: 0 };
+        foodCounts[key].count += 1;
+        foodCounts[key].totalAmount += entry.day.amounts?.[group.id]?.[food.id] ?? food.defaultQuantity;
       }
     }
   }
 
-  const topOptions = Object.values(optionCounts)
-    .filter((entry) => entry.option)
+  const topFoods = Object.values(foodCounts)
     .sort((a, b) => b.count - a.count)
     .slice(0, 6);
   const nextMilestone = [7, 14, 30, 60, 90, 180, 365].find((value) => value > records.length);
@@ -509,7 +489,7 @@ function cycleStatsHTML() {
         <div class="kpi-grid">
           <div class="kpi"><div class="kpi-value">${formatNumber(stats.averages.kcal)}</div><div class="kpi-label">kcal médias / registro</div></div>
           <div class="kpi"><div class="kpi-value">${formatMacro(stats.averages.p)}g</div><div class="kpi-label">proteína média</div></div>
-          <div class="kpi"><div class="kpi-value">${stats.adherenceAvg}%</div><div class="kpi-label">aderência média</div></div>
+          <div class="kpi"><div class="kpi-value">${formatNumber(stats.foodsAvg, 1)}</div><div class="kpi-label">alimentos / registro</div></div>
           <div class="kpi"><div class="kpi-value">${formatNumber(stats.hydrationAvg)}</div><div class="kpi-label">ml médios / registro</div></div>
           <div class="kpi"><div class="kpi-value">${stats.hydrationHits}</div><div class="kpi-label">metas de água atingidas</div></div>
           <div class="kpi"><div class="kpi-value">${streak.best}</div><div class="kpi-label">melhor sequência</div></div>
@@ -520,17 +500,17 @@ function cycleStatsHTML() {
           ${nextMilestone ? `<div class="goal-bar"><div class="goal-fill" style="width:${pctWidth((records.length / nextMilestone) * 100)}%"></div></div>` : ""}
         </div>
 
-        <h3 class="stats-subhead">Aderência por refeição</h3>
-        ${VINI_REQUIRED_MEALS.map((mealId) => {
-          const meal = VINI_MEALS.find((entry) => entry.id === mealId);
-          const value = mealCompletion[mealId];
-          const pct = value.days ? Math.round((value.sum / value.days) * 100) : 0;
-          return `<div class="vini-stat-progress"><div><span>${meal.icon} ${meal.label}</span><strong>${pct}%</strong></div><div class="goal-bar"><div class="goal-fill" style="width:${pctWidth(pct)}%"></div></div></div>`;
+        <h3 class="stats-subhead">Frequência por momento</h3>
+        ${VINI_REQUIRED_MEALS.map((groupId) => {
+          const group = VINI_FOOD_GROUPS.find((entry) => entry.id === groupId);
+          const days = groupFrequency[groupId];
+          const pct = stats.days ? Math.round((days / stats.days) * 100) : 0;
+          return `<div class="vini-stat-progress"><div><span>${group.icon} ${group.label}</span><strong>${days}/${stats.days} dias</strong></div><div class="goal-bar"><div class="goal-fill" style="width:${pctWidth(pct)}%"></div></div></div>`;
         }).join("")}
 
-        <h3 class="stats-subhead">Opções mais escolhidas</h3>
-        ${topOptions.length ? topOptions.map((entry) => `
-          <div class="stat-row"><span class="stat-label">${entry.meal.icon} ${entry.option.label}</span><span class="stat-value">${entry.count}x</span></div>`).join("") : `<p class="muted" style="font-size:12px">Nenhuma opção escolhida ainda.</p>`}
+        <h3 class="stats-subhead">Alimentos mais marcados</h3>
+        ${topFoods.length ? topFoods.map((entry) => `
+          <div class="stat-row"><span class="stat-label">${entry.group.icon} ${entry.food.label}</span><span class="stat-value">${entry.count}x${entry.food.unquantified ? "" : ` · ${formatFoodQuantity(entry.food, entry.totalAmount)}`}</span></div>`).join("") : `<p class="muted" style="font-size:12px">Nenhum alimento marcado ainda.</p>`}
       </div>
     </section>`;
 }
@@ -555,9 +535,9 @@ function historyHTML() {
       <div class="block-head"><h2>Histórico alimentar</h2><span class="muted" style="font-size:11px">toque para editar</span></div>
       ${records.length ? `<div class="vini-history-list">${records.slice(0, 30).map((entry) => `
         <button class="vini-history-row${entry.date === tracker.selectedDate ? " is-selected" : ""}" data-open-date="${entry.date}">
-          <span class="vini-history-date"><strong>${weekdayShort(entry.date)} ${fmtDateBR(entry.date)}</strong><small>${entry.summary.completedMeals}/${entry.summary.requiredMeals} refeições principais</small></span>
+          <span class="vini-history-date"><strong>${weekdayShort(entry.date)} ${fmtDateBR(entry.date)}</strong><small>${entry.summary.mainMealsLogged}/${entry.summary.requiredMeals} momentos · ${entry.summary.itemsChecked} alimentos</small></span>
           <span class="vini-history-nutri"><strong>${formatNumber(entry.summary.consumed.kcal)} kcal</strong><small>P ${formatMacro(entry.summary.consumed.p)} · C ${formatMacro(entry.summary.consumed.c)} · G ${formatMacro(entry.summary.consumed.f)}</small></span>
-          <span class="vini-history-score">${entry.summary.adherencePct}%</span>
+          <span class="vini-history-score"><strong>${entry.summary.itemsChecked}</strong><small>itens</small></span>
         </button>`).join("")}</div>` : `<p class="muted" style="padding:8px">Nenhum registro neste escopo.</p>`}
     </section>`;
 }
@@ -572,49 +552,48 @@ function bindTracker() {
     button.addEventListener("click", () => selectDate(button.dataset.openDate));
   });
 
-  tracker.root.querySelectorAll(".vini-option-btn").forEach((button) => {
-    button.addEventListener("click", () => mutateCurrentDay((day) => {
-      const mealId = button.dataset.meal;
-      const optionId = button.dataset.option;
-      const current = day.meals[mealId];
-      if (current?.optionId === optionId) return;
-      day.meals[mealId] = { optionId, checked: [] };
-    }));
+  tracker.root.querySelectorAll("[data-food-checkbox]").forEach((input) => {
+    input.addEventListener("change", () => {
+      const checked = input.checked;
+      const groupId = input.dataset.group;
+      const foodId = input.dataset.food;
+      mutateCurrentDay((day) => {
+        const group = VINI_FOOD_GROUPS.find((entry) => entry.id === groupId);
+        const food = foodForGroup(group, foodId);
+        if (!group || !food) return;
+        const selected = new Set(day.foods[groupId] || []);
+        if (checked) {
+          selected.add(foodId);
+          day.amounts[groupId] = day.amounts[groupId] || {};
+          day.amounts[groupId][foodId] = day.amounts[groupId][foodId] ?? food.defaultQuantity;
+        } else {
+          selected.delete(foodId);
+          if (day.amounts[groupId]) {
+            delete day.amounts[groupId][foodId];
+            if (!Object.keys(day.amounts[groupId]).length) delete day.amounts[groupId];
+          }
+        }
+        const ordered = group.foods.map((entry) => entry.id).filter((id) => selected.has(id));
+        if (ordered.length) day.foods[groupId] = ordered;
+        else delete day.foods[groupId];
+      });
+    });
   });
 
-  tracker.root.querySelectorAll("[data-food-check]").forEach((button) => {
+  tracker.root.querySelectorAll("[data-food-quantity]").forEach((button) => {
     button.addEventListener("click", () => mutateCurrentDay((day) => {
-      const mealId = button.dataset.meal;
-      const optionId = button.dataset.option;
-      const itemId = button.dataset.item;
-      if (day.meals[mealId]?.optionId !== optionId) day.meals[mealId] = { optionId, checked: [] };
-      const checked = new Set(day.meals[mealId].checked || []);
-      if (checked.has(itemId)) checked.delete(itemId);
-      else checked.add(itemId);
-      day.meals[mealId].checked = [...checked];
+      const groupId = button.dataset.group;
+      const foodId = button.dataset.food;
+      const amount = Number(button.dataset.amount);
+      const group = VINI_FOOD_GROUPS.find((entry) => entry.id === groupId);
+      const food = foodForGroup(group, foodId);
+      if (!group || !food || !food.quantityChoices.includes(amount)) return;
+      const selected = new Set(day.foods[groupId] || []);
+      selected.add(foodId);
+      day.foods[groupId] = group.foods.map((entry) => entry.id).filter((id) => selected.has(id));
+      day.amounts[groupId] = day.amounts[groupId] || {};
+      day.amounts[groupId][foodId] = amount;
     }));
-  });
-
-  tracker.root.querySelectorAll("[data-mark-all]").forEach((button) => {
-    button.addEventListener("click", () => mutateCurrentDay((day) => {
-      const mealId = button.dataset.meal;
-      const optionId = button.dataset.option;
-      const meal = VINI_MEALS.find((entry) => entry.id === mealId);
-      const option_ = optionForMeal(meal, optionId);
-      if (!option_) return;
-      const requiredIds = option_.items.filter((entry) => !entry.optional).map((entry) => entry.id);
-      const existing = day.meals[mealId]?.optionId === optionId ? day.meals[mealId].checked || [] : [];
-      const checked = new Set(existing);
-      const allRequired = requiredIds.every((itemId) => checked.has(itemId));
-      day.meals[mealId] = {
-        optionId,
-        checked: allRequired ? [] : [...new Set([...existing.filter((itemId) => option_.items.some((entry) => entry.optional && entry.id === itemId)), ...requiredIds])],
-      };
-    }));
-  });
-
-  tracker.root.querySelectorAll("[data-clear-meal]").forEach((button) => {
-    button.addEventListener("click", () => mutateCurrentDay((day) => { delete day.meals[button.dataset.meal]; }));
   });
 
   tracker.root.querySelectorAll("[data-water-add]").forEach((button) => {

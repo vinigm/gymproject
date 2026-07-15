@@ -5,7 +5,7 @@
 // prescrição. Alimentos simples usam referências compatíveis com TACO/TBCA;
 // produtos e receitas sem rótulo/ficha técnica usam aproximações explícitas.
 
-export const VINI_PLAN_VERSION = "vini-nutri-2026-07-v1";
+export const VINI_PLAN_VERSION = "vini-nutri-2026-07-v3";
 
 const ZERO = Object.freeze({ kcal: 0, p: 0, c: 0, f: 0 });
 
@@ -213,6 +213,144 @@ export const VINI_HYDRATION = Object.freeze({
   trainingMaxMl: 3500,
 });
 
+function slug(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
+function foodEntryId(entry) {
+  return `${entry.id}__${slug(entry.portion)}`;
+}
+
+const QUANTITY_RULES = Object.freeze({
+  banana: { unit: "un", values: [1, 2, 3, 4, 5] },
+  cafe: { unit: "ml", values: [100, 150, 200, 250, 300, 400, 500] },
+  ovos: { unit: "un", values: [1, 2, 3, 4, 5, 6] },
+  chia: { unit: "g", values: [5, 10, 15, 20, 25, 30] },
+  pao: { unit: "fatia", values: [1, 2, 3, 4, 5, 6] },
+  requeijao: { unit: "g", values: [10, 15, 20, 30, 40, 50, 60] },
+  vegetais: { unit: "g", values: [50, 100, 150, 200, 250] },
+  azeite: { unit: "ml", values: [5, 10, 15, 20, 25] },
+  arroz: { unit: "g", values: [50, 80, 100, 130, 150, 180, 200, 250, 300] },
+  frango: { unit: "g", values: [50, 80, 100, 120, 130, 150, 180, 200, 250, 300] },
+  ovo_frito: { unit: "un", values: [1, 2, 3, 4, 5, 6] },
+  pure_batata: { unit: "g", values: [50, 80, 100, 105, 130, 150, 180, 200, 250] },
+  panqueca_carne: { unit: "un", values: [1, 2, 3, 4, 5] },
+  suco_abacaxi: { unit: "ml", values: [100, 150, 200, 250, 300, 400, 500] },
+  macarrao_bolonhesa: { unit: "g", values: [150, 200, 250, 300, 350, 400, 450, 500] },
+  pro_force: { unit: "un", values: [1, 2, 3] },
+  natural_whey: { unit: "un", values: [1, 2, 3] },
+  maca: { unit: "un", values: [1, 2, 3, 4, 5] },
+  leite: { unit: "ml", values: [100, 150, 200, 250, 300, 400, 500] },
+  whey: { unit: "medida", values: [0.5, 1, 1.5, 2, 2.5, 3] },
+  morango: { unit: "un", values: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] },
+  farelo_aveia: { unit: "g", values: [5, 10, 15, 20, 25, 30] },
+  crepioca: { unit: "porcao", values: [1, 2, 3] },
+  feijao_lentilha: { unit: "g", values: [40, 80, 120, 160, 200] },
+  chocolate: { unit: "g", values: [5, 10, 15, 20, 25, 30, 40] },
+});
+
+function parseLocaleNumber(value) {
+  return Number(String(value || "").replace(",", "."));
+}
+
+function quantityFromEntry(entry, unit) {
+  const patterns = {
+    un: /(\d+(?:[.,]\d+)?)\s*unidade/i,
+    fatia: /(\d+(?:[.,]\d+)?)\s*fatia/i,
+    medida: /(\d+(?:[.,]\d+)?)\s*medida/i,
+    porcao: /(\d+(?:[.,]\d+)?)\s*por[cç][aã]o/i,
+    g: /(\d+(?:[.,]\d+)?)\s*g\b/i,
+    ml: /(\d+(?:[.,]\d+)?)\s*ml\b/i,
+  };
+  const match = String(entry?.portion || "").match(patterns[unit]);
+  const value = parseLocaleNumber(match?.[1]);
+  return Number.isFinite(value) && value > 0 ? value : 1;
+}
+
+function formatQuantityValue(value) {
+  return Number(value).toLocaleString("pt-BR", { maximumFractionDigits: 1 });
+}
+
+export function formatFoodQuantity(food, quantity) {
+  const value = formatQuantityValue(quantity);
+  if (food?.quantityUnit === "un") return `${value} un`;
+  if (food?.quantityUnit === "fatia") return `${value} ${Number(quantity) === 1 ? "fatia" : "fatias"}`;
+  if (food?.quantityUnit === "medida") return `${value} ${Number(quantity) === 1 ? "medida" : "medidas"}`;
+  if (food?.quantityUnit === "porcao") return `${value} ${Number(quantity) === 1 ? "porção" : "porções"}`;
+  return `${value}${food?.quantityUnit || ""}`;
+}
+
+// Catálogo achatado para a UX. Cada alimento aparece uma única vez por
+// momento do dia; as porções prescritas viram valores iniciais dentro do
+// seletor de quantidade.
+function buildFoodGroups() {
+  return VINI_MEALS.map((meal) => {
+    const foodsByBaseId = new Map();
+    for (const option_ of meal.options) {
+      for (const entry of option_.items) {
+        if (!foodsByBaseId.has(entry.id)) {
+          foodsByBaseId.set(entry.id, {
+            ...entry,
+            id: entry.id,
+            baseId: entry.id,
+            sourceOptions: new Set(),
+            variants: [],
+          });
+        }
+        const food = foodsByBaseId.get(entry.id);
+        food.sourceOptions.add(option_.id);
+        if (!food.variants.some((variant) => variant.portion === entry.portion)) food.variants.push(entry);
+      }
+    }
+
+    const foods = [...foodsByBaseId.values()].map((entry) => {
+      if (entry.unquantified) {
+        return Object.freeze({
+          ...entry,
+          sourceOptions: Object.freeze([...entry.sourceOptions]),
+          variants: Object.freeze(entry.variants),
+          quantityUnit: null,
+          quantityChoices: Object.freeze([]),
+          defaultQuantity: 1,
+          referenceQuantity: 1,
+          prescribedQuantities: Object.freeze([]),
+        });
+      }
+      const rule = QUANTITY_RULES[entry.baseId] || { unit: "g", values: [50, 100, 150, 200, 250] };
+      const prescribedQuantities = [...new Set(entry.variants.map((variant) => quantityFromEntry(variant, rule.unit)))];
+      const defaultQuantity = prescribedQuantities[0] || rule.values[0];
+      const quantityChoices = [...new Set([...rule.values, ...prescribedQuantities])].sort((a, b) => a - b);
+      return Object.freeze({
+        ...entry,
+        sourceOptions: Object.freeze([...entry.sourceOptions]),
+        variants: Object.freeze(entry.variants),
+        quantityUnit: rule.unit,
+        quantityChoices: Object.freeze(quantityChoices),
+        defaultQuantity,
+        referenceQuantity: quantityFromEntry(entry, rule.unit),
+        prescribedQuantities: Object.freeze(prescribedQuantities),
+      });
+    });
+
+    return Object.freeze({
+      id: meal.id,
+      icon: meal.icon,
+      label: meal.label,
+      time: meal.time || "",
+      required: meal.required,
+      contextual: meal.contextual,
+      foods: Object.freeze(foods),
+    });
+  });
+}
+
+export const VINI_FOOD_GROUPS = Object.freeze(buildFoodGroups());
+
 export function mealForId(mealId) {
   return VINI_MEALS.find((meal) => meal.id === mealId) || null;
 }
@@ -221,10 +359,41 @@ export function optionForMeal(meal, optionId) {
   return meal?.options.find((option_) => option_.id === optionId) || null;
 }
 
+export function foodGroupForId(groupId) {
+  return VINI_FOOD_GROUPS.find((group) => group.id === groupId) || null;
+}
+
+export function foodForGroup(group, foodId) {
+  return group?.foods.find((food) => food.id === foodId) || null;
+}
+
+export function normalizeFoodQuantity(food, value) {
+  if (!food || food.unquantified) return 1;
+  const amount = finiteNumber(value, food.defaultQuantity);
+  return food.quantityChoices.some((choice) => Math.abs(choice - amount) < 0.001)
+    ? amount
+    : food.defaultQuantity;
+}
+
+export function nutritionForFoodQuantity(food, value) {
+  if (!food?.nutrition) return null;
+  const quantity = normalizeFoodQuantity(food, value);
+  const reference = Math.max(0.001, finiteNumber(food.referenceQuantity, 1));
+  const ratio = quantity / reference;
+  return roundedNutrition({
+    kcal: finiteNumber(food.nutrition.kcal) * ratio,
+    p: finiteNumber(food.nutrition.p) * ratio,
+    c: finiteNumber(food.nutrition.c) * ratio,
+    f: finiteNumber(food.nutrition.f) * ratio,
+  });
+}
+
 export function emptyViniDietDay() {
   return {
     version: VINI_PLAN_VERSION,
     meals: {},
+    foods: {},
+    amounts: {},
     hydrationMl: 0,
     trainingDay: false,
     summary: null,
@@ -256,10 +425,21 @@ function cleanSummary(summary) {
     completedMeals: Math.max(0, finiteNumber(summary.completedMeals)),
     requiredMeals: Math.max(0, finiteNumber(summary.requiredMeals, VINI_REQUIRED_MEALS.length)),
     itemsChecked: Math.max(0, finiteNumber(summary.itemsChecked)),
+    mainMealsLogged: Math.max(0, finiteNumber(summary.mainMealsLogged, summary.completedMeals)),
+    mealCoveragePct: Math.max(0, Math.min(100, finiteNumber(summary.mealCoveragePct, summary.adherencePct))),
     hydrationMl: Math.max(0, finiteNumber(summary.hydrationMl)),
     hydrationTargetMl: Math.max(0, finiteNumber(summary.hydrationTargetMl)),
     hydrationPct: Math.max(0, finiteNumber(summary.hydrationPct)),
   };
+}
+
+function legacyFoodDescriptor(groupId, legacyFoodId) {
+  const meal = mealForId(groupId);
+  for (const option_ of meal?.options || []) {
+    const entry = option_.items.find((candidate) => foodEntryId(candidate) === legacyFoodId);
+    if (entry) return { id: entry.id, amount: null, entry };
+  }
+  return null;
 }
 
 export function normalizeViniDietDay(raw) {
@@ -278,6 +458,66 @@ export function normalizeViniDietDay(raw) {
     const checked = [...new Set(Array.isArray(source.checked) ? source.checked : [])]
       .filter((itemId) => validItems.has(itemId));
     out.meals[meal.id] = { optionId: selectedOption.id, checked };
+  }
+
+  const hasIndividualFoods = raw?.foods && typeof raw.foods === "object";
+  for (const group of VINI_FOOD_GROUPS) {
+    const valid = new Set(group.foods.map((food) => food.id));
+    let selected = [];
+
+    if (hasIndividualFoods && Array.isArray(raw.foods[group.id])) {
+      selected = raw.foods[group.id].map((rawFoodId) => {
+        if (valid.has(rawFoodId)) return { id: rawFoodId, rawId: rawFoodId, amount: null };
+        const legacy = legacyFoodDescriptor(group.id, rawFoodId);
+        if (!legacy) return null;
+        const rule = QUANTITY_RULES[legacy.id];
+        return {
+          id: legacy.id,
+          rawId: rawFoodId,
+          amount: rule ? quantityFromEntry(legacy.entry, rule.unit) : null,
+        };
+      }).filter(Boolean);
+    }
+
+    // Migração transparente da v1 (opções) para alimentos com quantidade.
+    if (!hasIndividualFoods) {
+      const legacy = out.meals[group.id];
+      const meal = mealForId(group.id);
+      const option_ = optionForMeal(meal, legacy?.optionId);
+      if (option_) {
+        selected = option_.items
+          .filter((entry) => legacy.checked.includes(entry.id))
+          .map((entry) => {
+            const rule = QUANTITY_RULES[entry.id];
+            return {
+              id: entry.id,
+              rawId: foodEntryId(entry),
+              amount: rule ? quantityFromEntry(entry, rule.unit) : null,
+            };
+          });
+      }
+    }
+
+    const cleanedById = new Map();
+    for (const descriptor of selected) {
+      if (!valid.has(descriptor.id)) continue;
+      cleanedById.set(descriptor.id, descriptor);
+    }
+    if (cleanedById.size) {
+      const order = new Map(group.foods.map((food, index) => [food.id, index]));
+      const cleaned = [...cleanedById.values()].sort((a, b) => order.get(a.id) - order.get(b.id));
+      out.foods[group.id] = cleaned.map((descriptor) => descriptor.id);
+      out.amounts[group.id] = {};
+      for (const descriptor of cleaned) {
+        const food = foodForGroup(group, descriptor.id);
+        const rawAmounts = raw?.amounts?.[group.id];
+        const savedAmount = rawAmounts?.[descriptor.id] ?? rawAmounts?.[descriptor.rawId];
+        out.amounts[group.id][descriptor.id] = normalizeFoodQuantity(
+          food,
+          savedAmount ?? descriptor.amount ?? food.defaultQuantity
+        );
+      }
+    }
   }
   return out;
 }
@@ -302,61 +542,52 @@ function roundedNutrition(value) {
 export function calculateViniDietDay(raw, { useSnapshot = false } = {}) {
   const day = normalizeViniDietDay(raw);
   const consumed = { ...ZERO };
-  const planned = { ...ZERO };
-  const meals = {};
+  const foodGroups = {};
   let itemsChecked = 0;
   let quantifiedItemsChecked = 0;
   let unquantifiedItemsChecked = 0;
 
-  for (const meal of VINI_MEALS) {
-    const selection = day.meals[meal.id] || null;
-    const selectedOption = optionForMeal(meal, selection?.optionId);
-    const checked = new Set(selection?.checked || []);
-    const requiredItems = selectedOption?.items.filter((entry) => !entry.optional) || [];
-    const checkedRequired = requiredItems.filter((entry) => checked.has(entry.id)).length;
-
-    if (selectedOption) {
-      for (const entry of selectedOption.items) {
-        if (!entry.optional) addNutrition(planned, entry.nutrition);
-        if (!checked.has(entry.id)) continue;
-        itemsChecked += 1;
-        if (entry.nutrition) quantifiedItemsChecked += 1;
-        else unquantifiedItemsChecked += 1;
-        addNutrition(consumed, entry.nutrition);
-      }
+  for (const group of VINI_FOOD_GROUPS) {
+    const selectedIds = day.foods[group.id] || [];
+    const selectedFoods = selectedIds.map((foodId) => foodForGroup(group, foodId)).filter(Boolean);
+    const selectedAmounts = {};
+    for (const food of selectedFoods) {
+      const amount = normalizeFoodQuantity(food, day.amounts[group.id]?.[food.id]);
+      selectedAmounts[food.id] = amount;
+      itemsChecked += 1;
+      if (food.nutrition) quantifiedItemsChecked += 1;
+      else unquantifiedItemsChecked += 1;
+      addNutrition(consumed, nutritionForFoodQuantity(food, amount));
     }
-
-    const completion = selectedOption && requiredItems.length
-      ? checkedRequired / requiredItems.length
-      : 0;
-    meals[meal.id] = {
-      meal,
-      option: selectedOption,
-      checked: [...checked],
-      completion,
-      complete: completion >= 1,
+    foodGroups[group.id] = {
+      group,
+      selectedIds,
+      selectedFoods,
+      selectedAmounts,
+      hasFood: selectedFoods.length > 0,
     };
   }
 
-  const requiredResults = VINI_REQUIRED_MEALS.map((mealId) => meals[mealId]);
-  const adherencePct = requiredResults.length
-    ? Math.round((requiredResults.reduce((sum, entry) => sum + entry.completion, 0) / requiredResults.length) * 100)
+  const mainMealsLogged = VINI_REQUIRED_MEALS.filter((groupId) => foodGroups[groupId]?.hasFood).length;
+  const mealCoveragePct = VINI_REQUIRED_MEALS.length
+    ? Math.round((mainMealsLogged / VINI_REQUIRED_MEALS.length) * 100)
     : 0;
-  const completedMeals = requiredResults.filter((entry) => entry.complete).length;
   const hydrationTargetMl = day.trainingDay ? VINI_HYDRATION.trainingMinMl : VINI_HYDRATION.baseMl;
   const hydrationPct = hydrationTargetMl > 0 ? Math.round((day.hydrationMl / hydrationTargetMl) * 100) : 0;
   const hasData = day.hydrationMl > 0
     || day.trainingDay
-    || Object.values(day.meals).some((selection) => selection.optionId || selection.checked.length);
+    || itemsChecked > 0;
 
   const result = {
     day,
     consumed: roundedNutrition(consumed),
-    planned: roundedNutrition(planned),
-    meals,
-    adherencePct,
-    completedMeals,
+    planned: { ...ZERO },
+    foodGroups,
+    adherencePct: mealCoveragePct,
+    completedMeals: mainMealsLogged,
     requiredMeals: VINI_REQUIRED_MEALS.length,
+    mainMealsLogged,
+    mealCoveragePct,
     itemsChecked,
     quantifiedItemsChecked,
     unquantifiedItemsChecked,
@@ -373,6 +604,8 @@ export function calculateViniDietDay(raw, { useSnapshot = false } = {}) {
     result.completedMeals = day.summary.completedMeals;
     result.requiredMeals = day.summary.requiredMeals;
     result.itemsChecked = day.summary.itemsChecked;
+    result.mainMealsLogged = day.summary.mainMealsLogged;
+    result.mealCoveragePct = day.summary.mealCoveragePct;
     result.hydrationMl = day.summary.hydrationMl;
     result.hydrationTargetMl = day.summary.hydrationTargetMl;
     result.hydrationPct = day.summary.hydrationPct;
@@ -392,6 +625,8 @@ export function withViniDietSummary(raw) {
     completedMeals: calculated.completedMeals,
     requiredMeals: calculated.requiredMeals,
     itemsChecked: calculated.itemsChecked,
+    mainMealsLogged: calculated.mainMealsLogged,
+    mealCoveragePct: calculated.mealCoveragePct,
     hydrationMl: calculated.hydrationMl,
     hydrationTargetMl: calculated.hydrationTargetMl,
     hydrationPct: calculated.hydrationPct,

@@ -18,7 +18,7 @@ Documento de referência para preservar o plano alimentar exibido no aplicativo 
 
 - As medidas e quantidades abaixo foram mantidas como aparecem no aplicativo.
 - A numeração e os identificadores das opções foram criados para organizar o documento e o tracker; o aplicativo da nutricionista mostra somente o título **“Opção”**.
-- Cada opção de almoço, lanche ou jantar deve ser tratada como uma **refeição completa**. Não se deve misturar componentes de opções diferentes automaticamente.
+- No aplicativo da nutricionista, cada opção representa uma composição sugerida. No tracker, os alimentos ficam disponíveis individualmente para registrar exatamente o que foi consumido, inclusive combinações diferentes da composição original.
 - Um botão **“Ver opções de substituição”** indica que existem alternativas no aplicativo, mas os conteúdos dessas alternativas não aparecem nos screenshots.
 - **“À vontade”** permanece sem quantidade numérica.
 - O morango do lanche com whey está explicitamente marcado como **opcional**.
@@ -317,7 +317,7 @@ Estas diretrizes orientam a implementação atual:
 - Alimentos com substituições devem aceitar alternativas somente quando elas forem conhecidas.
 - Valores nutricionais devem ficar em um catálogo separado da estrutura do plano, com fonte registrada.
 - Receitas compostas devem ser calculadas pela receita validada, não por uma estimativa genérica do nome.
-- O tracker deve guardar o identificador da opção escolhida e eventuais ajustes, preservando o histórico mesmo que o plano seja atualizado depois.
+- O tracker deve guardar cada alimento marcado e sua porção prescrita, além de um snapshot nutricional, preservando o histórico mesmo que o plano seja atualizado depois.
 
 ## 13. Mapa de rastreabilidade dos screenshots
 
@@ -350,15 +350,18 @@ Estas diretrizes orientam a implementação atual:
 - **15/07/2026:** transcrição inicial dos 21 screenshots, identificação das duplicatas e registro das pendências.
 - **15/07/2026:** confirmado que arroz (100 g) e purê (105 g) aparecem juntos nas opções correspondentes de almoço e jantar.
 - **15/07/2026:** plano levado ao Kg Vini com opções completas, checklist por item, hidratação, snapshots nutricionais, cálculos diários/semanais e estatísticas do ciclo.
+- **15/07/2026:** interface revisada para checkboxes independentes por alimento; o formato anterior por opção permanece compatível e é migrado automaticamente na leitura.
+- **15/07/2026:** cada alimento passou a ter quantidade ajustável (unidades, fatias, medidas, gramas ou ml), com recálculo proporcional dos macros e migração dos registros v1/v2.
 
 ## 15. Implementação no tracker
 
-- Catálogo versionado: `js/vini-diet-plan.js`, versão `vini-nutri-2026-07-v1`.
+- Catálogo versionado: `js/vini-diet-plan.js`, versão `vini-nutri-2026-07-v3`.
 - Interface e estatísticas: `js/vini-diet-ui.js`.
 - Persistência: campo `plan` nos documentos existentes de `diet_logs`, sem remover o mapa legado `foods`.
-- Cada dia guarda opção por refeição, itens marcados, hidratação, indicação de treino e um snapshot dos totais nutricionais.
+- Cada dia guarda checkboxes individuais agrupados por momento alimentar, a quantidade selecionada para cada alimento, hidratação, indicação de treino e um snapshot dos totais nutricionais.
 - O snapshot impede que uma futura revisão dos valores de referência altere retroativamente kcal e macros já registrados.
-- A aderência alimentar considera café da manhã, almoço, lanche da tarde e jantar. Pré-treino, pós-treino e belisco são contextuais.
+- Café da manhã, almoço, lanche da tarde e jantar compõem a cobertura de momentos principais; não existe mais o conceito de “refeição completa”. Pré-treino, pós-treino e belisco continuam contextuais.
 - A hidratação usa 2,5 L como base; em dias de treino, a meta mínima exibida passa a 3 L, mantendo a orientação de até 3,5 L.
-- As estatísticas incluem totais e médias semanais de kcal/macros, aderência, hidratação, sequência, marcos de dias, opções mais escolhidas e histórico editável.
+- As estatísticas incluem totais e médias semanais de kcal/macros, quantidade de alimentos, frequência por momento, hidratação, sequência, marcos de dias, alimentos mais marcados e histórico editável.
 - Itens “à vontade” podem ser registrados, mas não entram nos macros enquanto não houver quantidade definida.
+- Registros dos formatos `vini-nutri-2026-07-v1` e `vini-nutri-2026-07-v2` são convertidos em memória para os alimentos e quantidades equivalentes e só passam a v3 quando o dia é editado, sem apagar o snapshot histórico.

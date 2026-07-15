@@ -269,7 +269,7 @@ Cores: OCUPADO (fase foco) = `is-ocupado` + `presence-busy` (vermelho); Disponí
 
 - **Peso** — `renderWeight()` monta hero, formulário, gráfico, IMC e últimos registros. O registro continua sem horário e separado por usuário. Gráfico, comparação e lista abrem no ciclo atual; o hero também mostra a variação desde a primeira pesagem do ciclo. `Histórico completo` recupera visualmente todas as pesagens anteriores.
 - **Dieta da Vivi** — `renderDiet()` monta o cardápio genérico, resumo, metas provisórias, histórico e estatísticas. `computeNutrition` soma kcal/proteína/carbo/gordura e `setDietDay` persiste o mapa `foods` por usuário/data.
-- **Dieta do Vini** — `renderViniDietTracker()` monta navegação por data, resumo nutricional, opções completas por refeição, checklist por alimento, hidratação, semana, ciclo e histórico editável. O plano `vini-nutri-2026-07-v1` tem 4 refeições principais para aderência (café, almoço, lanche e jantar); pré/pós-treino e belisco são contextuais. Cada mudança chama `withViniDietSummary` antes de `setViniDietPlanDay`, preservando um snapshot de kcal/macros junto da escolha e dos itens marcados.
+- **Dieta do Vini** — `renderViniDietTracker()` monta navegação por data, resumo nutricional, checkboxes individuais com seletores de quantidade agrupados por momento alimentar, hidratação, semana, ciclo e histórico editável. O plano `vini-nutri-2026-07-v3` contabiliza cobertura de 4 momentos principais (café, almoço, lanche e jantar); pré/pós-treino e belisco são contextuais. Cada mudança chama `withViniDietSummary` antes de `setViniDietPlanDay`, preservando um snapshot de kcal/macros junto dos alimentos e quantidades marcados.
 
 **Metas diárias da Vivi (`GOALS`).** Valores **provisórios** (comentário explícito no código: "Quando tiver os certos, troque só aqui"; a UI mostra a nota "metas provisórias — ajuste quando tiver os números certos"):
 
@@ -289,9 +289,9 @@ Cores: OCUPADO (fase foco) = `is-ocupado` + `presence-busy` (vermelho); Disponí
 | **Almoço** (`almoco` ☀️) | Arroz [50,100,150] g → 130 / 2,7 / 28 / 0,3 · Feijão [50,100,150] g → 80 / 5 / 14 / 0,5 · Carne [50,100,150] g → 220 / 26 / 0 / 12 · Frango [50,100,150] g → 165 / 31 / 0 / 3,6 · Peixe [50,100,150] g → 130 / 26 / 0 / 3 |
 | **Janta** (`janta` 🌙) | Mesmos 5 alimentos do almoço (arroz, feijão, carne, frango, peixe), todos `per:"100g"`, opções [50,100,150] g e valores idênticos |
 
-**Plano do Vini (`VINI_MEALS`).** A estrutura contém pré-treino, café da manhã, 5 opções de almoço, 5 opções de lanche, pós-treino, 5 opções de jantar e belisco. As porções vêm dos screenshots. Alimentos simples usam referências compatíveis com TACO/TBCA; rótulos não capturados e receitas compostas ficam marcados como estimativas. Itens “à vontade” são registráveis, mas não entram na soma nutricional.
+**Plano do Vini (`VINI_MEALS` e `VINI_FOOD_GROUPS`).** `VINI_MEALS` preserva a transcrição das composições: pré-treino, café da manhã, 5 opções de almoço, 5 opções de lanche, pós-treino, 5 opções de jantar e belisco. `VINI_FOOD_GROUPS` achata esse catálogo para a interface: cada alimento aparece em um único card por momento, enquanto as porções prescritas e faixas úteis viram botões de quantidade. Banana, ovos e produtos inteiros usam unidades; pão usa fatias; whey usa medidas; líquidos usam ml; os demais alimentos mensuráveis usam gramas. Os macros são escalados pela razão entre a quantidade registrada e a quantidade de referência. Itens “à vontade” são registráveis, mas não entram na soma nutricional.
 
-**Estatísticas do Vini.** O dia mostra kcal/macros consumidos contra as opções selecionadas, aderência das 4 refeições principais e hidratação. A semana da data selecionada mostra dias registrados, kcal totais e médias, macros totais e médios, distribuição energética P/C/G, aderência e comparação com a semana anterior. O ciclo mostra médias, água, melhor sequência, marcos de dias, aderência por refeição e opções mais escolhidas. Tudo respeita `Ciclo atual` x `Histórico completo`.
+**Estatísticas do Vini.** O dia mostra kcal/macros somados a partir dos alimentos e quantidades marcados, quantidade de alimentos, cobertura dos 4 momentos principais e hidratação. A semana da data selecionada mostra dias registrados, kcal totais e médias, macros totais e médios, distribuição energética P/C/G, média de alimentos por registro e comparação com a semana anterior. O ciclo mostra médias, água, melhor sequência, marcos de dias, frequência por momento e alimentos mais marcados com sua quantidade acumulada. Tudo respeita `Ciclo atual` x `Histórico completo`.
 
 **Arquivos.** `kg-vini.html`, `kg-vivi.html`, `js/kg-vini-page.js`, `js/kg-vivi-page.js`, `js/vini-diet-plan.js`, `js/vini-diet-ui.js`, `js/weight-storage.js`, `js/diet-storage.js`, `js/tracking-cycle.js`, `DIETA_VINI.md`.
 
@@ -373,7 +373,7 @@ Todas as coleções têm um módulo de storage próprio com fallback automático
 - **Módulo**: `js/diet-storage.js` (`COL = "diet_logs"`).
 - **Campos comuns**: `userId`, `date` (`YYYY-MM-DD`) e `updatedAt` (serverTimestamp).
 - **Tracker genérico/legado**: `foods` (mapa `{ "refeição.alimento": quantidade }`, ex.: `{ "cafe.ovo": 2, "almoco.arroz": 100 }`). `cleanFoods` remove quantidades ≤ 0.
-- **Plano do Vini**: `planVersion` e `plan`, contendo `{ version, meals, hydrationMl, trainingDay, summary }`. Cada `meals[mealId]` guarda `{ optionId, checked[] }`. `summary` guarda o snapshot de `consumed`, `planned`, aderência, refeições completas e hidratação.
+- **Plano do Vini**: `planVersion` e `plan`, contendo `{ version, foods, amounts, meals, hydrationMl, trainingDay, summary }`. `foods[groupId]` guarda os IDs dos alimentos marcados e `amounts[groupId][foodId]` guarda sua quantidade. `meals` permanece somente para leitura e migração do formato v1 (`{ optionId, checked[] }`); IDs de porção da v2 também são migrados. `summary` guarda o snapshot de `consumed`, quantidade de itens, cobertura dos momentos principais e hidratação.
 - **Compatibilidade**: `setDietDay` e `setViniDietPlanDay` usam `setDoc(..., {merge:true})`; portanto `foods` e `plan` coexistem e nenhum registro do formato anterior é apagado.
 
 ### Regras de pontuação (`DEFAULT_POINTS`)
@@ -485,9 +485,9 @@ Breakpoints: `@media (max-width:359px)` compacta chips; `(max-width:420/480px)` 
 
 ### Service Worker
 
-`service-worker.js`, estratégia **network-first** com fallback offline. `CACHE = "habitos-shell-v18"`. No `install` faz `self.skipWaiting()`; no `activate` deleta todos os caches com nome diferente de `CACHE` e chama `self.clients.claim()`. No `fetch`: deixa passar direto hosts que contenham `googleapis.com`, `firebaseio.com` ou `gstatic.com`, e métodos diferentes de GET; para o resto faz `fetch(req, { cache: "no-store" })`, clona a resposta para o cache em background e, se a rede falhar, responde com `caches.match(req)`. Isso garante versão fresca quando online e evita ficar preso em versão antiga após deploy. O SW é registrado por `index.html` no evento `load`.
+`service-worker.js`, estratégia **network-first** com fallback offline. `CACHE = "habitos-shell-v20"`. No `install` faz `self.skipWaiting()`; no `activate` deleta todos os caches com nome diferente de `CACHE` e chama `self.clients.claim()`. No `fetch`: deixa passar direto hosts que contenham `googleapis.com`, `firebaseio.com` ou `gstatic.com`, e métodos diferentes de GET; para o resto faz `fetch(req, { cache: "no-store" })`, clona a resposta para o cache em background e, se a rede falhar, responde com `caches.match(req)`. Isso garante versão fresca quando online e evita ficar preso em versão antiga após deploy. O SW é registrado por `index.html` no evento `load`.
 
-Para invalidar caches antigos num deploy, é preciso **incrementar manualmente o nome do cache** (`habitos-shell-v18`) — o número é a versão efetiva do shell. Em rede lenta mas presente não há timeout: o app espera a rede em vez de servir o cache.
+Para invalidar caches antigos num deploy, é preciso **incrementar manualmente o nome do cache** (`habitos-shell-v20`) — o número é a versão efetiva do shell. Em rede lenta mas presente não há timeout: o app espera a rede em vez de servir o cache.
 
 ### Wake Lock
 
