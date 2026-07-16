@@ -379,7 +379,7 @@ Todas as coleções têm um módulo de storage próprio com fallback automático
 - **Tracker genérico/legado**: `foods` (mapa `{ "refeição.alimento": quantidade }`, ex.: `{ "cafe.ovo": 2, "almoco.arroz": 100 }`). `cleanFoods` remove quantidades ≤ 0.
 - **Plano do Vini**: `planVersion` e `plan`, contendo `{ version, foods, amounts, meals, hydrationMl, trainingDay, summary }`. `foods[groupId]` guarda os IDs dos alimentos marcados e `amounts[groupId][foodId]` guarda sua quantidade. `meals` permanece somente para leitura e migração do formato v1 (`{ optionId, checked[] }`); IDs de porção da v2 também são migrados. `summary` guarda o snapshot de `consumed`, quantidade de itens, cobertura dos momentos principais e hidratação.
 - **Compatibilidade**: `setDietDay` e `setViniDietPlanDay` usam `setDoc(..., {merge:true})`; portanto `foods` e `plan` coexistem e nenhum registro do formato anterior é apagado.
-- **Persistência do plano do Vini**: cada alteração é copiada de forma síncrona para `habitos-diet-logs-v1` antes de entrar na fila do Firestore. O campo local `planPendingSync` protege a versão ainda não enviada contra sobrescrita por um documento remoto antigo. A tela mantém autosave, exibe um botão explícito **Salvar marcações** e permite repetir a sincronização se a nuvem falhar. A leitura começa pelo cache local, mescla o Firestore por cima e, se a query por `userId` for recusada, tenta os IDs determinísticos em lotes desde o início do plano atual (`2026-07-15`).
+- **Persistência do plano do Vini**: cada alteração é copiada de forma síncrona para `habitos-diet-logs-v1` antes de entrar na fila do Firestore. O campo local `planPendingSync` protege a versão ainda não enviada contra sobrescrita por um documento remoto antigo. A tela mantém autosave e exibe, depois da hidratação e antes das estatísticas, o botão explícito **Salvar marcações**, que também permite repetir a sincronização se a nuvem falhar. A leitura começa pelo cache local, mescla o Firestore por cima e, se a query por `userId` for recusada, tenta os IDs determinísticos em lotes desde o início do plano atual (`2026-07-15`).
 
 ### Regras de pontuação (`DEFAULT_POINTS`)
 
@@ -490,9 +490,9 @@ Breakpoints: `@media (max-width:359px)` compacta chips; `(max-width:420/480px)` 
 
 ### Service Worker
 
-`service-worker.js`, estratégia **network-first** com fallback offline. `CACHE = "habitos-shell-v25"`. No `install` faz `self.skipWaiting()`; no `activate` deleta todos os caches com nome diferente de `CACHE` e chama `self.clients.claim()`. No `fetch`: deixa passar direto hosts que contenham `googleapis.com`, `firebaseio.com` ou `gstatic.com`, e métodos diferentes de GET; para o resto faz `fetch(req, { cache: "no-store" })`, clona a resposta para o cache em background e, se a rede falhar, responde com `caches.match(req)`. Isso garante versão fresca quando online e evita ficar preso em versão antiga após deploy. O SW é registrado por `index.html` no evento `load`.
+`service-worker.js`, estratégia **network-first** com fallback offline. `CACHE = "habitos-shell-v26"`. No `install` faz `self.skipWaiting()`; no `activate` deleta todos os caches com nome diferente de `CACHE` e chama `self.clients.claim()`. No `fetch`: deixa passar direto hosts que contenham `googleapis.com`, `firebaseio.com` ou `gstatic.com`, e métodos diferentes de GET; para o resto faz `fetch(req, { cache: "no-store" })`, clona a resposta para o cache em background e, se a rede falhar, responde com `caches.match(req)`. Isso garante versão fresca quando online e evita ficar preso em versão antiga após deploy. O SW é registrado por `index.html` no evento `load`.
 
-Para invalidar caches antigos num deploy, é preciso **incrementar manualmente o nome do cache** (`habitos-shell-v25`) — o número é a versão efetiva do shell. Em rede lenta mas presente não há timeout: o app espera a rede em vez de servir o cache.
+Para invalidar caches antigos num deploy, é preciso **incrementar manualmente o nome do cache** (`habitos-shell-v26`) — o número é a versão efetiva do shell. Em rede lenta mas presente não há timeout: o app espera a rede em vez de servir o cache.
 
 ### Wake Lock
 

@@ -211,6 +211,7 @@ function renderTracker() {
     </section>
 
     ${hydrationHTML(day, summary)}
+    ${saveControlsHTML()}
     ${weeklyHTML()}
     ${cycleStatsHTML()}
     ${historyHTML()}`;
@@ -237,10 +238,14 @@ function dateNavigatorHTML(isToday) {
         <button class="ghost-btn vini-date-arrow" data-date-shift="1" ${isToday ? "disabled" : ""} aria-label="Próximo dia">›</button>
         ${isToday ? "" : `<button class="ghost-btn vini-today-btn" data-date-today>Hoje</button>`}
       </div>
-      <div class="vini-save-row">
-        <button type="button" class="save-btn is-dirty vini-diet-save-btn" data-save-diet>Salvar marcações</button>
-        <span id="vini-diet-save-status" class="vini-save-status" aria-live="polite"></span>
-      </div>
+    </section>`;
+}
+
+function saveControlsHTML() {
+  return `
+    <section class="vini-save-row">
+      <button type="button" class="save-btn is-dirty vini-diet-save-btn" data-save-diet>Salvar marcações</button>
+      <span id="vini-diet-save-status" class="vini-save-status" aria-live="polite"></span>
     </section>`;
 }
 
