@@ -3416,6 +3416,7 @@ body.presence-fullscreen .presence-fs-exit { display: flex; }
 .vini-quantity-btn { min-width: 48px; min-height: 34px; flex: 0 0 auto; padding: 6px 9px; color: var(--muted); background: var(--card); border: 1px solid var(--border); border-radius: 9px; font-size: 10px; font-weight: 800; white-space: nowrap; }
 .vini-quantity-btn:hover { color: var(--text); border-color: var(--kg-accent); }
 .vini-quantity-btn.is-on { color: #07150f; background: var(--good); border-color: var(--good); box-shadow: 0 3px 10px rgba(52,211,153,.22); }
+.vini-quantity-btn.is-on:hover { color: #fff; background: var(--bad); border-color: var(--bad); box-shadow: 0 3px 10px rgba(248,113,113,.2); }
 .vini-food-group-card > .vini-estimate-note { margin: 0; padding: 0 12px 10px; }
 
 .vini-meal-list { display: flex; flex-direction: column; gap: 12px; }

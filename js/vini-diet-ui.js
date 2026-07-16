@@ -4,6 +4,7 @@ import {
   setViniDietPlanDay,
 } from "./diet-storage.js";
 import { filterDateMapForTrackingScope } from "./tracking-cycle.js";
+import { setViniFoodChecked, toggleViniFoodQuantity } from "./vini-diet-selection.js";
 import { viniDietTrendsHTML } from "./vini-diet-trends.js";
 import {
   VINI_FOOD_GROUPS,
@@ -156,8 +157,8 @@ function mutateCurrentDay(mutator) {
   draft.version = VINI_PLAN_VERSION;
   draft.meals = {};
   draft.summary = null;
-  mutator(draft);
-  const payload = withViniDietSummary(draft);
+  const updatedDay = mutator(draft) || draft;
+  const payload = withViniDietSummary(updatedDay);
   tracker.map[tracker.selectedDate] = payload;
   // O cache síncrono garante que até uma saída imediata da página preserve
   // a última marcação; o Firebase continua sendo sincronizado em seguida.
@@ -328,12 +329,13 @@ function foodCheckboxHTML(group, food, isChecked, amount) {
       </label>
       ${food.quantityChoices.length ? `
         <div class="vini-quantity-picker" role="group" aria-label="Quantidade de ${food.label}">
-          <span>${isChecked ? "Quantidade registrada" : "Escolha quanto comeu"}</span>
+          <span>${isChecked ? "Quantidade registrada · toque na opção ativa para retirar" : "Escolha quanto comeu"}</span>
           <div class="vini-quantity-options">
             ${food.quantityChoices.map((choice) => `
               <button type="button" class="vini-quantity-btn${isChecked && Number(amount) === choice ? " is-on" : ""}"
                       data-food-quantity data-group="${group.id}" data-food="${food.id}" data-amount="${choice}"
-                      aria-pressed="${isChecked && Number(amount) === choice}">${formatFoodQuantity(food, choice)}</button>`).join("")}
+                      aria-pressed="${isChecked && Number(amount) === choice}"
+                      aria-label="${formatFoodQuantity(food, choice)}${isChecked && Number(amount) === choice ? ", selecionado; toque novamente para retirar" : ""}">${formatFoodQuantity(food, choice)}${isChecked && Number(amount) === choice ? " ×" : ""}</button>`).join("")}
           </div>
         </div>` : ""}
     </div>`;
@@ -595,26 +597,7 @@ function bindTracker() {
       const checked = input.checked;
       const groupId = input.dataset.group;
       const foodId = input.dataset.food;
-      mutateCurrentDay((day) => {
-        const group = VINI_FOOD_GROUPS.find((entry) => entry.id === groupId);
-        const food = foodForGroup(group, foodId);
-        if (!group || !food) return;
-        const selected = new Set(day.foods[groupId] || []);
-        if (checked) {
-          selected.add(foodId);
-          day.amounts[groupId] = day.amounts[groupId] || {};
-          day.amounts[groupId][foodId] = day.amounts[groupId][foodId] ?? food.defaultQuantity;
-        } else {
-          selected.delete(foodId);
-          if (day.amounts[groupId]) {
-            delete day.amounts[groupId][foodId];
-            if (!Object.keys(day.amounts[groupId]).length) delete day.amounts[groupId];
-          }
-        }
-        const ordered = group.foods.map((entry) => entry.id).filter((id) => selected.has(id));
-        if (ordered.length) day.foods[groupId] = ordered;
-        else delete day.foods[groupId];
-      });
+      mutateCurrentDay((day) => setViniFoodChecked(day, { groupId, foodId, checked }));
     });
   });
 
@@ -623,14 +606,7 @@ function bindTracker() {
       const groupId = button.dataset.group;
       const foodId = button.dataset.food;
       const amount = Number(button.dataset.amount);
-      const group = VINI_FOOD_GROUPS.find((entry) => entry.id === groupId);
-      const food = foodForGroup(group, foodId);
-      if (!group || !food || !food.quantityChoices.includes(amount)) return;
-      const selected = new Set(day.foods[groupId] || []);
-      selected.add(foodId);
-      day.foods[groupId] = group.foods.map((entry) => entry.id).filter((id) => selected.has(id));
-      day.amounts[groupId] = day.amounts[groupId] || {};
-      day.amounts[groupId][foodId] = amount;
+      return toggleViniFoodQuantity(day, { groupId, foodId, amount });
     }));
   });
 
