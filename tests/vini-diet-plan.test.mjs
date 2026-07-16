@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import {
   VINI_FOOD_GROUPS,
+  VINI_DAILY_GOALS,
   VINI_MEALS,
   VINI_OFFICIAL_MEALS,
   VINI_PLAN_VERSION,
@@ -8,6 +9,7 @@ import {
   calculateViniDietDay,
   emptyViniDietDay,
   normalizeViniDietDay,
+  optionNutrition,
   withViniDietSummary,
 } from "../js/vini-diet-plan.js";
 import { TRACKING_SCOPE, trackingScopeCopy } from "../js/tracking-cycle.js";
@@ -22,6 +24,7 @@ assert.equal(empty.itemsChecked, 0);
 assert.equal(empty.mainMealsLogged, 0);
 assert.equal(empty.consumed.kcal, 0);
 assert.equal(VINI_PLAN_VERSION, "vini-nutri-2026-07-v3");
+assert.deepEqual(VINI_DAILY_GOALS, { kcal: 2000, p: 160, c: 200, f: 60 });
 assert.equal(VINI_FOOD_GROUPS.length, 7);
 assert.equal(trackingScopeCopy(TRACKING_SCOPE.OFFICIAL_DIET).title, "Dieta Oficial");
 
@@ -33,6 +36,21 @@ for (const foodGroup of VINI_FOOD_GROUPS) {
 // Auditoria de cobertura: todas as 19 composições transcritas e cada alimento
 // original precisam estar representados no catálogo selecionável.
 assert.equal(VINI_MEALS.flatMap((meal) => meal.options).length, 19);
+
+// A linha de referência dos gráficos arredonda a média das opções oficiais
+// do dia (pré, café, almoço, lanche, pós e jantar), sem o belisco eventual.
+const referenceMeals = VINI_MEALS.filter((meal) => meal.id !== "belisco");
+const referenceAverage = referenceMeals.reduce((total, meal) => {
+  const options = meal.options.map(optionNutrition);
+  for (const key of ["kcal", "p", "c", "f"]) {
+    total[key] += options.reduce((sum, value) => sum + value[key], 0) / options.length;
+  }
+  return total;
+}, { kcal: 0, p: 0, c: 0, f: 0 });
+assert.deepEqual(
+  Object.fromEntries(Object.entries(referenceAverage).map(([key, value]) => [key, Math.round(value)])),
+  { kcal: 1967, p: 160, c: 199, f: 58 },
+);
 for (const meal of VINI_MEALS) {
   const foodGroup = group(meal.id);
   assert.ok(foodGroup, `Grupo ausente: ${meal.id}`);

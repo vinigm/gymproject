@@ -366,5 +366,7 @@ Estas diretrizes orientam a implementação atual:
 - Café da manhã, almoço, lanche da tarde e jantar compõem a cobertura de momentos principais; não existe mais o conceito de “refeição completa”. Pré-treino, pós-treino e belisco continuam contextuais.
 - A hidratação usa 2,5 L como base; em dias de treino, a meta mínima exibida passa a 3 L, mantendo a orientação de até 3,5 L.
 - As estatísticas incluem totais e médias semanais de kcal/macros, quantidade de alimentos, frequência por momento, hidratação, sequência, marcos de dias, alimentos mais marcados e histórico editável.
+- No final da Dieta, quatro gráficos de linha acompanham kcal, proteína, carboidrato e gordura por data, respeitando `Ciclo atual` e `Histórico completo`. Cada gráfico inclui uma linha horizontal de referência.
+- Como os screenshots não informam metas clínicas, as referências atuais são estimativas arredondadas da média das opções oficiais de pré-treino, café, almoço, lanche, pós-treino e jantar: **2.000 kcal, 160 g de proteína, 200 g de carboidrato e 60 g de gordura**. O belisco eventual não entra nessa média. Esses valores devem ser substituídos quando a nutricionista fornecer as metas prescritas.
 - Itens “à vontade” podem ser registrados, mas não entram nos macros enquanto não houver quantidade definida.
 - Registros dos formatos `vini-nutri-2026-07-v1` e `vini-nutri-2026-07-v2` são convertidos em memória para os alimentos e quantidades equivalentes e só passam a v3 quando o dia é editado, sem apagar o snapshot histórico.

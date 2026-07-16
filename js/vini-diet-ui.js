@@ -4,6 +4,7 @@ import {
   setViniDietPlanDay,
 } from "./diet-storage.js";
 import { filterDateMapForTrackingScope } from "./tracking-cycle.js";
+import { viniDietTrendsHTML } from "./vini-diet-trends.js";
 import {
   VINI_FOOD_GROUPS,
   VINI_HYDRATION,
@@ -214,7 +215,8 @@ function renderTracker() {
     ${saveControlsHTML()}
     ${weeklyHTML()}
     ${cycleStatsHTML()}
-    ${historyHTML()}`;
+    ${historyHTML()}
+    ${viniDietTrendsHTML(recordsInScope(), { viewportWidth: Math.max(320, tracker.root.clientWidth - 48) })}`;
 
   bindTracker();
   updateSaveStatus();
