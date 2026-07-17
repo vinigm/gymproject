@@ -3381,6 +3381,19 @@ body.presence-fullscreen .presence-fs-exit { display: flex; }
 .vini-log-kpis strong { color: var(--kg-accent); font-size: 17px; }
 .vini-log-kpis span { color: var(--muted); font-size: 9px; line-height: 1.25; text-transform: uppercase; }
 
+.vini-presets-help { margin: -2px 0 12px; color: var(--muted); font-size: 11px; line-height: 1.45; }
+.vini-presets-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.vini-preset-card { display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "icon copy" "icon action"; align-items: center; gap: 3px 9px; min-height: 88px; padding: 11px; color: var(--text); text-align: left; background: var(--card-2); border: 1px solid var(--border); border-radius: 12px; transition: border-color .16s ease, background .16s ease, transform .16s ease; }
+.vini-preset-card:hover { border-color: var(--kg-accent); }
+.vini-preset-card:active { transform: scale(.985); }
+.vini-preset-card.is-applied { background: rgba(52,211,153,.08); border-color: rgba(52,211,153,.62); }
+.vini-preset-icon { grid-area: icon; display: grid; width: 34px; height: 34px; place-items: center; background: var(--card); border-radius: 10px; font-size: 18px; }
+.vini-preset-copy { grid-area: copy; display: flex; flex-direction: column; min-width: 0; }
+.vini-preset-copy strong { font-size: 12px; line-height: 1.25; }
+.vini-preset-copy small { margin-top: 3px; color: var(--muted); font-size: 9px; line-height: 1.35; }
+.vini-preset-card > b { grid-area: action; color: var(--kg-accent); font-size: 9px; letter-spacing: .04em; text-transform: uppercase; }
+.vini-preset-card.is-applied > b { color: var(--good); }
+
 .vini-checklist-help { margin: -2px 0 12px; color: var(--muted); font-size: 11px; }
 .vini-food-groups { display: flex; flex-direction: column; gap: 14px; }
 .vini-food-group-card { overflow: hidden; background: var(--card); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow); }

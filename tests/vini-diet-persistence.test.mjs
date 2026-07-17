@@ -10,6 +10,8 @@ assert.match(ui, /data-save-diet>Salvar marcações<\/button>/);
 assert.match(ui, /sincronizado com a nuvem/);
 assert.match(ui, /salvo neste aparelho; nuvem pendente/);
 assert.match(css, /\.vini-diet-save-btn\.is-saved/);
+assert.ok(ui.indexOf("${mealPresetsHTML(day)}") < ui.indexOf("${dailySummaryHTML(summary)}"));
+assert.match(ui, /data-meal-preset/);
 assert.ok(ui.indexOf("${hydrationHTML(day, summary)}") < ui.indexOf("${saveControlsHTML()}"));
 assert.ok(ui.indexOf("${saveControlsHTML()}") < ui.indexOf("${weeklyHTML()}"));
 assert.ok(ui.indexOf("${historyHTML()}") < ui.indexOf("${viniDietTrendsHTML("));

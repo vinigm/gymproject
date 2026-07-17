@@ -312,6 +312,7 @@ Estas diretrizes orientam a implementação atual:
 
 - No tracker, cada alimento é marcado individualmente e recebe sua quantidade consumida; itens de opções diferentes podem ser combinados conforme o consumo real.
 - Um alimento marcado pode ser retirado pelo próprio checkbox ou tocando novamente na quantidade ativa; escolher outra quantidade apenas atualiza a porção registrada.
+- No topo do tracker, atalhos de refeições padrão podem preencher de uma vez café da manhã, almoço, lanche da tarde e jantar, sem apagar outros alimentos já marcados no dia.
 - A visualização `Dieta Oficial` preserva separadamente as composições completas sugeridas pela nutricionista e é somente para consulta.
 - Nenhuma ação na `Dieta Oficial` cria, altera ou remove registros.
 - Itens opcionais, como o morango, podem ser marcados separadamente no tracker.
@@ -356,6 +357,7 @@ Estas diretrizes orientam a implementação atual:
 - **15/07/2026:** cada alimento passou a ter quantidade ajustável (unidades, fatias, medidas, gramas ou ml), com recálculo proporcional dos macros e migração dos registros v1/v2.
 - **15/07/2026:** adicionada a visualização somente de consulta `Dieta Oficial`, com as 18 composições completas dos screenshots e a orientação de hidratação. O Pro Force e o Natural Whey são exibidos como alternativas da mesma opção, conforme o print original.
 - **16/07/2026:** seleção de alimentos ajustada para funcionar como alternância: o checkbox desmarca normalmente e um segundo toque na quantidade ativa remove o alimento e sua porção.
+- **17/07/2026:** adicionados atalhos para as quatro refeições padrão do Vini, aplicando automaticamente os alimentos e porções usuais sem remover marcações extras.
 
 ## 15. Implementação no tracker
 
@@ -365,6 +367,7 @@ Estas diretrizes orientam a implementação atual:
 - Persistência: campo `plan` nos documentos existentes de `diet_logs`, sem remover o mapa legado `foods`.
 - Cada dia guarda checkboxes individuais agrupados por momento alimentar, a quantidade selecionada para cada alimento, hidratação, indicação de treino e um snapshot dos totais nutricionais.
 - O checkbox e a quantidade ativa funcionam como alternância: um novo toque remove o alimento; tocar em uma quantidade diferente mantém o alimento e corrige somente a porção.
+- Os atalhos de refeição padrão são aditivos e idempotentes: aplicam as porções configuradas para aquele momento e preservam quaisquer outros alimentos do dia.
 - O snapshot impede que uma futura revisão dos valores de referência altere retroativamente kcal e macros já registrados.
 - Café da manhã, almoço, lanche da tarde e jantar compõem a cobertura de momentos principais; não existe mais o conceito de “refeição completa”. Pré-treino, pós-treino e belisco continuam contextuais.
 - A hidratação usa 2,5 L como base; em dias de treino, a meta mínima exibida passa a 3 L, mantendo a orientação de até 3,5 L.

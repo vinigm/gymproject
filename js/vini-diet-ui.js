@@ -4,7 +4,13 @@ import {
   setViniDietPlanDay,
 } from "./diet-storage.js";
 import { filterDateMapForTrackingScope } from "./tracking-cycle.js";
-import { setViniFoodChecked, toggleViniFoodQuantity } from "./vini-diet-selection.js";
+import {
+  VINI_MEAL_PRESETS,
+  applyViniMealPreset,
+  isViniMealPresetApplied,
+  setViniFoodChecked,
+  toggleViniFoodQuantity,
+} from "./vini-diet-selection.js";
 import { viniDietTrendsHTML } from "./vini-diet-trends.js";
 import {
   VINI_FOOD_GROUPS,
@@ -199,6 +205,7 @@ function renderTracker() {
   const isToday = tracker.selectedDate === todayISO();
   tracker.root.innerHTML = `
     ${dateNavigatorHTML(isToday)}
+    ${mealPresetsHTML(day)}
     ${dailySummaryHTML(summary)}
 
     <section class="block vini-plan-block">
@@ -221,6 +228,32 @@ function renderTracker() {
 
   bindTracker();
   updateSaveStatus();
+}
+
+function mealPresetsHTML(day) {
+  return `
+    <section class="block vini-presets-block">
+      <div class="block-head">
+        <h2>Refeições padrão</h2>
+        <span class="muted" style="font-size:11px">preenchimento rápido</span>
+      </div>
+      <p class="vini-presets-help">Toque para marcar os alimentos e quantidades de uma vez. Outras marcações do dia serão mantidas.</p>
+      <div class="vini-presets-grid">
+        ${VINI_MEAL_PRESETS.map((preset) => {
+          const applied = isViniMealPresetApplied(day, preset.id);
+          return `
+            <button type="button" class="vini-preset-card${applied ? " is-applied" : ""}"
+                    data-meal-preset="${preset.id}" aria-pressed="${applied}">
+              <span class="vini-preset-icon">${preset.icon}</span>
+              <span class="vini-preset-copy">
+                <strong>${preset.label}</strong>
+                <small>${preset.description}</small>
+              </span>
+              <b>${applied ? "Aplicado ✓" : "Preencher"}</b>
+            </button>`;
+        }).join("")}
+      </div>
+    </section>`;
 }
 
 function dateNavigatorHTML(isToday) {
@@ -583,6 +616,11 @@ function historyHTML() {
 
 function bindTracker() {
   tracker.root.querySelector("[data-save-diet]")?.addEventListener("click", persistCurrentDay);
+  tracker.root.querySelectorAll("[data-meal-preset]").forEach((button) => {
+    button.addEventListener("click", () => {
+      mutateCurrentDay((day) => applyViniMealPreset(day, button.dataset.mealPreset));
+    });
+  });
   tracker.root.querySelectorAll("[data-date-shift]").forEach((button) => {
     button.addEventListener("click", () => selectDate(addDaysISO(tracker.selectedDate, Number(button.dataset.dateShift))));
   });

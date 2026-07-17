@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
 import {
+  VINI_MEAL_PRESETS,
+  applyViniMealPreset,
+  isViniMealPresetApplied,
   setViniFoodChecked,
   toggleViniFoodQuantity,
 } from "../js/vini-diet-selection.js";
@@ -29,5 +32,33 @@ assert.equal(day.amounts.pre_treino.banana, 2);
 day = setViniFoodChecked(day, { ...banana, checked: false });
 assert.equal(day.foods.pre_treino, undefined);
 assert.equal(day.amounts.pre_treino, undefined);
+
+const expectedPresets = {
+  cafe_padrao: { groupId: "cafe_manha", foods: ["ovos", "pao", "requeijao"], amounts: { ovos: 3, pao: 2, requeijao: 15 } },
+  almoco_padrao: { groupId: "almoco", foods: ["vegetais", "azeite", "arroz", "frango"], amounts: { vegetais: 50, azeite: 15, arroz: 150, frango: 120 } },
+  lanche_padrao: { groupId: "lanche_tarde", foods: ["whey", "requeijao", "ovos", "pao"], amounts: { whey: 2, requeijao: 15, ovos: 3, pao: 2 } },
+  jantar_padrao: { groupId: "jantar", foods: ["vegetais", "azeite", "arroz", "frango"], amounts: { vegetais: 50, azeite: 15, arroz: 150, frango: 120 } },
+};
+
+assert.deepEqual(VINI_MEAL_PRESETS.map((preset) => preset.id), Object.keys(expectedPresets));
+for (const [presetId, expected] of Object.entries(expectedPresets)) {
+  const presetDay = applyViniMealPreset(emptyViniDietDay(), presetId);
+  assert.deepEqual(presetDay.foods[expected.groupId], expected.foods);
+  assert.deepEqual(presetDay.amounts[expected.groupId], expected.amounts);
+  assert.equal(isViniMealPresetApplied(presetDay, presetId), true);
+}
+
+// O atalho preserva alimentos extras e volta a aparecer como pendente se uma
+// das quantidades padrão for alterada manualmente.
+day = setViniFoodChecked(emptyViniDietDay(), {
+  groupId: "almoco",
+  foodId: "ovo_frito",
+  checked: true,
+  amount: 1,
+});
+day = applyViniMealPreset(day, "almoco_padrao");
+assert.equal(day.foods.almoco.includes("ovo_frito"), true);
+day = toggleViniFoodQuantity(day, { groupId: "almoco", foodId: "arroz", amount: 180 });
+assert.equal(isViniMealPresetApplied(day, "almoco_padrao"), false);
 
 console.log("vini-diet-selection: ok");
