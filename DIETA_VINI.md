@@ -358,6 +358,8 @@ Estas diretrizes orientam a implementação atual:
 - **15/07/2026:** adicionada a visualização somente de consulta `Dieta Oficial`, com as 18 composições completas dos screenshots e a orientação de hidratação. O Pro Force e o Natural Whey são exibidos como alternativas da mesma opção, conforme o print original.
 - **16/07/2026:** seleção de alimentos ajustada para funcionar como alternância: o checkbox desmarca normalmente e um segundo toque na quantidade ativa remove o alimento e sua porção.
 - **17/07/2026:** adicionados atalhos para as quatro refeições padrão do Vini, aplicando automaticamente os alimentos e porções usuais sem remover marcações extras.
+- **17/07/2026:** atalhos ampliados com pré-treino de 2 bananas, pós-treino de 2 medidas de whey e duas alternativas de lanche (whey ou Pro Force Piracanjuba 23 g de proteína).
+- **17/07/2026:** a semana passou a destacar cards de médias diárias de kcal, proteína, carboidrato e gordura; a evolução nutricional ganhou exportação em PDF com essas médias e os quatro gráficos.
 
 ## 15. Implementação no tracker
 
@@ -368,6 +370,7 @@ Estas diretrizes orientam a implementação atual:
 - Cada dia guarda checkboxes individuais agrupados por momento alimentar, a quantidade selecionada para cada alimento, hidratação, indicação de treino e um snapshot dos totais nutricionais.
 - O checkbox e a quantidade ativa funcionam como alternância: um novo toque remove o alimento; tocar em uma quantidade diferente mantém o alimento e corrige somente a porção.
 - Os atalhos de refeição padrão são aditivos e idempotentes: aplicam as porções configuradas para aquele momento e preservam quaisquer outros alimentos do dia.
+- O relatório PDF é gerado integralmente no navegador, contém duas páginas com gráficos vetoriais e usa o mesmo escopo e as mesmas metas de referência exibidas no tracker; nenhum dado é enviado a serviços externos para gerar o arquivo.
 - O snapshot impede que uma futura revisão dos valores de referência altere retroativamente kcal e macros já registrados.
 - Café da manhã, almoço, lanche da tarde e jantar compõem a cobertura de momentos principais; não existe mais o conceito de “refeição completa”. Pré-treino, pós-treino e belisco continuam contextuais.
 - A hidratação usa 2,5 L como base; em dias de treino, a meta mínima exibida passa a 3 L, mantendo a orientação de até 3,5 L.

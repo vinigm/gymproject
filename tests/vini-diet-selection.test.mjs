@@ -34,9 +34,12 @@ assert.equal(day.foods.pre_treino, undefined);
 assert.equal(day.amounts.pre_treino, undefined);
 
 const expectedPresets = {
+  pre_treino_padrao: { groupId: "pre_treino", foods: ["banana"], amounts: { banana: 2 } },
   cafe_padrao: { groupId: "cafe_manha", foods: ["ovos", "pao", "requeijao"], amounts: { ovos: 3, pao: 2, requeijao: 15 } },
   almoco_padrao: { groupId: "almoco", foods: ["vegetais", "azeite", "arroz", "frango"], amounts: { vegetais: 50, azeite: 15, arroz: 150, frango: 120 } },
-  lanche_padrao: { groupId: "lanche_tarde", foods: ["whey", "requeijao", "ovos", "pao"], amounts: { whey: 2, requeijao: 15, ovos: 3, pao: 2 } },
+  lanche_whey: { groupId: "lanche_tarde", foods: ["whey", "requeijao", "ovos", "pao"], amounts: { whey: 2, requeijao: 15, ovos: 3, pao: 2 } },
+  lanche_piracanjuba: { groupId: "lanche_tarde", foods: ["pro_force", "requeijao", "ovos", "pao"], amounts: { pro_force: 1, requeijao: 15, ovos: 3, pao: 2 } },
+  pos_treino_padrao: { groupId: "pos_treino", foods: ["whey"], amounts: { whey: 2 } },
   jantar_padrao: { groupId: "jantar", foods: ["vegetais", "azeite", "arroz", "frango"], amounts: { vegetais: 50, azeite: 15, arroz: 150, frango: 120 } },
 };
 

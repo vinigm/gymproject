@@ -4,6 +4,7 @@ import {
   setViniDietPlanDay,
 } from "./diet-storage.js";
 import { filterDateMapForTrackingScope } from "./tracking-cycle.js";
+import { downloadViniDietPdf } from "./vini-diet-pdf.js";
 import {
   VINI_MEAL_PRESETS,
   applyViniMealPreset,
@@ -14,6 +15,7 @@ import {
 import { viniDietTrendsHTML } from "./vini-diet-trends.js";
 import {
   VINI_FOOD_GROUPS,
+  VINI_DAILY_GOALS,
   VINI_HYDRATION,
   VINI_PLAN_VERSION,
   VINI_REQUIRED_MEALS,
@@ -468,14 +470,22 @@ function weeklyHTML() {
           <div class="kpi-grid">
             <div class="kpi"><div class="kpi-value">${stats.days}/7</div><div class="kpi-label">dias registrados</div></div>
             <div class="kpi"><div class="kpi-value">${formatNumber(stats.totals.kcal)}</div><div class="kpi-label">kcal na semana</div></div>
-            <div class="kpi"><div class="kpi-value">${formatNumber(stats.averages.kcal)}</div><div class="kpi-label">kcal médias / registro</div></div>
             <div class="kpi"><div class="kpi-value">${formatNumber(stats.foodsAvg, 1)}</div><div class="kpi-label">alimentos / registro</div></div>
+            <div class="kpi"><div class="kpi-value">${formatNumber(stats.hydrationAvg)}</div><div class="kpi-label">ml médios / registro</div></div>
           </div>
-          <h3 class="stats-subhead">Macros da semana</h3>
+          <h3 class="stats-subhead">Média diária da semana</h3>
+          <div class="vini-week-average-grid">
+            ${weeklyAverageCardHTML("Calorias", stats.averages.kcal, VINI_DAILY_GOALS.kcal, "kcal", "is-kcal")}
+            ${weeklyAverageCardHTML("Proteína", stats.averages.p, VINI_DAILY_GOALS.p, "g", "is-protein")}
+            ${weeklyAverageCardHTML("Carboidrato", stats.averages.c, VINI_DAILY_GOALS.c, "g", "is-carbs")}
+            ${weeklyAverageCardHTML("Gordura", stats.averages.f, VINI_DAILY_GOALS.f, "g", "is-fat")}
+          </div>
+          <p class="vini-week-average-note">Média calculada somente entre os ${stats.days} dias registrados nesta semana.</p>
+          <h3 class="stats-subhead">Totais de macros na semana</h3>
           <div class="vini-week-macros">
-            <div><span>Proteína</span><strong>${formatMacro(stats.totals.p)} g</strong><small>${formatMacro(stats.averages.p)} g/dia registrado</small></div>
-            <div><span>Carboidrato</span><strong>${formatMacro(stats.totals.c)} g</strong><small>${formatMacro(stats.averages.c)} g/dia registrado</small></div>
-            <div><span>Gordura</span><strong>${formatMacro(stats.totals.f)} g</strong><small>${formatMacro(stats.averages.f)} g/dia registrado</small></div>
+            <div><span>Proteína</span><strong>${formatMacro(stats.totals.p)} g</strong><small>${stats.days} dias registrados</small></div>
+            <div><span>Carboidrato</span><strong>${formatMacro(stats.totals.c)} g</strong><small>${stats.days} dias registrados</small></div>
+            <div><span>Gordura</span><strong>${formatMacro(stats.totals.f)} g</strong><small>${stats.days} dias registrados</small></div>
           </div>
           ${macroDistributionHTML(stats.totals)}
           <h3 class="stats-subhead">Dia a dia</h3>
@@ -483,6 +493,16 @@ function weeklyHTML() {
           ${comparison === null ? "" : `<p class="vini-week-compare">Média por dia registrado ${comparison === 0 ? "igual à" : `${Math.abs(comparison)} kcal ${comparison > 0 ? "acima da" : "abaixo da"}`} semana anterior.</p>`}
         </div>`}
     </section>`;
+}
+
+function weeklyAverageCardHTML(label, value, goal, unit, cls) {
+  const digits = Number.isInteger(Number(value)) ? 0 : 1;
+  return `
+    <div class="vini-week-average-card ${cls}">
+      <span>${label}</span>
+      <strong>${formatNumber(value, digits)} ${unit}</strong>
+      <small>referência ${formatNumber(goal)} ${unit}</small>
+    </div>`;
 }
 
 function macroDistributionHTML(nutrition) {
@@ -616,6 +636,34 @@ function historyHTML() {
 
 function bindTracker() {
   tracker.root.querySelector("[data-save-diet]")?.addEventListener("click", persistCurrentDay);
+  tracker.root.querySelector("[data-export-diet-pdf]")?.addEventListener("click", (event) => {
+    const button = event.currentTarget;
+    const records = recordsInScope();
+    if (!records.length) return;
+    const start = mondayISO(tracker.selectedDate);
+    const end = addDaysISO(start, 6);
+    const weekly = aggregateRecords(weekRecords(start, records));
+    const originalLabel = button.textContent;
+    button.disabled = true;
+    button.textContent = "Gerando…";
+    try {
+      downloadViniDietPdf(records, {
+        scopeLabel: tracker.scope === "history" ? "Histórico completo" : "Ciclo atual",
+        generatedAt: new Date(),
+        fileDate: todayISO(),
+        weekly: { start, end, days: weekly.days, averages: weekly.averages },
+      });
+      button.textContent = "PDF gerado ✓";
+    } catch (error) {
+      console.warn("Falha ao gerar PDF nutricional:", error);
+      button.textContent = "Erro ao gerar";
+    }
+    window.setTimeout(() => {
+      if (!button.isConnected) return;
+      button.disabled = false;
+      button.textContent = originalLabel;
+    }, 1800);
+  });
   tracker.root.querySelectorAll("[data-meal-preset]").forEach((button) => {
     button.addEventListener("click", () => {
       mutateCurrentDay((day) => applyViniMealPreset(day, button.dataset.mealPreset));

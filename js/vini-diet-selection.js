@@ -22,6 +22,16 @@ function preset(id, icon, label, description, groupId, items) {
 
 export const VINI_MEAL_PRESETS = Object.freeze([
   preset(
+    "pre_treino_padrao",
+    "🏃",
+    "Pré-treino",
+    "2 bananas",
+    "pre_treino",
+    [
+      { foodId: "banana", amount: 2 },
+    ]
+  ),
+  preset(
     "cafe_padrao",
     "🌅",
     "Café da manhã",
@@ -47,15 +57,38 @@ export const VINI_MEAL_PRESETS = Object.freeze([
     ]
   ),
   preset(
-    "lanche_padrao",
+    "lanche_whey",
     "🥪",
-    "Lanche da tarde",
+    "Lanche + whey",
     "3 ovos · 2 fatias · 15g requeijão · 2 medidas whey",
     "lanche_tarde",
     [
       { foodId: "ovos", amount: 3 },
       { foodId: "pao", amount: 2 },
       { foodId: "requeijao", amount: 15 },
+      { foodId: "whey", amount: 2 },
+    ]
+  ),
+  preset(
+    "lanche_piracanjuba",
+    "🥤",
+    "Lanche + Piracanjuba",
+    "3 ovos · 2 fatias · 15g requeijão · 1 Pro Force 23g",
+    "lanche_tarde",
+    [
+      { foodId: "ovos", amount: 3 },
+      { foodId: "pao", amount: 2 },
+      { foodId: "requeijao", amount: 15 },
+      { foodId: "pro_force", amount: 1 },
+    ]
+  ),
+  preset(
+    "pos_treino_padrao",
+    "💪",
+    "Pós-treino",
+    "2 medidas de whey",
+    "pos_treino",
+    [
       { foodId: "whey", amount: 2 },
     ]
   ),

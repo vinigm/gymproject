@@ -18,6 +18,7 @@ assert.match(html, /meta estimada 160 g/);
 assert.match(html, /15\/07/);
 assert.match(html, /18\/07/);
 assert.match(html, /width="500"/);
+assert.match(html, /data-export-diet-pdf/);
 assert.doesNotMatch(html, /NaN|Infinity/);
 
 const oneDay = viniDietTrendsHTML(records.slice(0, 1));
@@ -26,6 +27,7 @@ assert.doesNotMatch(oneDay, /NaN|Infinity/);
 
 const empty = viniDietTrendsHTML([]);
 assert.match(empty, /Registre alimentos/);
+assert.doesNotMatch(empty, /data-export-diet-pdf/);
 assert.doesNotMatch(empty, /<svg/);
 
 console.log("vini-diet-trends: ok");

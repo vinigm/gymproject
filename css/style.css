@@ -3512,6 +3512,16 @@ body.presence-fullscreen .presence-fs-exit { display: flex; }
 .vini-water-note.is-good { color: var(--good); }
 
 .vini-week-card { border-top: 3px solid var(--kg-accent); }
+.vini-week-average-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.vini-week-average-card { --week-color: var(--kg-accent); display: flex; min-width: 0; flex-direction: column; gap: 3px; padding: 11px 10px; background: var(--card-2); border: 1px solid var(--border); border-top: 3px solid var(--week-color); border-radius: 10px; }
+.vini-week-average-card.is-kcal { --week-color: #ec4899; }
+.vini-week-average-card.is-protein { --week-color: var(--good); }
+.vini-week-average-card.is-carbs { --week-color: var(--water); }
+.vini-week-average-card.is-fat { --week-color: #fbbf24; }
+.vini-week-average-card span { overflow: hidden; color: var(--muted); font-size: 8px; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
+.vini-week-average-card strong { color: var(--week-color); font-size: 15px; white-space: nowrap; }
+.vini-week-average-card small { color: var(--muted); font-size: 8px; line-height: 1.25; }
+.vini-week-average-note { margin: 7px 0 0; color: var(--muted); font-size: 9px; text-align: center; }
 .vini-week-macros { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .vini-week-macros > div { display: flex; flex-direction: column; gap: 2px; padding: 10px; background: var(--card-2); border: 1px solid var(--border); border-radius: 10px; }
 .vini-week-macros span { color: var(--muted); font-size: 9px; text-transform: uppercase; }
@@ -3556,6 +3566,10 @@ body.presence-fullscreen .presence-fs-exit { display: flex; }
 .vini-history-score small { margin-top: 2px; font-size: 7px; line-height: 1; text-transform: uppercase; }
 
 .vini-trends-note { margin: -2px 0 12px; color: var(--muted); font-size: 10px; line-height: 1.45; }
+.vini-trends-actions { display: flex; align-items: center; gap: 8px; }
+.vini-trends-actions > span { font-size: 11px; }
+.vini-export-pdf-btn { min-height: 32px; padding: 6px 10px; color: var(--kg-accent); font-size: 10px; font-weight: 800; }
+.vini-export-pdf-btn:disabled { opacity: .58; cursor: wait; }
 .vini-trends-list { display: flex; flex-direction: column; gap: 14px; }
 .vini-trend-card {
   --trend-color: var(--kg-accent);
@@ -3609,8 +3623,11 @@ body.presence-fullscreen .presence-fs-exit { display: flex; }
   .vini-quantity-picker { padding-left: 43px; }
   .vini-water-actions { grid-template-columns: repeat(2, 1fr); }
   .vini-week-macros { grid-template-columns: 1fr; }
+  .vini-week-average-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .vini-history-row { grid-template-columns: minmax(0, 1fr) auto; }
   .vini-history-nutri { grid-column: 1; text-align: left; }
   .vini-history-score { grid-column: 2; grid-row: 1 / span 2; }
   .vini-trend-head { align-items: flex-start; flex-direction: column; }
+  .vini-trends-block > .block-head { align-items: flex-start; }
+  .vini-trends-actions { align-items: flex-end; flex-direction: column; }
 }

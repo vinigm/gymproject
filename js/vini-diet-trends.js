@@ -125,7 +125,10 @@ export function viniDietTrendsHTML(records, {
     <section class="block vini-trends-block">
       <div class="block-head">
         <h2>📈 Evolução nutricional</h2>
-        <span class="muted" style="font-size:11px">${clean.length} dia${clean.length === 1 ? "" : "s"}</span>
+        <div class="vini-trends-actions">
+          <span class="muted">${clean.length} dia${clean.length === 1 ? "" : "s"}</span>
+          ${clean.length ? `<button type="button" class="ghost-btn vini-export-pdf-btn" data-export-diet-pdf>Exportar PDF</button>` : ""}
+        </div>
       </div>
       <p class="vini-trends-note">Cada gráfico mostra o consumo registrado por data. A linha tracejada é uma referência estimada das porções oficiais, pois os prints não informam metas clínicas.</p>
       ${clean.length ? `<div class="vini-trends-list">${VINI_TREND_METRICS.map((metric) => chartHTML(clean, metric, goals, chartWidth)).join("")}</div>` : `
