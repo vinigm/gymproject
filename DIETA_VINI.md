@@ -312,7 +312,7 @@ Estas diretrizes orientam a implementação atual:
 
 - No tracker, cada alimento é marcado individualmente e recebe sua quantidade consumida; itens de opções diferentes podem ser combinados conforme o consumo real.
 - Um alimento marcado pode ser retirado pelo próprio checkbox ou tocando novamente na quantidade ativa; escolher outra quantidade apenas atualiza a porção registrada.
-- No topo do tracker, atalhos de refeições padrão podem preencher de uma vez café da manhã, almoço, lanche da tarde e jantar, sem apagar outros alimentos já marcados no dia.
+- No topo do tracker, atalhos de refeições padrão podem preencher de uma vez pré-treino, café da manhã, almoço, lanche da tarde, pós-treino e jantar. Um segundo toque remove os itens do atalho sem apagar outros alimentos já marcados no mesmo momento.
 - A visualização `Dieta Oficial` preserva separadamente as composições completas sugeridas pela nutricionista e é somente para consulta.
 - Nenhuma ação na `Dieta Oficial` cria, altera ou remove registros.
 - Itens opcionais, como o morango, podem ser marcados separadamente no tracker.
@@ -360,16 +360,17 @@ Estas diretrizes orientam a implementação atual:
 - **17/07/2026:** adicionados atalhos para as quatro refeições padrão do Vini, aplicando automaticamente os alimentos e porções usuais sem remover marcações extras.
 - **17/07/2026:** atalhos ampliados com pré-treino de 2 bananas, pós-treino de 2 medidas de whey e duas alternativas de lanche (whey ou Pro Force Piracanjuba 23 g de proteína).
 - **17/07/2026:** a semana passou a destacar cards de médias diárias de kcal, proteína, carboidrato e gordura; a evolução nutricional ganhou exportação em PDF com essas médias e os quatro gráficos.
+- **18/07/2026:** os atalhos passaram a funcionar como alternância, permitindo retirar uma refeição aplicada por engano com um segundo toque. Também foram adicionados almoço e jantar usuais com 120 g de guisado, 150 g de arroz e 70 g de legumes; o guisado usa estimativa nutricional de carne moída e não altera a consulta `Dieta Oficial`.
 
 ## 15. Implementação no tracker
 
-- Catálogo versionado: `js/vini-diet-plan.js`, versão `vini-nutri-2026-07-v3`.
+- Catálogo versionado: `js/vini-diet-plan.js`, versão `vini-nutri-2026-07-v4`.
 - Interface e estatísticas: `js/vini-diet-ui.js`.
 - Consulta oficial: `VINI_OFFICIAL_MEALS` preserva as composições completas dos prints; não contém checkboxes, não grava dados e consolida os screenshots duplicados.
 - Persistência: campo `plan` nos documentos existentes de `diet_logs`, sem remover o mapa legado `foods`.
 - Cada dia guarda checkboxes individuais agrupados por momento alimentar, a quantidade selecionada para cada alimento, hidratação, indicação de treino e um snapshot dos totais nutricionais.
 - O checkbox e a quantidade ativa funcionam como alternância: um novo toque remove o alimento; tocar em uma quantidade diferente mantém o alimento e corrige somente a porção.
-- Os atalhos de refeição padrão são aditivos e idempotentes: aplicam as porções configuradas para aquele momento e preservam quaisquer outros alimentos do dia.
+- Os atalhos de refeição padrão funcionam como alternância: o primeiro toque aplica as porções configuradas e o segundo remove somente os itens do atalho, preservando outros alimentos do dia.
 - O relatório PDF é gerado integralmente no navegador, contém duas páginas com gráficos vetoriais e usa o mesmo escopo e as mesmas metas de referência exibidas no tracker; nenhum dado é enviado a serviços externos para gerar o arquivo.
 - O snapshot impede que uma futura revisão dos valores de referência altere retroativamente kcal e macros já registrados.
 - Café da manhã, almoço, lanche da tarde e jantar compõem a cobertura de momentos principais; não existe mais o conceito de “refeição completa”. Pré-treino, pós-treino e belisco continuam contextuais.
@@ -378,4 +379,4 @@ Estas diretrizes orientam a implementação atual:
 - No final da Dieta, quatro gráficos de linha acompanham kcal, proteína, carboidrato e gordura por data, respeitando `Ciclo atual` e `Histórico completo`. Cada gráfico inclui uma linha horizontal de referência.
 - Como os screenshots não informam metas clínicas, as referências atuais são estimativas arredondadas da média das opções oficiais de pré-treino, café, almoço, lanche, pós-treino e jantar: **2.000 kcal, 160 g de proteína, 200 g de carboidrato e 60 g de gordura**. O belisco eventual não entra nessa média. Esses valores devem ser substituídos quando a nutricionista fornecer as metas prescritas.
 - Itens “à vontade” podem ser registrados, mas não entram nos macros enquanto não houver quantidade definida.
-- Registros dos formatos `vini-nutri-2026-07-v1` e `vini-nutri-2026-07-v2` são convertidos em memória para os alimentos e quantidades equivalentes e só passam a v3 quando o dia é editado, sem apagar o snapshot histórico.
+- Registros dos formatos `vini-nutri-2026-07-v1`, `vini-nutri-2026-07-v2` e `vini-nutri-2026-07-v3` são convertidos em memória para os alimentos e quantidades equivalentes e só passam a v4 quando o dia é editado, sem apagar o snapshot histórico.

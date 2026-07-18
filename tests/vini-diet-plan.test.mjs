@@ -23,10 +23,13 @@ assert.equal(empty.hasData, false);
 assert.equal(empty.itemsChecked, 0);
 assert.equal(empty.mainMealsLogged, 0);
 assert.equal(empty.consumed.kcal, 0);
-assert.equal(VINI_PLAN_VERSION, "vini-nutri-2026-07-v3");
+assert.equal(VINI_PLAN_VERSION, "vini-nutri-2026-07-v4");
 assert.deepEqual(VINI_DAILY_GOALS, { kcal: 2000, p: 160, c: 200, f: 60 });
 assert.equal(VINI_FOOD_GROUPS.length, 7);
 assert.equal(trackingScopeCopy(TRACKING_SCOPE.OFFICIAL_DIET).title, "Dieta Oficial");
+assert.ok(food("almoco", "guisado").quantityChoices.includes(120));
+assert.ok(food("jantar", "guisado").quantityChoices.includes(120));
+assert.ok(food("almoco", "vegetais").quantityChoices.includes(70));
 
 for (const foodGroup of VINI_FOOD_GROUPS) {
   const ids = foodGroup.foods.map((entry) => entry.id);

@@ -5,7 +5,7 @@
 // prescrição. Alimentos simples usam referências compatíveis com TACO/TBCA;
 // produtos e receitas sem rótulo/ficha técnica usam aproximações explícitas.
 
-export const VINI_PLAN_VERSION = "vini-nutri-2026-07-v3";
+export const VINI_PLAN_VERSION = "vini-nutri-2026-07-v4";
 
 // Referência diária estimada a partir da média das porções oficiais de
 // pré-treino, café, almoço, lanche, pós-treino e jantar. Os screenshots não
@@ -336,10 +336,11 @@ const QUANTITY_RULES = Object.freeze({
   chia: { unit: "g", values: [5, 10, 15, 20, 25, 30] },
   pao: { unit: "fatia", values: [1, 2, 3, 4, 5, 6] },
   requeijao: { unit: "g", values: [10, 15, 20, 30, 40, 50, 60] },
-  vegetais: { unit: "g", values: [50, 100, 150, 200, 250] },
+  vegetais: { unit: "g", values: [50, 70, 100, 150, 200, 250] },
   azeite: { unit: "ml", values: [5, 10, 15, 20, 25] },
   arroz: { unit: "g", values: [50, 80, 100, 130, 150, 180, 200, 250, 300] },
   frango: { unit: "g", values: [50, 80, 100, 120, 130, 150, 180, 200, 250, 300] },
+  guisado: { unit: "g", values: [50, 80, 100, 120, 130, 150, 180, 200, 250, 300] },
   ovo_frito: { unit: "un", values: [1, 2, 3, 4, 5, 6] },
   pure_batata: { unit: "g", values: [50, 80, 100, 105, 130, 150, 180, 200, 250] },
   panqueca_carne: { unit: "un", values: [1, 2, 3, 4, 5] },
@@ -355,6 +356,23 @@ const QUANTITY_RULES = Object.freeze({
   crepioca: { unit: "porcao", values: [1, 2, 3] },
   feijao_lentilha: { unit: "g", values: [40, 80, 120, 160, 200] },
   chocolate: { unit: "g", values: [5, 10, 15, 20, 25, 30, 40] },
+});
+
+// Itens adicionados ao tracker para refeições usuais do Vini, sem alterar a
+// visualização "Dieta Oficial", que continua fiel apenas aos screenshots da
+// nutricionista. O guisado usa a mesma referência estimada de carne do
+// cardápio genérico: 220 kcal, 26 g P e 12 g G por 100 g.
+const GUISADO_120 = item(
+  "guisado",
+  "Guisado (carne moída)",
+  "120 g",
+  nutrition(264, 31.2, 0, 14.4, "recipe-estimate"),
+  { estimatedRecipe: true }
+);
+
+const VINI_TRACKER_EXTRA_FOODS = Object.freeze({
+  almoco: Object.freeze([GUISADO_120]),
+  jantar: Object.freeze([GUISADO_120]),
 });
 
 function parseLocaleNumber(value) {
@@ -394,21 +412,28 @@ export function formatFoodQuantity(food, quantity) {
 function buildFoodGroups() {
   return VINI_MEALS.map((meal) => {
     const foodsByBaseId = new Map();
+    const addEntry = (entry, sourceOption) => {
+      if (!foodsByBaseId.has(entry.id)) {
+        foodsByBaseId.set(entry.id, {
+          ...entry,
+          id: entry.id,
+          baseId: entry.id,
+          sourceOptions: new Set(),
+          variants: [],
+        });
+      }
+      const food = foodsByBaseId.get(entry.id);
+      food.sourceOptions.add(sourceOption);
+      if (!food.variants.some((variant) => variant.portion === entry.portion)) food.variants.push(entry);
+    };
+
     for (const option_ of meal.options) {
       for (const entry of option_.items) {
-        if (!foodsByBaseId.has(entry.id)) {
-          foodsByBaseId.set(entry.id, {
-            ...entry,
-            id: entry.id,
-            baseId: entry.id,
-            sourceOptions: new Set(),
-            variants: [],
-          });
-        }
-        const food = foodsByBaseId.get(entry.id);
-        food.sourceOptions.add(option_.id);
-        if (!food.variants.some((variant) => variant.portion === entry.portion)) food.variants.push(entry);
+        addEntry(entry, option_.id);
       }
+    }
+    for (const entry of VINI_TRACKER_EXTRA_FOODS[meal.id] || []) {
+      addEntry(entry, "refeicao_padrao_guisado");
     }
 
     const foods = [...foodsByBaseId.values()].map((entry) => {

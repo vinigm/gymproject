@@ -7,9 +7,9 @@ import { filterDateMapForTrackingScope } from "./tracking-cycle.js";
 import { downloadViniDietPdf } from "./vini-diet-pdf.js";
 import {
   VINI_MEAL_PRESETS,
-  applyViniMealPreset,
   isViniMealPresetApplied,
   setViniFoodChecked,
+  toggleViniMealPreset,
   toggleViniFoodQuantity,
 } from "./vini-diet-selection.js";
 import { viniDietTrendsHTML } from "./vini-diet-trends.js";
@@ -239,7 +239,7 @@ function mealPresetsHTML(day) {
         <h2>Refeições padrão</h2>
         <span class="muted" style="font-size:11px">preenchimento rápido</span>
       </div>
-      <p class="vini-presets-help">Toque para marcar os alimentos e quantidades de uma vez. Outras marcações do dia serão mantidas.</p>
+      <p class="vini-presets-help">Toque para marcar os alimentos e quantidades de uma vez. Toque novamente para remover a refeição; outras marcações serão mantidas.</p>
       <div class="vini-presets-grid">
         ${VINI_MEAL_PRESETS.map((preset) => {
           const applied = isViniMealPresetApplied(day, preset.id);
@@ -251,7 +251,7 @@ function mealPresetsHTML(day) {
                 <strong>${preset.label}</strong>
                 <small>${preset.description}</small>
               </span>
-              <b>${applied ? "Aplicado ✓" : "Preencher"}</b>
+              <b>${applied ? "Remover ×" : "Preencher"}</b>
             </button>`;
         }).join("")}
       </div>
@@ -666,7 +666,7 @@ function bindTracker() {
   });
   tracker.root.querySelectorAll("[data-meal-preset]").forEach((button) => {
     button.addEventListener("click", () => {
-      mutateCurrentDay((day) => applyViniMealPreset(day, button.dataset.mealPreset));
+      mutateCurrentDay((day) => toggleViniMealPreset(day, button.dataset.mealPreset));
     });
   });
   tracker.root.querySelectorAll("[data-date-shift]").forEach((button) => {

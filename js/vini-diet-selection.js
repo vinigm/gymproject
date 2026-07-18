@@ -57,6 +57,18 @@ export const VINI_MEAL_PRESETS = Object.freeze([
     ]
   ),
   preset(
+    "almoco_guisado",
+    "🥩",
+    "Almoço · guisado",
+    "120g guisado · 150g arroz · 70g legumes",
+    "almoco",
+    [
+      { foodId: "guisado", amount: 120 },
+      { foodId: "arroz", amount: 150 },
+      { foodId: "vegetais", amount: 70 },
+    ]
+  ),
+  preset(
     "lanche_whey",
     "🥪",
     "Lanche + whey",
@@ -103,6 +115,18 @@ export const VINI_MEAL_PRESETS = Object.freeze([
       { foodId: "frango", amount: 120 },
       { foodId: "vegetais", amount: 50 },
       { foodId: "azeite", amount: 15 },
+    ]
+  ),
+  preset(
+    "jantar_guisado",
+    "🥩",
+    "Janta · guisado",
+    "120g guisado · 150g arroz · 70g legumes",
+    "jantar",
+    [
+      { foodId: "guisado", amount: 120 },
+      { foodId: "arroz", amount: 150 },
+      { foodId: "vegetais", amount: 70 },
     ]
   ),
 ]);
@@ -170,6 +194,21 @@ export function applyViniMealPreset(rawDay, presetId) {
   return day;
 }
 
+export function removeViniMealPreset(rawDay, presetId) {
+  const selectedPreset = VINI_MEAL_PRESETS.find((entry) => entry.id === presetId);
+  let day = normalizeViniDietDay(rawDay);
+  if (!selectedPreset) return day;
+
+  for (const item of selectedPreset.items) {
+    day = setViniFoodChecked(day, {
+      groupId: selectedPreset.groupId,
+      foodId: item.foodId,
+      checked: false,
+    });
+  }
+  return day;
+}
+
 export function isViniMealPresetApplied(rawDay, presetId) {
   const selectedPreset = VINI_MEAL_PRESETS.find((entry) => entry.id === presetId);
   if (!selectedPreset) return false;
@@ -180,4 +219,10 @@ export function isViniMealPresetApplied(rawDay, presetId) {
     selectedFoods.has(item.foodId)
       && sameQuantity(day.amounts[selectedPreset.groupId]?.[item.foodId], item.amount)
   ));
+}
+
+export function toggleViniMealPreset(rawDay, presetId) {
+  return isViniMealPresetApplied(rawDay, presetId)
+    ? removeViniMealPreset(rawDay, presetId)
+    : applyViniMealPreset(rawDay, presetId);
 }

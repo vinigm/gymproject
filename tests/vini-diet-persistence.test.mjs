@@ -12,6 +12,8 @@ assert.match(ui, /salvo neste aparelho; nuvem pendente/);
 assert.match(css, /\.vini-diet-save-btn\.is-saved/);
 assert.ok(ui.indexOf("${mealPresetsHTML(day)}") < ui.indexOf("${dailySummaryHTML(summary)}"));
 assert.match(ui, /data-meal-preset/);
+assert.match(ui, /toggleViniMealPreset/);
+assert.match(ui, /Toque novamente para remover a refeição/);
 assert.match(ui, /data-export-diet-pdf/);
 assert.match(ui, /vini-week-average-grid/);
 assert.match(ui, /downloadViniDietPdf\(records/);
