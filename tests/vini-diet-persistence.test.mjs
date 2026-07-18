@@ -14,9 +14,16 @@ assert.ok(ui.indexOf("${mealPresetsHTML(day)}") < ui.indexOf("${dailySummaryHTML
 assert.match(ui, /data-meal-preset/);
 assert.match(ui, /toggleViniMealPreset/);
 assert.match(ui, /Toque novamente para remover a refeição/);
+assert.match(ui, /customFoodsOpen: false/);
+assert.match(ui, /data-toggle-custom-foods/);
+assert.match(ui, /aria-expanded="\$\{isOpen\}"/);
+assert.match(ui, /data-close-custom-foods/);
+assert.match(ui, /tracker\.customFoodsOpen = !tracker\.customFoodsOpen/);
 assert.match(ui, /data-export-diet-pdf/);
 assert.match(ui, /vini-week-average-grid/);
 assert.match(ui, /downloadViniDietPdf\(records/);
+assert.ok(ui.indexOf("${dailySummaryHTML(summary)}") < ui.indexOf("${customFoodsHTML(day, summary)}"));
+assert.ok(ui.indexOf("${customFoodsHTML(day, summary)}") < ui.indexOf("${hydrationHTML(day, summary)}"));
 assert.ok(ui.indexOf("${hydrationHTML(day, summary)}") < ui.indexOf("${saveControlsHTML()}"));
 assert.ok(ui.indexOf("${saveControlsHTML()}") < ui.indexOf("${weeklyHTML()}"));
 assert.ok(ui.indexOf("${historyHTML()}") < ui.indexOf("${viniDietTrendsHTML("));

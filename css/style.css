@@ -3394,6 +3394,22 @@ body.presence-fullscreen .presence-fs-exit { display: flex; }
 .vini-preset-card > b { grid-area: action; color: var(--kg-accent); font-size: 9px; letter-spacing: .04em; text-transform: uppercase; }
 .vini-preset-card.is-applied > b { color: var(--good); }
 
+.vini-custom-foods-block { margin-bottom: 22px; }
+.vini-custom-foods-toggle { display: grid; width: 100%; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 11px; min-height: 72px; padding: 12px 13px; color: var(--text); text-align: left; background: linear-gradient(135deg, rgba(96,165,250,.1), rgba(96,165,250,.025)), var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); transition: border-color .16s ease, background .16s ease, transform .16s ease; }
+.vini-custom-foods-toggle:hover { border-color: rgba(96,165,250,.72); }
+.vini-custom-foods-toggle:active { transform: scale(.992); }
+.vini-custom-foods-toggle:focus-visible { outline: 2px solid var(--kg-accent); outline-offset: 3px; }
+.vini-custom-foods-block.is-open .vini-custom-foods-toggle { background: rgba(96,165,250,.09); border-color: rgba(96,165,250,.72); border-radius: var(--radius) var(--radius) 10px 10px; box-shadow: none; }
+.vini-custom-foods-icon { display: grid; width: 40px; height: 40px; place-items: center; background: var(--card-2); border: 1px solid var(--border); border-radius: 11px; font-size: 19px; }
+.vini-custom-foods-copy { display: flex; min-width: 0; flex-direction: column; gap: 3px; }
+.vini-custom-foods-copy strong { font-size: 13px; line-height: 1.25; }
+.vini-custom-foods-copy small { color: var(--muted); font-size: 9px; line-height: 1.35; }
+.vini-custom-foods-meta { display: flex; align-items: flex-end; flex-direction: column; gap: 4px; }
+.vini-custom-foods-meta b { color: var(--muted); font-size: 9px; white-space: nowrap; }
+.vini-custom-foods-block.has-food .vini-custom-foods-meta b { color: var(--good); }
+.vini-custom-foods-meta i { color: var(--kg-accent); font-size: 10px; font-style: normal; font-weight: 800; text-transform: uppercase; }
+.vini-custom-foods-panel { padding-top: 12px; }
+.vini-custom-foods-close { width: 100%; min-height: 42px; margin-top: 12px; color: var(--kg-accent); font-size: 11px; font-weight: 800; }
 .vini-checklist-help { margin: -2px 0 12px; color: var(--muted); font-size: 11px; }
 .vini-food-groups { display: flex; flex-direction: column; gap: 14px; }
 .vini-food-group-card { overflow: hidden; background: var(--card); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow); }

@@ -40,6 +40,7 @@ const tracker = {
   persistQueue: Promise.resolve(),
   saveSequence: 0,
   saveStatus: "",
+  customFoodsOpen: false,
 };
 
 function pad2(value) { return String(value).padStart(2, "0"); }
@@ -186,10 +187,12 @@ function selectDate(iso) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(String(iso || ""))) return;
   tracker.selectedDate = iso > todayISO() ? todayISO() : iso;
   tracker.saveStatus = "";
+  tracker.customFoodsOpen = false;
   renderTracker();
 }
 
 export function renderViniDietTracker(root, { scope = "cycle" } = {}) {
+  if (tracker.scope !== scope) tracker.customFoodsOpen = false;
   tracker.root = root;
   tracker.scope = scope;
   renderTracker();
@@ -209,17 +212,7 @@ function renderTracker() {
     ${dateNavigatorHTML(isToday)}
     ${mealPresetsHTML(day)}
     ${dailySummaryHTML(summary)}
-
-    <section class="block vini-plan-block">
-      <div class="block-head">
-        <h2>Alimentos de hoje</h2>
-        <span class="muted" style="font-size:11px">${summary.itemsChecked} marcado${summary.itemsChecked === 1 ? "" : "s"}</span>
-      </div>
-      <p class="vini-checklist-help">Marque somente cada alimento que você realmente comeu.</p>
-      <div class="vini-food-groups">
-        ${VINI_FOOD_GROUPS.map((group) => foodGroupHTML(group, day)).join("")}
-      </div>
-    </section>
+    ${customFoodsHTML(day, summary)}
 
     ${hydrationHTML(day, summary)}
     ${saveControlsHTML()}
@@ -230,6 +223,34 @@ function renderTracker() {
 
   bindTracker();
   updateSaveStatus();
+}
+
+function customFoodsHTML(day, summary) {
+  const isOpen = tracker.customFoodsOpen;
+  const countLabel = `${summary.itemsChecked} marcado${summary.itemsChecked === 1 ? "" : "s"}`;
+  return `
+    <section class="block vini-custom-foods-block${isOpen ? " is-open" : ""}${summary.itemsChecked ? " has-food" : ""}">
+      <button type="button" class="vini-custom-foods-toggle" data-toggle-custom-foods
+              aria-expanded="${isOpen}" aria-controls="vini-custom-foods-panel">
+        <span class="vini-custom-foods-icon">🧩</span>
+        <span class="vini-custom-foods-copy">
+          <strong>Montar refeição personalizada</strong>
+          <small>Escolha alimentos e quantidades individualmente</small>
+        </span>
+        <span class="vini-custom-foods-meta">
+          <b>${countLabel}</b>
+          <i>${isOpen ? "Fechar" : "Abrir"} ${isOpen ? "↑" : "↓"}</i>
+        </span>
+      </button>
+      ${isOpen ? `
+        <div id="vini-custom-foods-panel" class="vini-custom-foods-panel">
+          <p class="vini-checklist-help">Marque somente cada alimento que você realmente comeu.</p>
+          <div class="vini-food-groups">
+            ${VINI_FOOD_GROUPS.map((group) => foodGroupHTML(group, day)).join("")}
+          </div>
+          <button type="button" class="ghost-btn vini-custom-foods-close" data-close-custom-foods>Fechar lista de alimentos ↑</button>
+        </div>` : ""}
+    </section>`;
 }
 
 function mealPresetsHTML(day) {
@@ -636,6 +657,16 @@ function historyHTML() {
 
 function bindTracker() {
   tracker.root.querySelector("[data-save-diet]")?.addEventListener("click", persistCurrentDay);
+  tracker.root.querySelector("[data-toggle-custom-foods]")?.addEventListener("click", () => {
+    tracker.customFoodsOpen = !tracker.customFoodsOpen;
+    renderTracker();
+    tracker.root.querySelector("[data-toggle-custom-foods]")?.focus({ preventScroll: true });
+  });
+  tracker.root.querySelector("[data-close-custom-foods]")?.addEventListener("click", () => {
+    tracker.customFoodsOpen = false;
+    renderTracker();
+    tracker.root.querySelector("[data-toggle-custom-foods]")?.focus({ preventScroll: true });
+  });
   tracker.root.querySelector("[data-export-diet-pdf]")?.addEventListener("click", (event) => {
     const button = event.currentTarget;
     const records = recordsInScope();
