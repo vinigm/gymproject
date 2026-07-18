@@ -7,15 +7,14 @@
 
 export const VINI_PLAN_VERSION = "vini-nutri-2026-07-v4";
 
-// Referência diária estimada a partir da média das porções oficiais de
-// pré-treino, café, almoço, lanche, pós-treino e jantar. Os screenshots não
-// informam metas clínicas; estes valores arredondados servem apenas como linha
-// de acompanhamento e devem ser substituídos se a nutricionista enviar metas.
+// Metas/limites diários usados nos cards, gráficos e relatório PDF. Os macros
+// foram atualizados pelo usuário em 18/07/2026; calorias permanecem como
+// referência provisória enquanto não houver uma meta clínica específica.
 export const VINI_DAILY_GOALS = Object.freeze({
   kcal: 2000,
-  p: 160,
+  p: 150,
   c: 200,
-  f: 60,
+  f: 68,
 });
 
 const ZERO = Object.freeze({ kcal: 0, p: 0, c: 0, f: 0 });

@@ -362,6 +362,7 @@ Estas diretrizes orientam a implementação atual:
 - **17/07/2026:** a semana passou a destacar cards de médias diárias de kcal, proteína, carboidrato e gordura; a evolução nutricional ganhou exportação em PDF com essas médias e os quatro gráficos.
 - **18/07/2026:** os atalhos passaram a funcionar como alternância, permitindo retirar uma refeição aplicada por engano com um segundo toque. Também foram adicionados almoço e jantar usuais com 120 g de guisado, 150 g de arroz e 70 g de legumes; o guisado usa estimativa nutricional de carne moída e não altera a consulta `Dieta Oficial`.
 - **18/07/2026:** a lista completa de alimentos e quantidades passou a ficar recolhida por padrão dentro de `Montar refeição personalizada`. O painel permanece aberto durante as marcações e oferece fechamento no topo e no final da lista, reduzindo a rolagem até hidratação, estatísticas e gráficos.
+- **18/07/2026:** thresholds de macros atualizados para 150 g de proteína, 200 g de carboidrato e 68 g de gordura em cards semanais, gráficos e relatório PDF.
 
 ## 15. Implementação no tracker
 
@@ -379,6 +380,6 @@ Estas diretrizes orientam a implementação atual:
 - A hidratação usa 2,5 L como base; em dias de treino, a meta mínima exibida passa a 3 L, mantendo a orientação de até 3,5 L.
 - As estatísticas incluem totais e médias semanais de kcal/macros, quantidade de alimentos, frequência por momento, hidratação, sequência, marcos de dias, alimentos mais marcados e histórico editável.
 - No final da Dieta, quatro gráficos de linha acompanham kcal, proteína, carboidrato e gordura por data, respeitando `Ciclo atual` e `Histórico completo`. Cada gráfico inclui uma linha horizontal de referência.
-- Como os screenshots não informam metas clínicas, as referências atuais são estimativas arredondadas da média das opções oficiais de pré-treino, café, almoço, lanche, pós-treino e jantar: **2.000 kcal, 160 g de proteína, 200 g de carboidrato e 60 g de gordura**. O belisco eventual não entra nessa média. Esses valores devem ser substituídos quando a nutricionista fornecer as metas prescritas.
+- As referências atuais do tracker são **2.000 kcal, 150 g de proteína, 200 g de carboidrato e 68 g de gordura**. Os três thresholds de macros foram informados pelo usuário em 18/07/2026; as 2.000 kcal permanecem provisórias enquanto não houver uma meta clínica específica.
 - Itens “à vontade” podem ser registrados, mas não entram nos macros enquanto não houver quantidade definida.
 - Registros dos formatos `vini-nutri-2026-07-v1`, `vini-nutri-2026-07-v2` e `vini-nutri-2026-07-v3` são convertidos em memória para os alimentos e quantidades equivalentes e só passam a v4 quando o dia é editado, sem apagar o snapshot histórico.
