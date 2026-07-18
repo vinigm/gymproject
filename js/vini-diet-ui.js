@@ -5,6 +5,14 @@ import {
 } from "./diet-storage.js";
 import { filterDateMapForTrackingScope } from "./tracking-cycle.js";
 import { downloadViniDietPdf } from "./vini-diet-pdf.js";
+import { getWeightEntries } from "./weight-storage.js";
+import {
+  VINI_EXERCISE_DURATIONS,
+  VINI_EXERCISE_TYPES,
+  hasViniExercise,
+  setViniExerciseDuration,
+  toggleViniExerciseIntensity,
+} from "./vini-exercise.js";
 import {
   VINI_MEAL_PRESETS,
   isViniMealPresetApplied,
@@ -34,6 +42,7 @@ const WEEKDAYS = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"];
 const tracker = {
   loaded: false,
   map: {},
+  weightEntries: [],
   selectedDate: todayISO(),
   scope: "cycle",
   root: null,
@@ -95,8 +104,20 @@ function divideNutrition(total, divisor) {
 }
 
 export async function loadViniDietTracker() {
-  tracker.map = await getViniDietPlanMap(USER);
+  const [map, weightEntries] = await Promise.all([
+    getViniDietPlanMap(USER),
+    getWeightEntries(USER),
+  ]);
+  tracker.map = map;
+  tracker.weightEntries = weightEntries;
   tracker.loaded = true;
+}
+
+function weightForSelectedDate() {
+  const valid = tracker.weightEntries.filter((entry) => Number(entry?.weight) > 0);
+  if (!valid.length) return 0;
+  const onOrBefore = valid.filter((entry) => !entry.date || entry.date <= tracker.selectedDate);
+  return Number((onOrBefore.at(-1) || valid.at(-1)).weight);
 }
 
 function currentDay() {
@@ -167,6 +188,12 @@ function mutateCurrentDay(mutator) {
   draft.meals = {};
   draft.summary = null;
   const updatedDay = mutator(draft) || draft;
+  if (hasViniExercise(updatedDay.exercises)) {
+    updatedDay.trainingDay = true;
+    if (!(Number(updatedDay.exerciseWeightKg) > 0)) {
+      updatedDay.exerciseWeightKg = weightForSelectedDate();
+    }
+  }
   const payload = withViniDietSummary(updatedDay);
   tracker.map[tracker.selectedDate] = payload;
   // O cache síncrono garante que até uma saída imediata da página preserve
@@ -211,6 +238,7 @@ function renderTracker() {
   tracker.root.innerHTML = `
     ${dateNavigatorHTML(isToday)}
     ${mealPresetsHTML(day)}
+    ${exerciseTrackerHTML(day, summary)}
     ${dailySummaryHTML(summary)}
     ${customFoodsHTML(day, summary)}
 
@@ -308,6 +336,57 @@ function saveControlsHTML() {
     </section>`;
 }
 
+function exerciseTrackerHTML(day, summary) {
+  const weightKg = Number(day.exerciseWeightKg) || weightForSelectedDate();
+  const selectedCount = Object.keys(day.exercises || {}).length;
+  const legacyTraining = day.trainingDay && selectedCount === 0;
+  return `
+    <section class="block vini-exercise-block${selectedCount ? " has-exercise" : ""}">
+      <div class="block-head">
+        <h2>🔥 Treino do dia</h2>
+        <span class="vini-exercise-total${summary.exerciseKcal ? " is-active" : ""}">${summary.exerciseKcal ? `−${formatNumber(summary.exerciseKcal)} kcal` : "opcional"}</span>
+      </div>
+      <p class="vini-exercise-help">Selecione a intensidade e a duração. Musculação e corrida podem ser somadas no mesmo dia; toque novamente na intensidade ativa para retirar.</p>
+      <div class="vini-exercise-grid">
+        ${Object.keys(VINI_EXERCISE_TYPES).map((typeId) => exerciseTypeHTML(typeId, day, summary)).join("")}
+      </div>
+      ${weightKg > 0
+        ? `<p class="vini-exercise-method">Estimativa ativa calculada com <strong>${formatNumber(weightKg, 1)} kg</strong> · MET − repouso. O valor real pode variar.</p>`
+        : `<p class="vini-exercise-method is-warning">Cadastre uma pesagem no Kg Vini para calcular o gasto estimado.</p>`}
+      ${legacyTraining ? `<p class="vini-exercise-method is-warning">Este dia tem um registro antigo de treino sem intensidade. Escolha uma opção acima para calcular as kcal.</p>` : ""}
+    </section>`;
+}
+
+function exerciseTypeHTML(typeId, day, summary) {
+  const type = VINI_EXERCISE_TYPES[typeId];
+  const selected = day.exercises?.[typeId];
+  const estimate = summary.exercises.find((entry) => entry.typeId === typeId)?.kcal || 0;
+  const intensity = selected ? type.intensities[selected.intensity] : null;
+  return `
+    <article class="vini-exercise-card${selected ? " is-selected" : ""}">
+      <header>
+        <span>${type.icon}</span>
+        <div><strong>${type.label}</strong><small>${selected ? `${intensity.label} · ${selected.minutes} min` : "não registrado"}</small></div>
+        <b>${estimate ? `−${formatNumber(estimate)} kcal` : "—"}</b>
+      </header>
+      <div class="vini-exercise-intensities" role="group" aria-label="Intensidade de ${type.label}">
+        ${Object.entries(type.intensities).map(([intensityId, option]) => {
+          const active = selected?.intensity === intensityId;
+          return `<button type="button" class="vini-exercise-option${active ? " is-on" : ""}"
+                    data-exercise-intensity data-exercise-type="${typeId}" data-exercise-level="${intensityId}"
+                    aria-pressed="${active}">${option.label}${active ? " ×" : ""}</button>`;
+        }).join("")}
+      </div>
+      ${selected ? `
+        <p class="vini-exercise-hint">${intensity.hint} · ${formatNumber(intensity.met, 1)} MET</p>
+        <div class="vini-exercise-duration" role="group" aria-label="Duração de ${type.label}">
+          ${VINI_EXERCISE_DURATIONS.map((minutes) => `<button type="button" class="vini-exercise-minute${selected.minutes === minutes ? " is-on" : ""}"
+                    data-exercise-duration data-exercise-type="${typeId}" data-exercise-minutes="${minutes}"
+                    aria-pressed="${selected.minutes === minutes}">${minutes} min</button>`).join("")}
+        </div>` : ""}
+    </article>`;
+}
+
 function dailySummaryHTML(summary) {
   const consumed = summary.consumed;
   return `
@@ -315,9 +394,9 @@ function dailySummaryHTML(summary) {
       <div class="block-head"><h2>Resumo do dia</h2></div>
       <div class="vini-day-summary">
         <div class="vini-kcal-hero">
-          <span class="vini-kcal-value">${formatNumber(consumed.kcal)}</span>
-          <span class="vini-kcal-unit">kcal registradas</span>
-          <span class="vini-kcal-plan">soma dos alimentos marcados</span>
+          <span class="vini-kcal-value">${formatNumber(summary.netKcal)}</span>
+          <span class="vini-kcal-unit">kcal líquidas</span>
+          <span class="vini-kcal-plan">${formatNumber(consumed.kcal)} ingeridas${summary.exerciseKcal ? ` − ${formatNumber(summary.exerciseKcal)} do treino` : " · sem treino descontado"}</span>
         </div>
         <div class="vini-summary-macros">
           ${macroSummaryHTML("Proteína", "P", consumed.p, "vini-macro-p")}
@@ -417,10 +496,6 @@ function hydrationHTML(day, summary) {
           <span>Volume exato</span>
           <input type="number" id="vini-water-input" min="0" max="10000" step="50" value="${day.hydrationMl}" inputmode="numeric" />
           <small>ml</small>
-        </label>
-        <label class="kg-check vini-training-check">
-          <input type="checkbox" id="vini-training-day" ${day.trainingDay ? "checked" : ""} />
-          <span>Treinei hoje — considerar 500 ml a 1 L adicionais</span>
         </label>
         <p class="vini-water-note ${baseReached ? "is-good" : ""}">
           ${baseReached ? `Base de 2,5 L atingida${day.trainingDay ? ` · adicional registrado: ${formatNumber(trainingExtra)} ml` : ""}.` : `Faltam ${formatNumber(VINI_HYDRATION.baseMl - day.hydrationMl)} ml para a base de 2,5 L.`}
@@ -700,6 +775,26 @@ function bindTracker() {
       mutateCurrentDay((day) => toggleViniMealPreset(day, button.dataset.mealPreset));
     });
   });
+  tracker.root.querySelectorAll("[data-exercise-intensity]").forEach((button) => {
+    button.addEventListener("click", () => mutateCurrentDay((day) => {
+      day.exercises = toggleViniExerciseIntensity(
+        day.exercises,
+        button.dataset.exerciseType,
+        button.dataset.exerciseLevel
+      );
+      day.trainingDay = hasViniExercise(day.exercises);
+      if (!day.trainingDay) day.exerciseWeightKg = 0;
+    }));
+  });
+  tracker.root.querySelectorAll("[data-exercise-duration]").forEach((button) => {
+    button.addEventListener("click", () => mutateCurrentDay((day) => {
+      day.exercises = setViniExerciseDuration(
+        day.exercises,
+        button.dataset.exerciseType,
+        Number(button.dataset.exerciseMinutes)
+      );
+    }));
+  });
   tracker.root.querySelectorAll("[data-date-shift]").forEach((button) => {
     button.addEventListener("click", () => selectDate(addDaysISO(tracker.selectedDate, Number(button.dataset.dateShift))));
   });
@@ -735,8 +830,5 @@ function bindTracker() {
   tracker.root.querySelector("[data-water-reset]")?.addEventListener("click", () => mutateCurrentDay((day) => { day.hydrationMl = 0; }));
   tracker.root.querySelector("#vini-water-input")?.addEventListener("change", (event) => mutateCurrentDay((day) => {
     day.hydrationMl = clamp(Math.round(Number(event.target.value) || 0), 0, 10000);
-  }));
-  tracker.root.querySelector("#vini-training-day")?.addEventListener("change", (event) => mutateCurrentDay((day) => {
-    day.trainingDay = event.target.checked;
   }));
 }

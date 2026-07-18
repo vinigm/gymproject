@@ -317,6 +317,9 @@ Estas diretrizes orientam a implementação atual:
 - Nenhuma ação na `Dieta Oficial` cria, altera ou remove registros.
 - Itens opcionais, como o morango, podem ser marcados separadamente no tracker.
 - Pré-treino e pós-treino devem ser ativados conforme o treino do dia.
+- O card `Treino do dia` permite registrar musculação e/ou corrida em intensidade leve, média ou intensa, com duração de 20 a 90 minutos. O tracker usa a pesagem mais recente disponível no Kg Vini.
+- O gasto mostrado é uma estimativa de **calorias ativas**: `(MET − 1) × peso em kg × duração em horas`. A subtração de 1 MET evita descontar também o gasto de repouso que já ocorreria sem exercício.
+- As intensidades usam o [Compêndio de Atividades Físicas 2024](https://pacompendium.com/adult-compendium/): musculação 3,5 / 5,0 / 6,0 MET e corrida 7,5 / 9,3 / 10,5 MET. O valor real varia com condicionamento, composição corporal, pausas, terreno e ritmo.
 - Alimentos com substituições devem aceitar alternativas somente quando elas forem conhecidas.
 - Valores nutricionais devem ficar em um catálogo separado da estrutura do plano, com fonte registrada.
 - Receitas compostas devem ser calculadas pela receita validada, não por uma estimativa genérica do nome.
@@ -363,14 +366,16 @@ Estas diretrizes orientam a implementação atual:
 - **18/07/2026:** os atalhos passaram a funcionar como alternância, permitindo retirar uma refeição aplicada por engano com um segundo toque. Também foram adicionados almoço e jantar usuais com 120 g de guisado, 150 g de arroz e 70 g de legumes; o guisado usa estimativa nutricional de carne moída e não altera a consulta `Dieta Oficial`.
 - **18/07/2026:** a lista completa de alimentos e quantidades passou a ficar recolhida por padrão dentro de `Montar refeição personalizada`. O painel permanece aberto durante as marcações e oferece fechamento no topo e no final da lista, reduzindo a rolagem até hidratação, estatísticas e gráficos.
 - **18/07/2026:** thresholds de macros atualizados para 150 g de proteína, 200 g de carboidrato e 68 g de gordura em cards semanais, gráficos e relatório PDF.
+- **18/07/2026:** adicionado registro de musculação e corrida por intensidade e duração, com estimativa ativa baseada em MET e peso. O resumo diário passou a separar kcal ingeridas, gasto estimado do treino e kcal líquidas.
 
 ## 15. Implementação no tracker
 
-- Catálogo versionado: `js/vini-diet-plan.js`, versão `vini-nutri-2026-07-v4`.
+- Catálogo versionado: `js/vini-diet-plan.js`, versão `vini-nutri-2026-07-v5`.
+- Estimativa de exercício: `js/vini-exercise.js`, com definições MET, normalização, alternância das intensidades e cálculo puro do gasto ativo.
 - Interface e estatísticas: `js/vini-diet-ui.js`.
 - Consulta oficial: `VINI_OFFICIAL_MEALS` preserva as composições completas dos prints; não contém checkboxes, não grava dados e consolida os screenshots duplicados.
 - Persistência: campo `plan` nos documentos existentes de `diet_logs`, sem remover o mapa legado `foods`.
-- Cada dia guarda checkboxes individuais agrupados por momento alimentar, a quantidade selecionada para cada alimento, hidratação, indicação de treino e um snapshot dos totais nutricionais.
+- Cada dia guarda checkboxes individuais agrupados por momento alimentar, a quantidade selecionada para cada alimento, hidratação, exercícios, peso usado no cálculo e um snapshot dos totais nutricionais, kcal do treino e kcal líquidas.
 - Os checkboxes individuais ficam em um painel recolhível, fechado por padrão. Abrir ou fechar esse painel altera somente a interface e não interfere nas marcações nem na sincronização.
 - O checkbox e a quantidade ativa funcionam como alternância: um novo toque remove o alimento; tocar em uma quantidade diferente mantém o alimento e corrige somente a porção.
 - Os atalhos de refeição padrão funcionam como alternância: o primeiro toque aplica as porções configuradas e o segundo remove somente os itens do atalho, preservando outros alimentos do dia.
@@ -378,8 +383,9 @@ Estas diretrizes orientam a implementação atual:
 - O snapshot impede que uma futura revisão dos valores de referência altere retroativamente kcal e macros já registrados.
 - Café da manhã, almoço, lanche da tarde e jantar compõem a cobertura de momentos principais; não existe mais o conceito de “refeição completa”. Pré-treino, pós-treino e belisco continuam contextuais.
 - A hidratação usa 2,5 L como base; em dias de treino, a meta mínima exibida passa a 3 L, mantendo a orientação de até 3,5 L.
+- O resumo diário exibe `kcal líquidas = kcal ingeridas − kcal ativas estimadas do treino`. As séries históricas de alimentação continuam mostrando kcal ingeridas, sem misturar consumo com exercício.
 - As estatísticas incluem totais e médias semanais de kcal/macros, quantidade de alimentos, frequência por momento, hidratação, sequência, marcos de dias, alimentos mais marcados e histórico editável.
 - No final da Dieta, quatro gráficos de linha acompanham kcal, proteína, carboidrato e gordura por data, respeitando `Ciclo atual` e `Histórico completo`. Cada gráfico inclui uma linha horizontal de referência.
 - As referências atuais do tracker são **2.000 kcal, 150 g de proteína, 200 g de carboidrato e 68 g de gordura**. Os três thresholds de macros foram informados pelo usuário em 18/07/2026; as 2.000 kcal permanecem provisórias enquanto não houver uma meta clínica específica.
 - Itens “à vontade” podem ser registrados, mas não entram nos macros enquanto não houver quantidade definida.
-- Registros dos formatos `vini-nutri-2026-07-v1`, `vini-nutri-2026-07-v2` e `vini-nutri-2026-07-v3` são convertidos em memória para os alimentos e quantidades equivalentes e só passam a v4 quando o dia é editado, sem apagar o snapshot histórico.
+- Registros dos formatos `vini-nutri-2026-07-v1` a `vini-nutri-2026-07-v4` são convertidos em memória para o modelo atual e só passam a v5 quando o dia é editado, sem apagar o snapshot histórico.

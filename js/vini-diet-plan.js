@@ -5,7 +5,13 @@
 // prescrição. Alimentos simples usam referências compatíveis com TACO/TBCA;
 // produtos e receitas sem rótulo/ficha técnica usam aproximações explícitas.
 
-export const VINI_PLAN_VERSION = "vini-nutri-2026-07-v4";
+import {
+  estimateViniExercises,
+  hasViniExercise,
+  normalizeViniExercises,
+} from "./vini-exercise.js";
+
+export const VINI_PLAN_VERSION = "vini-nutri-2026-07-v5";
 
 // Metas/limites diários usados nos cards, gráficos e relatório PDF. Os macros
 // foram atualizados pelo usuário em 18/07/2026; calorias permanecem como
@@ -523,6 +529,8 @@ export function emptyViniDietDay() {
     amounts: {},
     hydrationMl: 0,
     trainingDay: false,
+    exercises: {},
+    exerciseWeightKg: 0,
     summary: null,
   };
 }
@@ -544,10 +552,15 @@ function cleanNutrition(value) {
 function cleanSummary(summary) {
   const planVersion = String(summary?.planVersion || "").trim();
   if (!planVersion) return null;
+  const consumed = cleanNutrition(summary.consumed);
+  const exerciseKcal = Math.max(0, finiteNumber(summary.exerciseKcal));
   return {
     planVersion,
-    consumed: cleanNutrition(summary.consumed),
+    consumed,
     planned: cleanNutrition(summary.planned),
+    exerciseKcal,
+    netKcal: finiteNumber(summary.netKcal, consumed.kcal - exerciseKcal),
+    exerciseWeightKg: Math.max(0, finiteNumber(summary.exerciseWeightKg)),
     adherencePct: Math.max(0, Math.min(100, finiteNumber(summary.adherencePct))),
     completedMeals: Math.max(0, finiteNumber(summary.completedMeals)),
     requiredMeals: Math.max(0, finiteNumber(summary.requiredMeals, VINI_REQUIRED_MEALS.length)),
@@ -601,7 +614,9 @@ export function normalizeViniDietDay(raw) {
   const out = emptyViniDietDay();
   out.version = String(raw?.version || VINI_PLAN_VERSION);
   out.hydrationMl = Math.max(0, Math.min(10000, Math.round(finiteNumber(raw?.hydrationMl))));
-  out.trainingDay = raw?.trainingDay === true;
+  out.exercises = normalizeViniExercises(raw?.exercises);
+  out.exerciseWeightKg = Math.max(0, Math.round(finiteNumber(raw?.exerciseWeightKg) * 10) / 10);
+  out.trainingDay = raw?.trainingDay === true || hasViniExercise(out.exercises);
   out.summary = cleanSummary(raw?.summary);
 
   for (const meal of VINI_MEALS) {
@@ -729,14 +744,22 @@ export function calculateViniDietDay(raw, { useSnapshot = false } = {}) {
     : 0;
   const hydrationTargetMl = day.trainingDay ? VINI_HYDRATION.trainingMinMl : VINI_HYDRATION.baseMl;
   const hydrationPct = hydrationTargetMl > 0 ? Math.round((day.hydrationMl / hydrationTargetMl) * 100) : 0;
+  const exercise = estimateViniExercises(day.exercises, day.exerciseWeightKg);
+  const roundedConsumed = roundedNutrition(consumed);
+  const netKcal = roundedConsumed.kcal - exercise.totalKcal;
   const hasData = day.hydrationMl > 0
     || day.trainingDay
+    || exercise.items.length > 0
     || itemsChecked > 0;
 
   const result = {
     day,
-    consumed: roundedNutrition(consumed),
+    consumed: roundedConsumed,
     planned: { ...ZERO },
+    exercises: exercise.items,
+    exerciseKcal: exercise.totalKcal,
+    netKcal,
+    exerciseWeightKg: day.exerciseWeightKg,
     foodGroups,
     adherencePct: mealCoveragePct,
     completedMeals: mainMealsLogged,
@@ -755,6 +778,9 @@ export function calculateViniDietDay(raw, { useSnapshot = false } = {}) {
   if (useSnapshot && day.summary) {
     result.consumed = cleanNutrition(day.summary.consumed);
     result.planned = cleanNutrition(day.summary.planned);
+    result.exerciseKcal = day.summary.exerciseKcal;
+    result.netKcal = day.summary.netKcal;
+    result.exerciseWeightKg = day.summary.exerciseWeightKg;
     result.adherencePct = day.summary.adherencePct;
     result.completedMeals = day.summary.completedMeals;
     result.requiredMeals = day.summary.requiredMeals;
@@ -776,6 +802,9 @@ export function withViniDietSummary(raw) {
     planVersion: day.version,
     consumed: calculated.consumed,
     planned: calculated.planned,
+    exerciseKcal: calculated.exerciseKcal,
+    netKcal: calculated.netKcal,
+    exerciseWeightKg: calculated.exerciseWeightKg,
     adherencePct: calculated.adherencePct,
     completedMeals: calculated.completedMeals,
     requiredMeals: calculated.requiredMeals,

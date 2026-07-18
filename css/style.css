@@ -3381,6 +3381,32 @@ body.presence-fullscreen .presence-fs-exit { display: flex; }
 .vini-log-kpis strong { color: var(--kg-accent); font-size: 17px; }
 .vini-log-kpis span { color: var(--muted); font-size: 9px; line-height: 1.25; text-transform: uppercase; }
 
+.vini-exercise-block { --exercise: #f97316; }
+.vini-exercise-block.has-exercise { padding-top: 3px; border-top: 3px solid var(--exercise); }
+.vini-exercise-total { color: var(--muted); font-size: 11px; font-weight: 800; }
+.vini-exercise-total.is-active { color: var(--exercise); }
+.vini-exercise-help { margin: -2px 0 12px; color: var(--muted); font-size: 11px; line-height: 1.45; }
+.vini-exercise-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.vini-exercise-card { min-width: 0; padding: 11px; background: var(--card-2); border: 1px solid var(--border); border-radius: 12px; transition: border-color .16s ease, background .16s ease; }
+.vini-exercise-card.is-selected { background: rgba(249,115,22,.07); border-color: rgba(249,115,22,.62); }
+.vini-exercise-card header { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 8px; }
+.vini-exercise-card header > span { display: grid; width: 34px; height: 34px; place-items: center; background: var(--card); border-radius: 10px; font-size: 18px; }
+.vini-exercise-card header > div { display: flex; min-width: 0; flex-direction: column; gap: 2px; }
+.vini-exercise-card header strong { font-size: 12px; }
+.vini-exercise-card header small { overflow: hidden; color: var(--muted); font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+.vini-exercise-card header b { color: var(--exercise); font-size: 10px; white-space: nowrap; }
+.vini-exercise-intensities { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-top: 10px; }
+.vini-exercise-option, .vini-exercise-minute { min-height: 34px; padding: 6px 4px; color: var(--muted); background: var(--card); border: 1px solid var(--border); border-radius: 8px; font-size: 9px; font-weight: 800; white-space: nowrap; }
+.vini-exercise-option:hover, .vini-exercise-minute:hover { color: var(--text); border-color: var(--exercise); }
+.vini-exercise-option.is-on, .vini-exercise-minute.is-on { color: #fff; background: var(--exercise); border-color: var(--exercise); box-shadow: 0 3px 10px rgba(249,115,22,.2); }
+.vini-exercise-option.is-on:hover { background: var(--bad); border-color: var(--bad); }
+.vini-exercise-hint { margin: 8px 0 6px; color: var(--muted); font-size: 9px; line-height: 1.35; }
+.vini-exercise-duration { display: flex; gap: 5px; overflow-x: auto; padding-bottom: 3px; scrollbar-width: thin; }
+.vini-exercise-minute { min-width: 48px; flex: 0 0 auto; }
+.vini-exercise-method { margin: 10px 0 0; color: var(--muted); font-size: 9px; line-height: 1.4; text-align: center; }
+.vini-exercise-method strong { color: var(--text); }
+.vini-exercise-method.is-warning { color: #fbbf24; }
+
 .vini-presets-help { margin: -2px 0 12px; color: var(--muted); font-size: 11px; line-height: 1.45; }
 .vini-presets-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .vini-preset-card { display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "icon copy" "icon action"; align-items: center; gap: 3px 9px; min-height: 88px; padding: 11px; color: var(--text); text-align: left; background: var(--card-2); border: 1px solid var(--border); border-radius: 12px; transition: border-color .16s ease, background .16s ease, transform .16s ease; }
@@ -3638,6 +3664,7 @@ body.presence-fullscreen .presence-fs-exit { display: flex; }
   .vini-checkbox-nutri { grid-column: 2; }
   .vini-quantity-picker { padding-left: 43px; }
   .vini-water-actions { grid-template-columns: repeat(2, 1fr); }
+  .vini-exercise-grid { grid-template-columns: 1fr; }
   .vini-week-macros { grid-template-columns: 1fr; }
   .vini-week-average-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .vini-history-row { grid-template-columns: minmax(0, 1fr) auto; }
