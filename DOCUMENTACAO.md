@@ -126,6 +126,7 @@ No iPhone/Android, abrir o site no navegador e usar "Adicionar à tela de iníci
 | `tests/vini-diet-plan.test.mjs` | Testes dos cálculos, snapshots, opcionais, hidratação e arroz + purê |
 | `tests/tracker-run-distance.test.mjs` | Testes das opções, seleção, troca e limpeza da distância de corrida |
 | `tests/water-options.test.mjs` | Testes das opções de água nos dois cards, conversão em litros e pontuação |
+| `tests/stats-cleanup.test.mjs` | Protege a limpeza da Stats e a permanência das seções gerais |
 
 ## Boot & autenticação
 
@@ -237,7 +238,7 @@ Em seguida o nav é posicionado logo abaixo da `.topbar`: `setOffsets()` mede `t
 
 **Como funciona por baixo.** `initStatsPage` faz `renderAuthFooter`, `setupToggle()`, aguarda `loadAndApplyConfig()` e, via `Promise.all`, busca `getRange(u, APP_START_DATE, todayISO())` dos dois usuários + `getStretchSessions(u)`; guarda em `_daysByUser`/`_stretchByUser` e chama `render()`. Os dados são sempre buscados inteiros. Por padrão, `filterRecordsForTrackingScope` limita totais, médias, streaks, recordes, modalidades e sessões ao ciclo iniciado em **2026-07-15**; `Histórico completo` volta a usar `APP_START_DATE` sem reler ou alterar o banco.
 
-Seções renderizadas, nesta ordem: **Pontos** (total, média/dia, semana, mês) · **Recordes** · **Resumo do período** (dias ativos, dias de exercício, % refeições limpas, média de água, cigarros) · **Sequências (atual · recorde)** (exercício, sem fumar, sem refri, sem sobremesa) · **Totais desde o início** · **Outros hábitos** · **Exercícios por modalidade** · **Alimentação** · **Cigarros & Nicotina** · **Jiu-jítsu** (só Vini) · **Pilates** (só Vivi) · **Alongamento** · **Academia**.
+Seções renderizadas, nesta ordem: **Pontos** (total, média/dia, semana, mês) · **Recordes** · **Resumo do período** (dias ativos, dias de exercício, % refeições limpas, média de água, cigarros) · **Sequências (atual · recorde)** (exercício, sem fumar, sem refri, sem sobremesa) · **Exercícios por modalidade** · **Alimentação** · **Cigarros & Nicotina** · **Pilates** (só Vivi) · **Alongamento** · **Academia**. Os antigos cards **Totais**, **Outros hábitos** e o detalhamento exclusivo de **Jiu-jítsu** foram removidos em 19/07/2026. Jiu-jítsu continua aparecendo nas agregações gerais de modalidade e nos badges do calendário da academia.
 
 Gráficos: medidor semicircular SVG (`semiDonut`, refeições limpas x sujas), barras por dia da semana (`dowChart`), barras horizontais empilhadas por grupo muscular/DOW (`gymDowBars`), barras normalizadas de refeições por DOW (`mealDowChart`), somatório por DOW (`dowSumChart`, cigarros/chiclete), mini-calendário mensal com badges (`gymCalendar`) e barra de progresso (`bar`). Streaks: `currentStreak` anda para trás desde hoje; `bestStreak` anda para frente desde o início do escopo selecionado.
 

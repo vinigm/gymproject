@@ -5,7 +5,7 @@ import { setupAuthGate, renderAuthFooter } from "./auth.js";
 import { getRange } from "./storage.js";
 import { getStretchSessions } from "./stretch-storage.js";
 import { pointsForDay } from "./points-engine.js";
-import { POINTS, EXTRAS_META, CATEGORY_START_DATES } from "./points-config.js";
+import { CATEGORY_START_DATES } from "./points-config.js";
 import {
   loadAndApplyConfig, pointsInPeriod, totalEarnedByUser,
   fmtPts, fmtDayFull, fmtWeekRange, fmtMonth,
@@ -357,16 +357,9 @@ function gymSectionHtml(stats, ACCENT, extrasByDate = new Map(), startDate = CAT
   `;
 }
 
-// === Jiu Jitsu helpers ===
-const JIU_DURATION = {
-  "6h30": 60, "12h": 60, "16h30": 60,
-  "19h30": 90, "Sab11": 90,
-};
+// === Helpers compartilhados de tempo e dia da semana ===
 const DOW_PT_SHORT = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"];
 
-function jiuMinutes(session) {
-  return JIU_DURATION[session] || 60;
-}
 function fmtHours(min) {
   if (!min || min === 0) return "0h";
   const h = Math.floor(min / 60);
@@ -377,36 +370,6 @@ function fmtHours(min) {
 }
 function fmtN(n, digits = 1) {
   return Number(n).toFixed(digits).replace(".", ",");
-}
-
-function computeJiuStats(days) {
-  const jiuDays = days.filter(d => (d.exercises || []).includes("jiujitsu"));
-  let totalMinutes = 0;
-  let totalSparMin = 0;
-  for (const d of jiuDays) {
-    totalMinutes += jiuMinutes(d.jiu_session);
-    if (d.jiu_spar_min != null && d.jiu_spar_min !== "") {
-      totalSparMin += Number(d.jiu_spar_min) || 0;
-    }
-  }
-  const total = jiuDays.length;
-  const { weeks: activeWeeks, months: activeMonths } = activeWeeksMonths(jiuDays);
-  const aw = Math.max(1, activeWeeks);
-  const am = Math.max(1, activeMonths);
-  return {
-    jiuDays,
-    totalTrainings: total,
-    totalMinutes,
-    totalSparMin,
-    activeWeeks, activeMonths,
-    avgSparPerTraining: total > 0 ? totalSparMin / total : 0,
-    avgTrainingsPerActiveWeek: total / aw,
-    avgMinutesPerActiveWeek: totalMinutes / aw,
-    avgSparPerActiveWeek: totalSparMin / aw,
-    avgTrainingsPerActiveMonth: total / am,
-    avgMinutesPerActiveMonth: totalMinutes / am,
-    avgSparPerActiveMonth: totalSparMin / am,
-  };
 }
 
 function dowChart(jiuDays) {
@@ -581,43 +544,6 @@ function pilatesSectionHtml(stats, ACCENT, startDate = CATEGORY_START_DATES.pila
   `;
 }
 
-function jiuSectionHtml(stats, ACCENT, startDate = CATEGORY_START_DATES.jiujitsu) {
-  const {
-    totalTrainings, totalMinutes, totalSparMin, jiuDays,
-    activeWeeks, activeMonths,
-    avgSparPerTraining,
-    avgTrainingsPerActiveWeek, avgMinutesPerActiveWeek, avgSparPerActiveWeek,
-    avgTrainingsPerActiveMonth, avgMinutesPerActiveMonth, avgSparPerActiveMonth,
-  } = stats;
-  return `
-    <section class="block">
-      <div class="block-head"><h2>🥋 Jiu Jitsu</h2></div>
-      <div class="stat-card" style="border-top:3px solid ${ACCENT}">
-        <div class="kpi-grid">
-          <div class="kpi"><div class="kpi-value">${totalTrainings}</div><div class="kpi-label">treinos totais</div></div>
-          <div class="kpi"><div class="kpi-value">${fmtHours(totalMinutes)}</div><div class="kpi-label">tempo total</div></div>
-          <div class="kpi"><div class="kpi-value">${fmtHours(totalSparMin)}</div><div class="kpi-label">luta total</div></div>
-          <div class="kpi"><div class="kpi-value">${Math.round(avgSparPerTraining)}<span class="muted" style="font-size:12px;font-weight:500">min</span></div><div class="kpi-label">luta / treino (média)</div></div>
-        </div>
-        <p class="muted stats-meta">${startInfoLine(startDate, activeWeeks, activeMonths)}</p>
-
-        <h3 class="stats-subhead">Médias por semana ativa</h3>
-        <div class="stat-row"><span class="stat-label">📅 Treinos</span><span class="stat-value">${fmtN(avgTrainingsPerActiveWeek)}</span></div>
-        <div class="stat-row"><span class="stat-label">⏱️ Tempo total</span><span class="stat-value">${fmtHours(Math.round(avgMinutesPerActiveWeek))}</span></div>
-        <div class="stat-row"><span class="stat-label">🥊 Tempo de luta</span><span class="stat-value">${fmtHours(Math.round(avgSparPerActiveWeek))}</span></div>
-
-        <h3 class="stats-subhead">Médias por mês ativo</h3>
-        <div class="stat-row"><span class="stat-label">📅 Treinos</span><span class="stat-value">${fmtN(avgTrainingsPerActiveMonth)}</span></div>
-        <div class="stat-row"><span class="stat-label">⏱️ Tempo total</span><span class="stat-value">${fmtHours(Math.round(avgMinutesPerActiveMonth))}</span></div>
-        <div class="stat-row"><span class="stat-label">🥊 Tempo de luta</span><span class="stat-value">${fmtHours(Math.round(avgSparPerActiveMonth))}</span></div>
-
-        <h3 class="stats-subhead">Treinos por dia da semana</h3>
-        ${dowChart(jiuDays)}
-      </div>
-    </section>
-  `;
-}
-
 function kpiRow(value, label, suffix = "") {
   return `
     <div class="kpi-row">
@@ -777,9 +703,6 @@ function render() {
   const _days = filterRecordsForTrackingScope(_daysByUser[USER], USER, _trackingScope);
   const stretchSessions = filterRecordsForTrackingScope(_stretchByUser[USER], USER, _trackingScope);
   const scopeSinceLabel = _trackingScope === TRACKING_SCOPE.CYCLE ? "no ciclo atual" : "desde o início";
-  const scopeTotalTitle = _trackingScope === TRACKING_SCOPE.CYCLE
-    ? "Totais · ciclo atual"
-    : "Totais · histórico completo";
   const scopeSectionLabel = _trackingScope === TRACKING_SCOPE.CYCLE ? "Ciclo atual" : "Histórico completo";
   const categoryStartDate = (category) => (
     CATEGORY_START_DATES[category] > statsStartDate ? CATEGORY_START_DATES[category] : statsStartDate
@@ -798,13 +721,11 @@ function render() {
   let exDays = 0, activeDays = 0, totalCigRange = 0;
   let cleanRange = 0, dirtyRange = 0;
   const exCount = {};
-  const extraCount = {};
   for (const d of rangeData) {
     if (hasData(d)) activeDays++;
     const arr = d.exercises || [];
     if (arr.length) exDays++;
     for (const e of arr) exCount[e] = (exCount[e] || 0) + 1;
-    for (const x of (d.extras || [])) extraCount[x] = (extraCount[x] || 0) + 1;
     for (const slot of ["lunch", "dinner"]) {
       if (d[slot] === "limpo") cleanRange++;
       else if (d[slot] === "sujo") dirtyRange++;
@@ -814,22 +735,6 @@ function render() {
   const waterRange = rangeData.reduce((s, d) => s + waterLitres(d.water), 0);
   const avgWaterRange = totalDays > 0 ? waterRange / totalDays : 0;
 
-  // ----- desde o início (all-time) -----
-  const totalCigAll = _days.reduce((s, d) => s + ((d.cigarettes != null && d.cigarettes !== "") ? Number(d.cigarettes) : 0), 0);
-  const waterAll = _days.reduce((s, d) => s + waterLitres(d.water), 0);
-  const activeDaysAll = _days.filter(hasData).length;
-  const marmitas = _days.filter(d => (d.extras || []).includes("marmita")).length;
-
-  // denominadores = dias em que aquele hábito foi registrado
-  const cigReg = _days.filter(d => d.cigarettes != null && d.cigarettes !== "").length;
-  const sodaReg = _days.filter(d => d.soda === "sim" || d.soda === "nao").length;
-  const dessertReg = _days.filter(d => d.dessert === "sim" || d.dessert === "nao").length;
-
-  const diasSemRefri = _days.filter(d => d.soda === "nao").length;
-  const diasComRefri = _days.filter(d => d.soda === "sim").length;
-  const diasSemSobremesa = _days.filter(d => d.dessert === "nao").length;
-  const diasComSobremesa = _days.filter(d => d.dessert === "sim").length;
-  const diasSemFumarTotal = _days.filter(d => d.cigarettes === "0" || d.cigarettes === 0).length;
   const totalPts = totalEarnedByUser(_days);
   const ptsWeek = pointsInPeriod(_days, "weekly");
   const ptsMonth = pointsInPeriod(_days, "monthly");
@@ -861,17 +766,6 @@ function render() {
           <div class="stat-value">${count}</div>
         </div>`).join("")
     : `<p class="muted" style="font-size:12px;margin:4px 0">sem registros no período</p>`;
-
-  // ----- outros hábitos (range) -----
-  const extraRows = EXTRAS_META
-    .map(meta => ({ meta, count: extraCount[meta.key] || 0 }))
-    .filter(x => x.count > 0)
-    .sort((a, b) => b.count - a.count)
-    .map(({ meta, count }) => `
-      <div class="stat-row">
-        <span class="stat-label">${meta.icon} ${meta.label}</span>
-        <span class="stat-value">${count}</span>
-      </div>`).join("");
 
   // ----- recordes (all-time) -----
   const bDay = getBestDay(_days);
@@ -952,27 +846,6 @@ function render() {
     </section>
 
     <section class="block">
-      <div class="block-head"><h2>${scopeTotalTitle}</h2><span class="muted" style="font-size:11px">X / dias registrados</span></div>
-      <div class="stat-card" style="border-top:3px solid ${ACCENT}">
-        <div class="stat-row"><span class="stat-label">🚭 Dias sem fumar</span><span class="stat-value">${diasSemFumarTotal}<span class="muted" style="font-weight:500;font-size:12px">/${cigReg}</span></span></div>
-        <div class="stat-row"><span class="stat-label">🥤 Dias sem refrigerante</span><span class="stat-value">${diasSemRefri}<span class="muted" style="font-weight:500;font-size:12px">/${sodaReg}</span></span></div>
-        <div class="stat-row"><span class="stat-label">🥤 Dias com refrigerante</span><span class="stat-value">${diasComRefri}<span class="muted" style="font-weight:500;font-size:12px">/${sodaReg}</span></span></div>
-        <div class="stat-row"><span class="stat-label">🍰 Dias sem sobremesa</span><span class="stat-value">${diasSemSobremesa}<span class="muted" style="font-weight:500;font-size:12px">/${dessertReg}</span></span></div>
-        <div class="stat-row"><span class="stat-label">🍰 Dias com sobremesa</span><span class="stat-value">${diasComSobremesa}<span class="muted" style="font-weight:500;font-size:12px">/${dessertReg}</span></span></div>
-        <div class="stat-row"><span class="stat-label">🍱 Marmitas feitas</span><span class="stat-value">${marmitas}<span class="muted" style="font-weight:500;font-size:12px">/${activeDaysAll}</span></span></div>
-        <div class="stat-row"><span class="stat-label">🚬 Cigarros fumados (total)</span><span class="stat-value">${totalCigAll}</span></div>
-        <div class="stat-row"><span class="stat-label">💧 Água total</span><span class="stat-value">${fmtLitres(waterAll)}</span></div>
-      </div>
-    </section>
-
-    <section class="block">
-      <div class="block-head"><h2>Outros hábitos</h2><span class="muted" style="font-size:11px">no período</span></div>
-      <div class="stat-card" style="border-top:3px solid ${ACCENT}">
-        ${extraRows || `<p class="muted" style="font-size:12px;margin:4px 0">nada marcado no período</p>`}
-      </div>
-    </section>
-
-    <section class="block">
       <div class="block-head"><h2>Exercícios por modalidade</h2><span class="muted" style="font-size:11px">no período</span></div>
       <div class="stat-card" style="border-top:3px solid ${ACCENT}">${modRows}</div>
     </section>
@@ -1007,8 +880,6 @@ function render() {
     </section>
 
     ${cigSectionHtml(computeCigStats(_days, statsStartDate), ACCENT, scopeSinceLabel)}
-
-    ${USER === "vinicius" ? jiuSectionHtml(computeJiuStats(_days), ACCENT, categoryStartDate("jiujitsu")) : ""}
 
     ${USER === "victoria" ? pilatesSectionHtml(computePilatesStats(_days), ACCENT, categoryStartDate("pilates")) : ""}
 
