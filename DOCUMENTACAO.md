@@ -127,6 +127,7 @@ No iPhone/Android, abrir o site no navegador e usar "Adicionar à tela de iníci
 | `tests/tracker-run-distance.test.mjs` | Testes das opções, seleção, troca e limpeza da distância de corrida |
 | `tests/water-options.test.mjs` | Testes das opções de água nos dois cards, conversão em litros e pontuação |
 | `tests/stats-cleanup.test.mjs` | Protege a limpeza da Stats e a permanência das seções gerais |
+| `tests/stats-food-chart.test.mjs` | Garante a barra alimentar única e preserva o gráfico por dia da semana |
 
 ## Boot & autenticação
 
@@ -240,7 +241,7 @@ Em seguida o nav é posicionado logo abaixo da `.topbar`: `setOffsets()` mede `t
 
 Seções renderizadas, nesta ordem: **Pontos** (total, média/dia, semana, mês) · **Recordes** · **Resumo do período** (dias ativos, dias de exercício, % refeições limpas, média de água, cigarros) · **Sequências (atual · recorde)** (exercício, sem fumar, sem refri, sem sobremesa) · **Exercícios por modalidade** · **Alimentação** · **Cigarros & Nicotina** · **Pilates** (só Vivi) · **Alongamento** · **Academia**. Os antigos cards **Totais**, **Outros hábitos** e o detalhamento exclusivo de **Jiu-jítsu** foram removidos em 19/07/2026. Jiu-jítsu continua aparecendo nas agregações gerais de modalidade e nos badges do calendário da academia.
 
-Gráficos: medidor semicircular SVG (`semiDonut`, refeições limpas x sujas), barras por dia da semana (`dowChart`), barras horizontais empilhadas por grupo muscular/DOW (`gymDowBars`), barras normalizadas de refeições por DOW (`mealDowChart`), somatório por DOW (`dowSumChart`, cigarros/chiclete), mini-calendário mensal com badges (`gymCalendar`) e barra de progresso (`bar`). Streaks: `currentStreak` anda para trás desde hoje; `bestStreak` anda para frente desde o início do escopo selecionado.
+Gráficos: barra horizontal única de 0–100% para a divisão geral entre refeições limpas e sujas (`mealSplitBar`), barras por dia da semana (`dowChart`), barras horizontais empilhadas por grupo muscular/DOW (`gymDowBars`), barras normalizadas de refeições por DOW (`mealDowChart`), somatório por DOW (`dowSumChart`, cigarros/chiclete), mini-calendário mensal com badges (`gymCalendar`) e barra de progresso (`bar`). Streaks: `currentStreak` anda para trás desde hoje; `bestStreak` anda para frente desde o início do escopo selecionado.
 
 **Arquivos.** `js/stats-page.js`, `stats.html`, `js/points-utils.js`, `js/points-engine.js`, `js/storage.js`, `js/stretch-storage.js`, `js/tracking-cycle.js`. (`js/stats.js` e `js/calendar.js` são código morto — ver Modelo de dados/observações.)
 
@@ -478,7 +479,7 @@ Amarelos (`#fbbf24`/`#fcd34d`/`#fde68a`) e roxos/azuis de gradiente **não têm 
 - **Avatares**: `.avatar` + `.avatar--vini`/`.avatar--vic` + tamanhos `--md/--sm/--xs`.
 - **Estrutura de página**: `.page`, `.topbar`/`.brand`/`.topbar-date`/`.topbar-right`/`.points-badge`, `.nav-menu`/`.nav-item`/`.nav-item.is-active`, `.block`/`.block-head` (wrapper de seção). `.stats-toggle-bar` sticky usa `top: var(--stack-top)`.
 - **Save/registro**: `.save-bar`/`.save-btn`/`.save-btn.is-dirty`, `.date-input` (`color-scheme:dark`), `.saved-pill`, `.sync-status[data-kind=ok|err]`.
-- **Stats/gráficos**: `.stat-card`/`.stat-row`/`.bar>i`, `.kpi`/`.kpi-row`, `.donut` (gauge SVG 180°, `pathLength=100`), `.hg-*` (histórico grid), `.dow-chart`/`.meal-stack`, `.gym-dow-*`/`.gym-cal-*`.
+- **Stats/gráficos**: `.stat-card`/`.stat-row`/`.bar>i`, `.kpi`/`.kpi-row`, `.meal-split` (barra alimentar única de 0–100%), `.hg-*` (histórico grid), `.dow-chart`/`.meal-stack`, `.gym-dow-*`/`.gym-cal-*`.
 - **Calendários**: `.calendar`/`.cal-cell`, `.dcal-*` (calendário de pontos, `.has-bonus`/`.has-penalty`).
 - **Domínios específicos**: `.totals-*`/`.bd-*` (detalhamento), `.rec-*`/`.banner-card` (recordes), `.sb-*`/`.scoreboards` (placares), `.vic-*`/`.casal-*` (carteiras), `.config-*`/`.extra-*`/`.reward-*` (config), `.along-*` (alongamento/timer), `.pom-*` (pomodoro + overlay `.pom-focus`), `.presence-*` (status; `.presence-hero.is-ocupado`/`.is-livre`, switch `.presence-switch`, `body.presence-fullscreen`).
 - **KG/Dieta**: `.kg-hero`/`.kg-hero-value`, `.kg-form`/`.kg-weight-input`/`.kg-height-input`/`.kg-check`, `.kg-seg`, `.kg-chart-wrap`/`.kgc-line`/`.kgc-area`/`.kgc-dot`, `.kg-imc-grid`/`.kg-stat` (`.imc--low/--ok/--warn/--high`), `.kg-list`. Dieta: `.diet-meal-group`/`.food-row`/`.food-chip`, `.nutri`/`.nutri-kcal`/`.nutri-macros` (`.nutri-p` verde, `.nutri-c` azul-água, `.nutri-f` amarelo), `.goals`/`.goal-row`/`.goal-fill` (`.is-met`), `.diet-days`/`.diet-day-row`.

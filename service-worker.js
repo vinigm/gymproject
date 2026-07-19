@@ -2,7 +2,7 @@
 // Em conexões normais, sempre busca a versão mais recente.
 // Só recorre ao cache se a rede falhar (offline).
 // Isso evita ficar "preso" em uma versão antiga após deploy.
-const CACHE = "habitos-shell-v35";
+const CACHE = "habitos-shell-v36";
 
 self.addEventListener("install", (e) => {
   self.skipWaiting();

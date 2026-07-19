@@ -98,28 +98,27 @@ function bestStreak(byDate, statusFn, startDate = APP_START_DATE) {
   return best;
 }
 
-// === gauge semi-circular (igual ao da página principal) ===
-function semiDonut(clean, dirty) {
+// === distribuição geral das refeições em uma única barra de 0 a 100% ===
+function mealSplitBar(clean, dirty) {
   const total = clean + dirty;
-  const pClean = total > 0 ? (clean / total) * 100 : 0;
+  const pClean = total > 0 ? Math.round((clean / total) * 100) : 0;
   const pDirty = total > 0 ? 100 - pClean : 0;
   return `
-    <div class="donut">
-      <svg viewBox="0 0 200 130" class="donut-svg" aria-hidden="true">
-        <path d="M 20 100 A 80 80 0 0 1 180 100" class="donut-bg" pathLength="100"/>
-        <path d="M 20 100 A 80 80 0 0 1 180 100" class="donut-fg" pathLength="100" stroke-dasharray="${pClean} 100"/>
-        <text x="100" y="86" class="donut-total">${total}</text>
-        <text x="100" y="110" class="donut-sub">refeições</text>
-      </svg>
-      <div class="donut-legend">
-        <div class="leg leg--good">
-          <span class="leg-pct">${Math.round(pClean)}%</span>
-          <span class="leg-lbl">limpas · ${clean}</span>
-        </div>
-        <div class="leg leg--bad">
-          <span class="leg-pct">${Math.round(pDirty)}%</span>
-          <span class="leg-lbl">sujas · ${dirty}</span>
-        </div>
+    <div class="meal-split">
+      <div class="meal-split-labels">
+        <strong class="meal-split-clean">${pClean}% limpas</strong>
+        <strong class="meal-split-dirty">${pDirty}% sujas</strong>
+      </div>
+      <div class="meal-split-track" role="img" aria-label="${pClean}% de refeições limpas e ${pDirty}% de refeições sujas">
+        ${total === 0
+          ? `<span class="meal-split-empty"></span>`
+          : `
+            ${pClean > 0 ? `<span class="meal-split-segment meal-split-segment--clean" style="width:${pClean}%"></span>` : ""}
+            ${pDirty > 0 ? `<span class="meal-split-segment meal-split-segment--dirty" style="width:${pDirty}%"></span>` : ""}
+          `}
+      </div>
+      <div class="meal-split-scale" aria-hidden="true">
+        <span>0%</span><span>100%</span>
       </div>
     </div>
   `;
@@ -703,7 +702,6 @@ function render() {
   const _days = filterRecordsForTrackingScope(_daysByUser[USER], USER, _trackingScope);
   const stretchSessions = filterRecordsForTrackingScope(_stretchByUser[USER], USER, _trackingScope);
   const scopeSinceLabel = _trackingScope === TRACKING_SCOPE.CYCLE ? "no ciclo atual" : "desde o início";
-  const scopeSectionLabel = _trackingScope === TRACKING_SCOPE.CYCLE ? "Ciclo atual" : "Histórico completo";
   const categoryStartDate = (category) => (
     CATEGORY_START_DATES[category] > statsStartDate ? CATEGORY_START_DATES[category] : statsStartDate
   );
@@ -854,24 +852,15 @@ function render() {
       <div class="block-head"><h2>Alimentação</h2></div>
       <div class="stat-card" style="border-top:3px solid ${ACCENT}">
         ${(() => {
-          const ms = monthStartClamped(statsStartDate);
-          let cM = 0, sM = 0, cAll = 0, sAll = 0;
+          let cAll = 0, sAll = 0;
           for (const d of _days) {
             for (const slot of ["lunch", "dinner"]) {
-              if (d[slot] === "limpo") {
-                cAll++;
-                if (d.date >= ms) cM++;
-              } else if (d[slot] === "sujo") {
-                sAll++;
-                if (d.date >= ms) sM++;
-              }
+              if (d[slot] === "limpo") cAll++;
+              else if (d[slot] === "sujo") sAll++;
             }
           }
           return `
-            <h3 class="stats-subhead">Mês atual</h3>
-            ${semiDonut(cM, sM)}
-            <h3 class="stats-subhead">${scopeSectionLabel}</h3>
-            ${semiDonut(cAll, sAll)}
+            ${mealSplitBar(cAll, sAll)}
             <h3 class="stats-subhead">Refeições por dia da semana</h3>
             ${mealDowChart(_days)}
           `;
@@ -892,12 +881,6 @@ function render() {
       categoryStartDate("academia")
     )}
   `;
-}
-
-function monthStartClamped(startDate = APP_START_DATE) {
-  const t = new Date();
-  const first = `${t.getFullYear()}-${pad(t.getMonth() + 1)}-01`;
-  return first < startDate ? startDate : first;
 }
 
 function setupToggle() {
