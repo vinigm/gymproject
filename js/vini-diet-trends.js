@@ -272,6 +272,7 @@ export function bindViniTrendTooltips(root, { records = [], onOpenDate } = {}) {
   const { signal } = controller;
   let active = null;
   let hideTimer = 0;
+  let suppressFocusOpen = false;
 
   const clearHideTimer = () => {
     if (!hideTimer) return;
@@ -283,13 +284,19 @@ export function bindViniTrendTooltips(root, { records = [], onOpenDate } = {}) {
     clearHideTimer();
     if (!active) return;
     const { point, tooltip } = active;
+    active = null;
     point.setAttribute("aria-expanded", "false");
     point.classList.remove("is-active");
     tooltip.hidden = true;
     tooltip.style.removeProperty("left");
     tooltip.style.removeProperty("top");
-    if (restoreFocus) point.focus({ preventScroll: true });
-    active = null;
+    if (restoreFocus) {
+      // No Safari móvel, devolver o foco pode disparar `focus` depois do
+      // clique e reabrir imediatamente o painel que acabou de ser fechado.
+      suppressFocusOpen = true;
+      point.focus({ preventScroll: true });
+      window.requestAnimationFrame(() => { suppressFocusOpen = false; });
+    }
   };
 
   const position = () => {
@@ -342,19 +349,19 @@ export function bindViniTrendTooltips(root, { records = [], onOpenDate } = {}) {
     }, { signal });
     point.addEventListener("mouseleave", scheduleClose, { signal });
     point.addEventListener("focus", () => {
-      if (!active?.pinned) show(point);
+      if (!suppressFocusOpen && !active?.pinned) show(point);
     }, { signal });
     point.addEventListener("blur", scheduleClose, { signal });
     point.addEventListener("click", (event) => {
       event.stopPropagation();
-      if (active?.point === point && active.pinned) close({ restoreFocus: true });
+      if (active?.point === point && active.pinned) close();
       else show(point, { pinned: true });
     }, { signal });
     point.addEventListener("keydown", (event) => {
       if (event.key === "Escape") close({ restoreFocus: true });
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
-        if (active?.point === point && active.pinned) close({ restoreFocus: true });
+        if (active?.point === point && active.pinned) close();
         else show(point, { pinned: true });
       }
     }, { signal });
@@ -366,7 +373,7 @@ export function bindViniTrendTooltips(root, { records = [], onOpenDate } = {}) {
     tooltip.addEventListener("click", (event) => {
       event.stopPropagation();
       if (event.target.closest("[data-trend-close]")) {
-        close({ restoreFocus: true });
+        close();
         return;
       }
       const openButton = event.target.closest("[data-trend-open-date]");

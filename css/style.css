@@ -3654,7 +3654,7 @@ body.presence-fullscreen .presence-fs-exit { display: flex; }
 .vini-trend-tooltip-head > div { display: flex; min-width: 0; flex-direction: column; gap: 3px; }
 .vini-trend-tooltip-head small { color: var(--muted); font-size: 9px; line-height: 1.35; }
 .vini-trend-tooltip-head strong { color: var(--trend-color); font-size: 13px; }
-.vini-trend-tooltip-head button { width: 30px; height: 30px; flex: none; padding: 0; color: var(--muted); background: rgba(255,255,255,.06); border: 1px solid var(--border); border-radius: 50%; font-size: 19px; line-height: 1; cursor: pointer; }
+.vini-trend-tooltip-head button { width: 36px; height: 36px; flex: none; padding: 0; color: var(--muted); background: rgba(255,255,255,.06); border: 1px solid var(--border); border-radius: 50%; font-size: 21px; line-height: 1; cursor: pointer; touch-action: manipulation; }
 .vini-trend-tooltip-head button:hover { color: var(--text); border-color: var(--trend-color); }
 .vini-trend-tooltip-totals { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; margin: 11px 0; }
 .vini-trend-tooltip-totals > span { display: flex; min-width: 0; padding: 7px 5px; align-items: center; flex-direction: column; gap: 2px; background: rgba(255,255,255,.035); border: 1px solid var(--border); border-radius: 8px; text-align: center; }
@@ -3701,6 +3701,16 @@ body.presence-fullscreen .presence-fs-exit { display: flex; }
     width: auto;
     max-height: min(72vh, 560px);
   }
+  .vini-trend-tooltip-head {
+    position: sticky;
+    z-index: 2;
+    top: -13px;
+    margin: -13px -13px 0;
+    padding: 13px;
+    background: #0b1325;
+    border-bottom: 1px solid var(--border);
+  }
+  .vini-trend-tooltip-head button { width: 44px; height: 44px; font-size: 24px; }
 }
 
 @media (max-width: 440px) {

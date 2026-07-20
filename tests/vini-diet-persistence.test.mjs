@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
 const ui = await readFile(new URL("../js/vini-diet-ui.js", import.meta.url), "utf8");
+const trends = await readFile(new URL("../js/vini-diet-trends.js", import.meta.url), "utf8");
 const storage = await readFile(new URL("../js/diet-storage.js", import.meta.url), "utf8");
 const css = await readFile(new URL("../css/style.css", import.meta.url), "utf8");
 
@@ -47,6 +48,8 @@ assert.ok(ui.indexOf("${viniDietTrendsHTML(recordsInScope(), { viewportWidth: Ma
 assert.ok(ui.indexOf("${historyHTML()}") < ui.indexOf("${viniDietTrendsHTML("));
 assert.match(ui, /bindViniTrendTooltips\(tracker\.root/);
 assert.match(ui, /onOpenDate:\s*\(date\)/);
+assert.match(trends, /suppressFocusOpen/);
+assert.match(trends, /if \(!suppressFocusOpen && !active\?\.pinned\) show\(point\)/);
 
 // A mutação precisa chegar ao cache síncrono antes de entrar na fila remota.
 const mutation = ui.match(/function mutateCurrentDay\(mutator\) \{([\s\S]*?)\n\}/)?.[1] || "";
