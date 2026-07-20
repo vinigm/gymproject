@@ -22,16 +22,6 @@ function preset(id, icon, label, description, groupId, items) {
 
 export const VINI_MEAL_PRESETS = Object.freeze([
   preset(
-    "pre_treino_padrao",
-    "🏃",
-    "Pré-treino",
-    "2 bananas",
-    "pre_treino",
-    [
-      { foodId: "banana", amount: 2 },
-    ]
-  ),
-  preset(
     "cafe_padrao",
     "🌅",
     "Café da manhã",
@@ -104,6 +94,16 @@ export const VINI_MEAL_PRESETS = Object.freeze([
       { foodId: "pao", amount: 2 },
       { foodId: "pasta_amendoim_amendopower", amount: 30 },
       { foodId: "whey", amount: 3 },
+    ]
+  ),
+  preset(
+    "pre_treino_padrao",
+    "🏃",
+    "Pré-treino",
+    "2 bananas",
+    "pre_treino",
+    [
+      { foodId: "banana", amount: 2 },
     ]
   ),
   preset(

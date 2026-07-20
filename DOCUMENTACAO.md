@@ -496,9 +496,9 @@ Breakpoints: `@media (max-width:359px)` compacta chips; `(max-width:420/480px)` 
 
 ### Service Worker
 
-`service-worker.js`, estratégia **network-first** com fallback offline. `CACHE = "habitos-shell-v39"`. No `install` faz `self.skipWaiting()`; no `activate` deleta todos os caches com nome diferente de `CACHE` e chama `self.clients.claim()`. No `fetch`: deixa passar direto hosts que contenham `googleapis.com`, `firebaseio.com` ou `gstatic.com`, e métodos diferentes de GET; para o resto faz `fetch(req, { cache: "no-store" })`, clona a resposta para o cache em background e, se a rede falhar, responde com `caches.match(req)`. Isso garante versão fresca quando online e evita ficar preso em versão antiga após deploy. O SW é registrado por `index.html` no evento `load`.
+`service-worker.js`, estratégia **network-first** com fallback offline. `CACHE = "habitos-shell-v40"`. No `install` faz `self.skipWaiting()`; no `activate` deleta todos os caches com nome diferente de `CACHE` e chama `self.clients.claim()`. No `fetch`: deixa passar direto hosts que contenham `googleapis.com`, `firebaseio.com` ou `gstatic.com`, e métodos diferentes de GET; para o resto faz `fetch(req, { cache: "no-store" })`, clona a resposta para o cache em background e, se a rede falhar, responde com `caches.match(req)`. Isso garante versão fresca quando online e evita ficar preso em versão antiga após deploy. O SW é registrado por `index.html` no evento `load`.
 
-Para invalidar caches antigos num deploy, é preciso **incrementar manualmente o nome do cache** (`habitos-shell-v39`) — o número é a versão efetiva do shell. Em rede lenta mas presente não há timeout: o app espera a rede em vez de servir o cache.
+Para invalidar caches antigos num deploy, é preciso **incrementar manualmente o nome do cache** (`habitos-shell-v40`) — o número é a versão efetiva do shell. Em rede lenta mas presente não há timeout: o app espera a rede em vez de servir o cache.
 
 ### Wake Lock
 
