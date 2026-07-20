@@ -3604,7 +3604,8 @@ body.presence-fullscreen .presence-fs-exit { display: flex; }
 .vini-trends-list { display: flex; flex-direction: column; gap: 14px; }
 .vini-trend-card {
   --trend-color: var(--kg-accent);
-  overflow: hidden;
+  position: relative;
+  overflow: visible;
   background: var(--card);
   border: 1px solid var(--border);
   border-top: 3px solid var(--trend-color);
@@ -3627,7 +3628,61 @@ body.presence-fullscreen .presence-fs-exit { display: flex; }
 .vini-trend-xlabel { fill: var(--muted); font-size: 8px; font-variant-numeric: tabular-nums; }
 .vini-trend-goal { stroke: #f8fafc; stroke-width: 1.6; stroke-dasharray: 6 5; opacity: .7; }
 .vini-trend-line { fill: none; stroke: var(--trend-color); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
-.vini-trend-dot { fill: var(--card); stroke: var(--trend-color); stroke-width: 2.3; }
+.vini-trend-hit { fill: transparent; stroke: transparent; cursor: pointer; pointer-events: all; }
+.vini-trend-hit:focus { outline: none; }
+.vini-trend-dot { fill: var(--card); stroke: var(--trend-color); stroke-width: 2.3; pointer-events: none; transition: r .15s ease, fill .15s ease; }
+.vini-trend-hit:hover + .vini-trend-dot,
+.vini-trend-hit:focus + .vini-trend-dot,
+.vini-trend-hit.is-active + .vini-trend-dot { r: 5.2px; fill: var(--trend-color); }
+.vini-trend-tooltip {
+  position: absolute;
+  z-index: 30;
+  width: min(380px, calc(100% - 16px));
+  max-height: min(520px, 72vh);
+  overflow: auto;
+  padding: 13px;
+  color: var(--text);
+  background: #0b1325;
+  border: 1px solid var(--border);
+  border-color: color-mix(in srgb, var(--trend-color) 62%, var(--border));
+  border-radius: 14px;
+  box-shadow: 0 22px 60px rgba(0, 0, 0, .52);
+  scrollbar-width: thin;
+}
+.vini-trend-tooltip[hidden] { display: none; }
+.vini-trend-tooltip-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.vini-trend-tooltip-head > div { display: flex; min-width: 0; flex-direction: column; gap: 3px; }
+.vini-trend-tooltip-head small { color: var(--muted); font-size: 9px; line-height: 1.35; }
+.vini-trend-tooltip-head strong { color: var(--trend-color); font-size: 13px; }
+.vini-trend-tooltip-head button { width: 30px; height: 30px; flex: none; padding: 0; color: var(--muted); background: rgba(255,255,255,.06); border: 1px solid var(--border); border-radius: 50%; font-size: 19px; line-height: 1; cursor: pointer; }
+.vini-trend-tooltip-head button:hover { color: var(--text); border-color: var(--trend-color); }
+.vini-trend-tooltip-totals { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; margin: 11px 0; }
+.vini-trend-tooltip-totals > span { display: flex; min-width: 0; padding: 7px 5px; align-items: center; flex-direction: column; gap: 2px; background: rgba(255,255,255,.035); border: 1px solid var(--border); border-radius: 8px; text-align: center; }
+.vini-trend-tooltip-totals small { color: var(--muted); font-size: 7px; text-transform: uppercase; }
+.vini-trend-tooltip-totals b { font-size: 9px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.vini-trend-tooltip-content { display: flex; flex-direction: column; gap: 8px; }
+.vini-trend-tooltip-meal { padding: 9px; background: rgba(255,255,255,.025); border: 1px solid var(--border); border-radius: 10px; }
+.vini-trend-tooltip-meal header { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-bottom: 6px; border-bottom: 1px dashed var(--border); }
+.vini-trend-tooltip-meal header strong { font-size: 10px; }
+.vini-trend-tooltip-meal header > span { color: var(--trend-color); font-size: 9px; font-weight: 900; }
+.vini-trend-tooltip-meal ul { display: flex; margin: 0; padding: 4px 0 0; flex-direction: column; list-style: none; }
+.vini-trend-tooltip-meal li { display: flex; padding: 5px 0; align-items: center; justify-content: space-between; gap: 10px; border-bottom: 1px solid rgba(148,163,184,.08); }
+.vini-trend-tooltip-meal li:last-child { border-bottom: 0; }
+.vini-trend-tooltip-meal li > span { display: flex; min-width: 0; flex-direction: column; gap: 1px; }
+.vini-trend-tooltip-meal li b { font-size: 9px; }
+.vini-trend-tooltip-meal li small { color: var(--muted); font-size: 8px; }
+.vini-trend-tooltip-meal li em { flex: none; color: var(--muted); font-size: 8px; font-style: normal; }
+.vini-trend-tooltip-subtotal { display: flex; padding-top: 6px; justify-content: flex-end; gap: 7px; color: var(--muted); border-top: 1px dashed var(--border); font-size: 7px; font-weight: 800; }
+.vini-trend-tooltip-empty { margin: 0; padding: 12px; color: var(--muted); background: rgba(255,255,255,.025); border: 1px dashed var(--border); border-radius: 10px; font-size: 9px; line-height: 1.5; text-align: center; }
+.vini-trend-tooltip-water { margin: 0; padding: 8px 9px; color: var(--muted); background: rgba(56,189,248,.06); border: 1px solid rgba(56,189,248,.16); border-radius: 9px; font-size: 9px; }
+.vini-trend-tooltip-water b { color: var(--text); }
+.vini-trend-tooltip-exercise { display: flex; padding: 9px; flex-direction: column; gap: 4px; background: rgba(251,191,36,.055); border: 1px solid rgba(251,191,36,.18); border-radius: 10px; }
+.vini-trend-tooltip-exercise > strong { color: #fbbf24; font-size: 10px; }
+.vini-trend-tooltip-exercise > span { color: var(--text); font-size: 8px; }
+.vini-trend-tooltip-exercise > span b { color: #fbbf24; }
+.vini-trend-tooltip-exercise > small { color: var(--muted); font-size: 8px; }
+.vini-trend-tooltip-open { width: 100%; min-height: 36px; margin-top: 10px; color: #06101f; background: var(--trend-color); border: 0; border-radius: 9px; font-size: 10px; font-weight: 900; cursor: pointer; }
+.vini-trend-tooltip-open:hover { filter: brightness(1.08); }
 
 @media (max-width: 620px) {
   .vini-date-card { grid-template-columns: 1fr; }
@@ -3637,6 +3692,15 @@ body.presence-fullscreen .presence-fs-exit { display: flex; }
   .vini-beverage-row { grid-template-columns: auto minmax(0, 1fr); }
   .vini-beverage-stepper { grid-column: 1 / -1; grid-template-columns: 42px 1fr 42px; }
   .vini-beverage-stepper button { width: 42px; height: 42px; }
+  .vini-trend-tooltip {
+    position: fixed;
+    z-index: 1200;
+    right: 12px;
+    bottom: max(12px, env(safe-area-inset-bottom));
+    left: 12px;
+    width: auto;
+    max-height: min(72vh, 560px);
+  }
 }
 
 @media (max-width: 440px) {

@@ -374,6 +374,7 @@ Estas diretrizes orientam a implementação atual:
 - **19/07/2026:** adicionado menu recolhível de bebidas com contadores `+ / −` para cerveja, destilado e energético normal. As porções médias entram nos totais nutricionais e são persistidas no campo `beverages` do dia.
 - **19/07/2026:** adicionado o atalho pessoal `Churrasco` com 1 pão de alho Santa Massa, 300 g de carne, 70 g de salsichão e 50 g de coração. O pão usa o [rótulo oficial da Santa Massa](https://www.santamassa.com.br/produtos/pao-de-alho-tradicional/) para uma unidade de 80 g; carnes usam médias provisórias.
 - **20/07/2026:** adicionada a Amendopower Cookies & Cream ao lanche personalizado e à predefinição `Lanche - Pasta de amendoim + whey`, com 2 fatias de pão, 30 g da pasta e 3 medidas de whey. A referência por 15 g é 87 kcal, 3,2 g de proteína, 3,7 g de carboidrato e 6,6 g de gordura, conforme a [tabela publicada pelo Sonda](https://www.sondadelivery.com.br/faco/produto/pasta-de-amendoim-cookies--cream-dacolonia-amendo-power-pote-450g/1000044454).
+- **20/07/2026:** os pontos dos quatro gráficos nutricionais ganharam detalhes interativos. No desktop, o painel abre ao passar o mouse ou focar; no celular, abre por toque e pode ficar fixado. Ele mostra totais, alimentos e porções agrupados por refeição, subtotais, bebidas, hidratação, exercício e um atalho para editar o registro daquele dia. Registros antigos sem composição preservam os totais e informam que os detalhes não estão disponíveis.
 
 ## 15. Implementação no tracker
 
@@ -392,7 +393,7 @@ Estas diretrizes orientam a implementação atual:
 - A hidratação usa 2,5 L como base; em dias de treino, a meta mínima exibida passa a 3 L, mantendo a orientação de até 3,5 L.
 - O resumo diário exibe `kcal líquidas = kcal ingeridas − kcal ativas estimadas do treino`. As séries históricas de alimentação continuam mostrando kcal ingeridas, sem misturar consumo com exercício.
 - As estatísticas incluem totais e médias semanais de kcal/macros, quantidade de alimentos, frequência por momento, hidratação, sequência, marcos de dias, alimentos mais marcados e histórico editável.
-- No final da Dieta, quatro gráficos de linha acompanham kcal, proteína, carboidrato e gordura por data, respeitando `Ciclo atual` e `Histórico completo`. Cada gráfico inclui uma linha horizontal de referência.
+- No final da Dieta, quatro gráficos de linha acompanham kcal, proteína, carboidrato e gordura por data, respeitando `Ciclo atual` e `Histórico completo`. Cada gráfico inclui uma linha horizontal de referência e pontos interativos que detalham a composição do dia sem alterar os dados salvos.
 - As referências atuais do tracker são **2.000 kcal, 150 g de proteína, 200 g de carboidrato e 68 g de gordura**. Os três thresholds de macros foram informados pelo usuário em 18/07/2026; as 2.000 kcal permanecem provisórias enquanto não houver uma meta clínica específica.
 - Itens “à vontade” podem ser registrados, mas não entram nos macros enquanto não houver quantidade definida.
 - Registros dos formatos `vini-nutri-2026-07-v1` a `vini-nutri-2026-07-v6` são convertidos em memória para o modelo atual e só passam a v7 quando o dia é editado, sem apagar o snapshot histórico.

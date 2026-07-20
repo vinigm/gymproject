@@ -20,7 +20,7 @@ import {
   toggleViniMealPreset,
   toggleViniFoodQuantity,
 } from "./vini-diet-selection.js";
-import { viniDietTrendsHTML } from "./vini-diet-trends.js";
+import { bindViniTrendTooltips, viniDietTrendsHTML } from "./vini-diet-trends.js";
 import {
   VINI_BEVERAGES,
   VINI_FOOD_GROUPS,
@@ -53,6 +53,7 @@ const tracker = {
   saveStatus: "",
   customFoodsOpen: false,
   beveragesOpen: false,
+  trendTooltipCleanup: null,
 };
 
 function pad2(value) { return String(value).padStart(2, "0"); }
@@ -234,6 +235,8 @@ export function renderViniDietTracker(root, { scope = "cycle" } = {}) {
 
 function renderTracker() {
   if (!tracker.root) return;
+  tracker.trendTooltipCleanup?.();
+  tracker.trendTooltipCleanup = null;
   if (!tracker.loaded) {
     tracker.root.innerHTML = `<section class="block"><p class="muted" style="padding:8px">Carregando plano alimentar…</p></section>`;
     return;
@@ -866,6 +869,13 @@ function bindTracker() {
   tracker.root.querySelector("[data-date-today]")?.addEventListener("click", () => selectDate(todayISO()));
   tracker.root.querySelectorAll("[data-open-date]").forEach((button) => {
     button.addEventListener("click", () => selectDate(button.dataset.openDate));
+  });
+  tracker.trendTooltipCleanup = bindViniTrendTooltips(tracker.root, {
+    records: recordsInScope(),
+    onOpenDate: (date) => {
+      selectDate(date);
+      window.requestAnimationFrame(() => tracker.root?.scrollIntoView({ behavior: "smooth", block: "start" }));
+    },
   });
 
   tracker.root.querySelectorAll("[data-food-checkbox]").forEach((input) => {

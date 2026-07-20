@@ -45,6 +45,8 @@ assert.ok(ui.indexOf("${cycleStatsHTML()}") < ui.indexOf("${saveControlsHTML()}"
 assert.ok(ui.indexOf("${historyHTML()}") < ui.indexOf("${saveControlsHTML()}"));
 assert.ok(ui.indexOf("${viniDietTrendsHTML(recordsInScope(), { viewportWidth: Math.max(320, tracker.root.clientWidth - 48) })}") < ui.indexOf("${saveControlsHTML()}"));
 assert.ok(ui.indexOf("${historyHTML()}") < ui.indexOf("${viniDietTrendsHTML("));
+assert.match(ui, /bindViniTrendTooltips\(tracker\.root/);
+assert.match(ui, /onOpenDate:\s*\(date\)/);
 
 // A mutação precisa chegar ao cache síncrono antes de entrar na fila remota.
 const mutation = ui.match(/function mutateCurrentDay\(mutator\) \{([\s\S]*?)\n\}/)?.[1] || "";
