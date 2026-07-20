@@ -250,11 +250,11 @@ function renderTracker() {
     ${customFoodsHTML(day, summary)}
     ${beveragesHTML(day, summary)}
     ${hydrationHTML(day, summary)}
-    ${saveControlsHTML()}
     ${weeklyHTML()}
     ${cycleStatsHTML()}
     ${historyHTML()}
-    ${viniDietTrendsHTML(recordsInScope(), { viewportWidth: Math.max(320, tracker.root.clientWidth - 48) })}`;
+    ${viniDietTrendsHTML(recordsInScope(), { viewportWidth: Math.max(320, tracker.root.clientWidth - 48) })}
+    ${saveControlsHTML()}`;
 
   bindTracker();
   updateSaveStatus();

@@ -39,8 +39,11 @@ assert.ok(ui.indexOf("${dailySummaryHTML(summary)}") < ui.indexOf("${customFoods
 assert.ok(ui.indexOf("${customFoodsHTML(day, summary)}") < ui.indexOf("${hydrationHTML(day, summary)}"));
 assert.ok(ui.indexOf("${customFoodsHTML(day, summary)}") < ui.indexOf("${beveragesHTML(day, summary)}"));
 assert.ok(ui.indexOf("${beveragesHTML(day, summary)}") < ui.indexOf("${hydrationHTML(day, summary)}"));
-assert.ok(ui.indexOf("${hydrationHTML(day, summary)}") < ui.indexOf("${saveControlsHTML()}"));
-assert.ok(ui.indexOf("${saveControlsHTML()}") < ui.indexOf("${weeklyHTML()}"));
+assert.ok(ui.indexOf("${hydrationHTML(day, summary)}") < ui.indexOf("${weeklyHTML()}"));
+assert.ok(ui.indexOf("${weeklyHTML()}") < ui.indexOf("${saveControlsHTML()}"));
+assert.ok(ui.indexOf("${cycleStatsHTML()}") < ui.indexOf("${saveControlsHTML()}"));
+assert.ok(ui.indexOf("${historyHTML()}") < ui.indexOf("${saveControlsHTML()}"));
+assert.ok(ui.indexOf("${viniDietTrendsHTML(recordsInScope(), { viewportWidth: Math.max(320, tracker.root.clientWidth - 48) })}") < ui.indexOf("${saveControlsHTML()}"));
 assert.ok(ui.indexOf("${historyHTML()}") < ui.indexOf("${viniDietTrendsHTML("));
 
 // A mutação precisa chegar ao cache síncrono antes de entrar na fila remota.
