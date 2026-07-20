@@ -95,6 +95,18 @@ export const VINI_MEAL_PRESETS = Object.freeze([
     ]
   ),
   preset(
+    "lanche_pasta_amendoim_whey",
+    "🥜",
+    "Lanche - Pasta de amendoim + whey",
+    "2 fatias · 30g Amendopower · 3 medidas whey",
+    "lanche_tarde",
+    [
+      { foodId: "pao", amount: 2 },
+      { foodId: "pasta_amendoim_amendopower", amount: 30 },
+      { foodId: "whey", amount: 3 },
+    ]
+  ),
+  preset(
     "pos_treino_padrao",
     "💪",
     "Pós-treino",

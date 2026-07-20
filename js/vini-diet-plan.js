@@ -11,7 +11,7 @@ import {
   normalizeViniExercises,
 } from "./vini-exercise.js";
 
-export const VINI_PLAN_VERSION = "vini-nutri-2026-07-v6";
+export const VINI_PLAN_VERSION = "vini-nutri-2026-07-v7";
 
 // Metas/limites diários usados nos cards, gráficos e relatório PDF. Os macros
 // foram atualizados pelo usuário em 18/07/2026; calorias permanecem como
@@ -368,6 +368,7 @@ const QUANTITY_RULES = Object.freeze({
   chia: { unit: "g", values: [5, 10, 15, 20, 25, 30] },
   pao: { unit: "fatia", values: [1, 2, 3, 4, 5, 6] },
   requeijao: { unit: "g", values: [10, 15, 20, 30, 40, 50, 60] },
+  pasta_amendoim_amendopower: { unit: "g", values: [15, 20, 25, 30, 35, 40, 45, 50, 60] },
   vegetais: { unit: "g", values: [50, 70, 100, 150, 200, 250] },
   azeite: { unit: "ml", values: [5, 10, 15, 20, 25] },
   arroz: { unit: "g", values: [50, 80, 100, 130, 150, 180, 200, 250, 300] },
@@ -406,6 +407,15 @@ const GUISADO_120 = item(
   { estimatedRecipe: true }
 );
 
+// Referência do rótulo da Amendopower Cookies & Cream 450 g: porção de 15 g
+// com 87 kcal, 3,2 g P, 3,7 g C e 6,6 g G. O preset usa 30 g.
+const PASTA_AMENDOIM_AMENDOPOWER = item(
+  "pasta_amendoim_amendopower",
+  "Amendopower Cookies & Cream",
+  "1 colher de sopa · 15 g",
+  nutrition(87, 3.2, 3.7, 6.6, "label-estimate")
+);
+
 // Pão Santa Massa: o rótulo oficial informa 122 kcal, 2,9 g P, 17 g C e
 // 4,8 g G por meia unidade (40 g); uma unidade de 80 g usa o dobro.
 // Os demais itens são médias de churrasco e variam conforme corte e preparo.
@@ -441,6 +451,7 @@ const CHURRASCO_FOODS = Object.freeze([
 
 const VINI_TRACKER_EXTRA_FOODS = Object.freeze({
   almoco: Object.freeze([GUISADO_120]),
+  lanche_tarde: Object.freeze([PASTA_AMENDOIM_AMENDOPOWER]),
   jantar: Object.freeze([GUISADO_120, ...CHURRASCO_FOODS]),
 });
 
@@ -502,7 +513,7 @@ function buildFoodGroups() {
       }
     }
     for (const entry of VINI_TRACKER_EXTRA_FOODS[meal.id] || []) {
-      addEntry(entry, "refeicao_padrao_guisado");
+      addEntry(entry, "tracker_extra");
     }
 
     const foods = [...foodsByBaseId.values()].map((entry) => {

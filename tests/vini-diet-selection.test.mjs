@@ -41,6 +41,11 @@ const expectedPresets = {
   almoco_guisado: { groupId: "almoco", foods: ["vegetais", "arroz", "guisado"], amounts: { vegetais: 70, arroz: 150, guisado: 120 } },
   lanche_whey: { groupId: "lanche_tarde", foods: ["whey", "requeijao", "ovos", "pao"], amounts: { whey: 2, requeijao: 15, ovos: 3, pao: 2 } },
   lanche_piracanjuba: { groupId: "lanche_tarde", foods: ["pro_force", "requeijao", "ovos", "pao"], amounts: { pro_force: 1, requeijao: 15, ovos: 3, pao: 2 } },
+  lanche_pasta_amendoim_whey: {
+    groupId: "lanche_tarde",
+    foods: ["whey", "pao", "pasta_amendoim_amendopower"],
+    amounts: { whey: 3, pao: 2, pasta_amendoim_amendopower: 30 },
+  },
   pos_treino_padrao: { groupId: "pos_treino", foods: ["whey"], amounts: { whey: 2 } },
   jantar_padrao: { groupId: "jantar", foods: ["vegetais", "azeite", "arroz", "frango"], amounts: { vegetais: 50, azeite: 15, arroz: 150, frango: 120 } },
   jantar_guisado: { groupId: "jantar", foods: ["vegetais", "arroz", "guisado"], amounts: { vegetais: 70, arroz: 150, guisado: 120 } },
