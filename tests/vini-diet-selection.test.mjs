@@ -44,6 +44,11 @@ const expectedPresets = {
   pos_treino_padrao: { groupId: "pos_treino", foods: ["whey"], amounts: { whey: 2 } },
   jantar_padrao: { groupId: "jantar", foods: ["vegetais", "azeite", "arroz", "frango"], amounts: { vegetais: 50, azeite: 15, arroz: 150, frango: 120 } },
   jantar_guisado: { groupId: "jantar", foods: ["vegetais", "arroz", "guisado"], amounts: { vegetais: 70, arroz: 150, guisado: 120 } },
+  churrasco: {
+    groupId: "jantar",
+    foods: ["pao_alho_santa_massa", "carne_churrasco", "salsichao", "coracao_galinha"],
+    amounts: { pao_alho_santa_massa: 1, carne_churrasco: 300, salsichao: 70, coracao_galinha: 50 },
+  },
 };
 
 assert.deepEqual(VINI_MEAL_PRESETS.map((preset) => preset.id), Object.keys(expectedPresets));
@@ -53,6 +58,14 @@ for (const [presetId, expected] of Object.entries(expectedPresets)) {
   assert.deepEqual(presetDay.amounts[expected.groupId], expected.amounts);
   assert.equal(isViniMealPresetApplied(presetDay, presetId), true);
 }
+
+const churrasco = applyViniMealPreset(emptyViniDietDay(), "churrasco");
+assert.deepEqual(churrasco.amounts.jantar, {
+  pao_alho_santa_massa: 1,
+  carne_churrasco: 300,
+  salsichao: 70,
+  coracao_galinha: 50,
+});
 
 // O atalho preserva alimentos extras e volta a aparecer como pendente se uma
 // das quantidades padrão for alterada manualmente.

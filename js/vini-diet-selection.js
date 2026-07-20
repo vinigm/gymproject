@@ -129,6 +129,19 @@ export const VINI_MEAL_PRESETS = Object.freeze([
       { foodId: "vegetais", amount: 70 },
     ]
   ),
+  preset(
+    "churrasco",
+    "🔥",
+    "Churrasco",
+    "1 pão de alho · 300g carne · 70g salsichão · 50g coração",
+    "jantar",
+    [
+      { foodId: "pao_alho_santa_massa", amount: 1 },
+      { foodId: "carne_churrasco", amount: 300 },
+      { foodId: "salsichao", amount: 70 },
+      { foodId: "coracao_galinha", amount: 50 },
+    ]
+  ),
 ]);
 
 export function setViniFoodChecked(rawDay, { groupId, foodId, checked, amount }) {

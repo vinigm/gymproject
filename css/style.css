@@ -3409,6 +3409,23 @@ body.presence-fullscreen .presence-fs-exit { display: flex; }
 .vini-custom-foods-panel { padding-top: 12px; }
 .vini-custom-foods-close { width: 100%; min-height: 42px; margin-top: 12px; color: var(--kg-accent); font-size: 11px; font-weight: 800; }
 .vini-checklist-help { margin: -2px 0 12px; color: var(--muted); font-size: 11px; }
+.vini-beverages-toggle { background: linear-gradient(135deg, rgba(251,191,36,.1), rgba(251,191,36,.025)), var(--card); }
+.vini-beverages-toggle:hover { border-color: rgba(251,191,36,.72); }
+.vini-beverages-block.is-open .vini-beverages-toggle { background: rgba(251,191,36,.08); border-color: rgba(251,191,36,.72); }
+.vini-beverages-block.has-drink .vini-custom-foods-meta b { color: #fbbf24; }
+.vini-beverage-list { display: flex; flex-direction: column; gap: 8px; }
+.vini-beverage-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px; min-height: 68px; padding: 10px 11px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow); transition: border-color .16s ease, background .16s ease; }
+.vini-beverage-row.has-drink { background: rgba(251,191,36,.06); border-color: rgba(251,191,36,.52); }
+.vini-beverage-icon { display: grid; width: 38px; height: 38px; place-items: center; background: var(--card-2); border-radius: 10px; font-size: 20px; }
+.vini-beverage-copy { display: flex; min-width: 0; flex-direction: column; gap: 3px; }
+.vini-beverage-copy strong { font-size: 13px; line-height: 1.25; }
+.vini-beverage-copy small { color: var(--muted); font-size: 9px; line-height: 1.35; }
+.vini-beverage-stepper { display: grid; grid-template-columns: 34px 28px 34px; align-items: center; gap: 5px; }
+.vini-beverage-stepper button { display: grid; width: 34px; height: 34px; place-items: center; padding: 0; color: var(--text); background: var(--card-2); border: 1px solid var(--border); border-radius: 9px; font-size: 19px; font-weight: 800; }
+.vini-beverage-stepper button:hover { border-color: #fbbf24; }
+.vini-beverage-stepper button:active { transform: scale(.95); }
+.vini-beverage-stepper button:disabled { opacity: .32; cursor: not-allowed; }
+.vini-beverage-stepper output { color: #fbbf24; font-size: 15px; font-weight: 900; text-align: center; font-variant-numeric: tabular-nums; }
 .vini-food-groups { display: flex; flex-direction: column; gap: 14px; }
 .vini-food-group-card { overflow: hidden; background: var(--card); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow); }
 .vini-food-group-card.has-food { border-color: rgba(52,211,153,.5); }
@@ -3617,6 +3634,9 @@ body.presence-fullscreen .presence-fs-exit { display: flex; }
   .vini-date-nav { width: 100%; }
   .vini-date-nav input { flex: 1; min-width: 0; }
   .vini-save-status { text-align: center; }
+  .vini-beverage-row { grid-template-columns: auto minmax(0, 1fr); }
+  .vini-beverage-stepper { grid-column: 1 / -1; grid-template-columns: 42px 1fr 42px; }
+  .vini-beverage-stepper button { width: 42px; height: 42px; }
 }
 
 @media (max-width: 440px) {

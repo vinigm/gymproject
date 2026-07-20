@@ -22,6 +22,7 @@ import {
 } from "./vini-diet-selection.js";
 import { viniDietTrendsHTML } from "./vini-diet-trends.js";
 import {
+  VINI_BEVERAGES,
   VINI_FOOD_GROUPS,
   VINI_DAILY_GOALS,
   VINI_HYDRATION,
@@ -33,6 +34,7 @@ import {
   formatFoodQuantity,
   normalizeViniDietDay,
   nutritionForFoodQuantity,
+  setViniBeverageCount,
   withViniDietSummary,
 } from "./vini-diet-plan.js";
 
@@ -50,6 +52,7 @@ const tracker = {
   saveSequence: 0,
   saveStatus: "",
   customFoodsOpen: false,
+  beveragesOpen: false,
 };
 
 function pad2(value) { return String(value).padStart(2, "0"); }
@@ -215,11 +218,15 @@ function selectDate(iso) {
   tracker.selectedDate = iso > todayISO() ? todayISO() : iso;
   tracker.saveStatus = "";
   tracker.customFoodsOpen = false;
+  tracker.beveragesOpen = false;
   renderTracker();
 }
 
 export function renderViniDietTracker(root, { scope = "cycle" } = {}) {
-  if (tracker.scope !== scope) tracker.customFoodsOpen = false;
+  if (tracker.scope !== scope) {
+    tracker.customFoodsOpen = false;
+    tracker.beveragesOpen = false;
+  }
   tracker.root = root;
   tracker.scope = scope;
   renderTracker();
@@ -241,7 +248,7 @@ function renderTracker() {
     ${exerciseTrackerHTML(day, summary)}
     ${dailySummaryHTML(summary)}
     ${customFoodsHTML(day, summary)}
-
+    ${beveragesHTML(day, summary)}
     ${hydrationHTML(day, summary)}
     ${saveControlsHTML()}
     ${weeklyHTML()}
@@ -251,6 +258,51 @@ function renderTracker() {
 
   bindTracker();
   updateSaveStatus();
+}
+
+function beveragesHTML(day, summary) {
+  const isOpen = tracker.beveragesOpen;
+  const count = summary.beverageCount || 0;
+  const countLabel = count ? `${count} registrada${count === 1 ? "" : "s"}` : "nenhuma";
+  return `
+    <section class="block vini-custom-foods-block vini-beverages-block${isOpen ? " is-open" : ""}${count ? " has-drink" : ""}">
+      <button type="button" class="vini-custom-foods-toggle vini-beverages-toggle" data-toggle-beverages
+              aria-expanded="${isOpen}" aria-controls="vini-beverages-panel">
+        <span class="vini-custom-foods-icon">🍻</span>
+        <span class="vini-custom-foods-copy">
+          <strong>Bebidas do dia</strong>
+          <small>Some uma unidade a cada cerveja, dose ou energético</small>
+        </span>
+        <span class="vini-custom-foods-meta">
+          <b>${countLabel}</b>
+          <i>${isOpen ? "Fechar" : "Abrir"} ${isOpen ? "↑" : "↓"}</i>
+        </span>
+      </button>
+      ${isOpen ? `
+        <div id="vini-beverages-panel" class="vini-custom-foods-panel vini-beverages-panel">
+          <p class="vini-checklist-help">Valores médios por porção. Use + e − para registrar exatamente quantas tomou.</p>
+          <div class="vini-beverage-list">
+            ${VINI_BEVERAGES.map((beverage) => {
+              const beverageCount = day.beverages[beverage.id] || 0;
+              return `
+                <article class="vini-beverage-row${beverageCount ? " has-drink" : ""}">
+                  <span class="vini-beverage-icon">${beverage.icon}</span>
+                  <span class="vini-beverage-copy">
+                    <strong>${beverage.label}</strong>
+                    <small>${beverage.portion} · ~${formatNumber(beverage.nutrition.kcal)} kcal por unidade</small>
+                  </span>
+                  <span class="vini-beverage-stepper" role="group" aria-label="Quantidade de ${beverage.label}">
+                    <button type="button" data-beverage-step="-1" data-beverage="${beverage.id}"
+                            aria-label="Diminuir ${beverage.label}" ${beverageCount <= 0 ? "disabled" : ""}>−</button>
+                    <output aria-live="polite" aria-label="${beverageCount} unidades">${beverageCount}</output>
+                    <button type="button" data-beverage-step="1" data-beverage="${beverage.id}"
+                            aria-label="Adicionar ${beverage.label}">+</button>
+                  </span>
+                </article>`;
+            }).join("")}
+          </div>
+        </div>` : ""}
+    </section>`;
 }
 
 function customFoodsHTML(day, summary) {
@@ -741,6 +793,18 @@ function bindTracker() {
     tracker.customFoodsOpen = false;
     renderTracker();
     tracker.root.querySelector("[data-toggle-custom-foods]")?.focus({ preventScroll: true });
+  });
+  tracker.root.querySelector("[data-toggle-beverages]")?.addEventListener("click", () => {
+    tracker.beveragesOpen = !tracker.beveragesOpen;
+    renderTracker();
+    tracker.root.querySelector("[data-toggle-beverages]")?.focus({ preventScroll: true });
+  });
+  tracker.root.querySelectorAll("[data-beverage-step]").forEach((button) => {
+    button.addEventListener("click", () => mutateCurrentDay((day) => {
+      const beverageId = button.dataset.beverage;
+      const count = day.beverages[beverageId] || 0;
+      return setViniBeverageCount(day, beverageId, count + Number(button.dataset.beverageStep));
+    }));
   });
   tracker.root.querySelector("[data-export-diet-pdf]")?.addEventListener("click", (event) => {
     const button = event.currentTarget;

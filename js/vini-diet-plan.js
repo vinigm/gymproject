@@ -11,7 +11,7 @@ import {
   normalizeViniExercises,
 } from "./vini-exercise.js";
 
-export const VINI_PLAN_VERSION = "vini-nutri-2026-07-v5";
+export const VINI_PLAN_VERSION = "vini-nutri-2026-07-v6";
 
 // Metas/limites diários usados nos cards, gráficos e relatório PDF. Os macros
 // foram atualizados pelo usuário em 18/07/2026; calorias permanecem como
@@ -32,6 +32,33 @@ function nutrition(kcal, p, c, f, quality = "reference") {
 function item(id, label, portion, nutri, extra = {}) {
   return Object.freeze({ id, label, portion, nutrition: nutri, ...extra });
 }
+
+// Porções médias para registrar bebidas sem exigir marca ou receita exata.
+// As kcal do destilado vêm principalmente do álcool e, por isso, não aparecem
+// como proteína, carboidrato ou gordura.
+export const VINI_BEVERAGES = Object.freeze([
+  Object.freeze({
+    id: "cerveja",
+    icon: "🍺",
+    label: "Cerveja",
+    portion: "1 lata · 350 ml",
+    nutrition: nutrition(150, 1.3, 13, 0, "generic-estimate"),
+  }),
+  Object.freeze({
+    id: "destilado",
+    icon: "🥃",
+    label: "Destilado",
+    portion: "1 dose · 50 ml",
+    nutrition: nutrition(110, 0, 0, 0, "generic-estimate"),
+  }),
+  Object.freeze({
+    id: "energetico_normal",
+    icon: "⚡",
+    label: "Energético normal",
+    portion: "1 lata · 250 ml",
+    nutrition: nutrition(110, 0, 27, 0, "generic-estimate"),
+  }),
+]);
 
 const COMMON = Object.freeze({
   vegetables50: item("vegetais", "Verdura ou legumes", "50 g", nutrition(15, 0.7, 3, 0.1)),
@@ -361,6 +388,10 @@ const QUANTITY_RULES = Object.freeze({
   crepioca: { unit: "porcao", values: [1, 2, 3] },
   feijao_lentilha: { unit: "g", values: [40, 80, 120, 160, 200] },
   chocolate: { unit: "g", values: [5, 10, 15, 20, 25, 30, 40] },
+  pao_alho_santa_massa: { unit: "un", values: [1, 2, 3, 4] },
+  carne_churrasco: { unit: "g", values: [100, 150, 200, 250, 300, 350, 400, 500] },
+  salsichao: { unit: "g", values: [35, 50, 70, 100, 140, 200] },
+  coracao_galinha: { unit: "g", values: [25, 50, 70, 100, 150, 200] },
 });
 
 // Itens adicionados ao tracker para refeições usuais do Vini, sem alterar a
@@ -375,9 +406,42 @@ const GUISADO_120 = item(
   { estimatedRecipe: true }
 );
 
+// Pão Santa Massa: o rótulo oficial informa 122 kcal, 2,9 g P, 17 g C e
+// 4,8 g G por meia unidade (40 g); uma unidade de 80 g usa o dobro.
+// Os demais itens são médias de churrasco e variam conforme corte e preparo.
+const CHURRASCO_FOODS = Object.freeze([
+  item(
+    "pao_alho_santa_massa",
+    "Pão de alho Santa Massa",
+    "1 unidade · 80 g",
+    nutrition(244, 5.8, 34, 9.6, "manufacturer-label")
+  ),
+  item(
+    "carne_churrasco",
+    "Carne de churrasco",
+    "300 g",
+    nutrition(750, 78, 0, 51, "generic-estimate"),
+    { estimatedRecipe: true }
+  ),
+  item(
+    "salsichao",
+    "Salsichão",
+    "70 g",
+    nutrition(210, 9.8, 0.7, 18.2, "generic-estimate"),
+    { estimatedRecipe: true }
+  ),
+  item(
+    "coracao_galinha",
+    "Coração de galinha",
+    "50 g",
+    nutrition(93, 13, 0, 4, "generic-estimate"),
+    { estimatedRecipe: true }
+  ),
+]);
+
 const VINI_TRACKER_EXTRA_FOODS = Object.freeze({
   almoco: Object.freeze([GUISADO_120]),
-  jantar: Object.freeze([GUISADO_120]),
+  jantar: Object.freeze([GUISADO_120, ...CHURRASCO_FOODS]),
 });
 
 function parseLocaleNumber(value) {
@@ -500,6 +564,21 @@ export function foodForGroup(group, foodId) {
   return group?.foods.find((food) => food.id === foodId) || null;
 }
 
+export function beverageForId(beverageId) {
+  return VINI_BEVERAGES.find((beverage) => beverage.id === beverageId) || null;
+}
+
+export function nutritionForBeverageCount(beverage, value) {
+  if (!beverage?.nutrition) return null;
+  const count = Math.max(0, Math.min(99, Math.round(finiteNumber(value))));
+  return roundedNutrition({
+    kcal: finiteNumber(beverage.nutrition.kcal) * count,
+    p: finiteNumber(beverage.nutrition.p) * count,
+    c: finiteNumber(beverage.nutrition.c) * count,
+    f: finiteNumber(beverage.nutrition.f) * count,
+  });
+}
+
 export function normalizeFoodQuantity(food, value) {
   if (!food || food.unquantified) return 1;
   const amount = finiteNumber(value, food.defaultQuantity);
@@ -527,6 +606,7 @@ export function emptyViniDietDay() {
     meals: {},
     foods: {},
     amounts: {},
+    beverages: {},
     hydrationMl: 0,
     trainingDay: false,
     exercises: {},
@@ -565,6 +645,7 @@ function cleanSummary(summary) {
     completedMeals: Math.max(0, finiteNumber(summary.completedMeals)),
     requiredMeals: Math.max(0, finiteNumber(summary.requiredMeals, VINI_REQUIRED_MEALS.length)),
     itemsChecked: Math.max(0, finiteNumber(summary.itemsChecked)),
+    beverageCount: Math.max(0, finiteNumber(summary.beverageCount)),
     mainMealsLogged: Math.max(0, finiteNumber(summary.mainMealsLogged, summary.completedMeals)),
     mealCoveragePct: Math.max(0, Math.min(100, finiteNumber(summary.mealCoveragePct, summary.adherencePct))),
     hydrationMl: Math.max(0, finiteNumber(summary.hydrationMl)),
@@ -618,6 +699,11 @@ export function normalizeViniDietDay(raw) {
   out.exerciseWeightKg = Math.max(0, Math.round(finiteNumber(raw?.exerciseWeightKg) * 10) / 10);
   out.trainingDay = raw?.trainingDay === true || hasViniExercise(out.exercises);
   out.summary = cleanSummary(raw?.summary);
+
+  for (const beverage of VINI_BEVERAGES) {
+    const count = Math.max(0, Math.min(99, Math.round(finiteNumber(raw?.beverages?.[beverage.id]))));
+    if (count > 0) out.beverages[beverage.id] = count;
+  }
 
   for (const meal of VINI_MEALS) {
     const source = raw?.meals?.[meal.id];
@@ -692,6 +778,16 @@ export function normalizeViniDietDay(raw) {
   return out;
 }
 
+export function setViniBeverageCount(rawDay, beverageId, value) {
+  const day = normalizeViniDietDay(rawDay);
+  const beverage = beverageForId(beverageId);
+  if (!beverage) return day;
+  const count = Math.max(0, Math.min(99, Math.round(finiteNumber(value))));
+  if (count > 0) day.beverages[beverage.id] = count;
+  else delete day.beverages[beverage.id];
+  return day;
+}
+
 function addNutrition(total, value) {
   if (!value) return;
   total.kcal += finiteNumber(value.kcal);
@@ -716,6 +812,7 @@ export function calculateViniDietDay(raw, { useSnapshot = false } = {}) {
   let itemsChecked = 0;
   let quantifiedItemsChecked = 0;
   let unquantifiedItemsChecked = 0;
+  let beverageCount = 0;
 
   for (const group of VINI_FOOD_GROUPS) {
     const selectedIds = day.foods[group.id] || [];
@@ -738,6 +835,13 @@ export function calculateViniDietDay(raw, { useSnapshot = false } = {}) {
     };
   }
 
+  for (const beverage of VINI_BEVERAGES) {
+    const count = day.beverages[beverage.id] || 0;
+    if (!count) continue;
+    beverageCount += count;
+    addNutrition(consumed, nutritionForBeverageCount(beverage, count));
+  }
+
   const mainMealsLogged = VINI_REQUIRED_MEALS.filter((groupId) => foodGroups[groupId]?.hasFood).length;
   const mealCoveragePct = VINI_REQUIRED_MEALS.length
     ? Math.round((mainMealsLogged / VINI_REQUIRED_MEALS.length) * 100)
@@ -750,7 +854,8 @@ export function calculateViniDietDay(raw, { useSnapshot = false } = {}) {
   const hasData = day.hydrationMl > 0
     || day.trainingDay
     || exercise.items.length > 0
-    || itemsChecked > 0;
+    || itemsChecked > 0
+    || beverageCount > 0;
 
   const result = {
     day,
@@ -767,6 +872,7 @@ export function calculateViniDietDay(raw, { useSnapshot = false } = {}) {
     mainMealsLogged,
     mealCoveragePct,
     itemsChecked,
+    beverageCount,
     quantifiedItemsChecked,
     unquantifiedItemsChecked,
     hydrationMl: day.hydrationMl,
@@ -785,6 +891,7 @@ export function calculateViniDietDay(raw, { useSnapshot = false } = {}) {
     result.completedMeals = day.summary.completedMeals;
     result.requiredMeals = day.summary.requiredMeals;
     result.itemsChecked = day.summary.itemsChecked;
+    result.beverageCount = day.summary.beverageCount || beverageCount;
     result.mainMealsLogged = day.summary.mainMealsLogged;
     result.mealCoveragePct = day.summary.mealCoveragePct;
     result.hydrationMl = day.summary.hydrationMl;
@@ -809,6 +916,7 @@ export function withViniDietSummary(raw) {
     completedMeals: calculated.completedMeals,
     requiredMeals: calculated.requiredMeals,
     itemsChecked: calculated.itemsChecked,
+    beverageCount: calculated.beverageCount,
     mainMealsLogged: calculated.mainMealsLogged,
     mealCoveragePct: calculated.mealCoveragePct,
     hydrationMl: calculated.hydrationMl,

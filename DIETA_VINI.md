@@ -313,6 +313,10 @@ Estas diretrizes orientam a implementação atual:
 - No tracker, cada alimento é marcado individualmente e recebe sua quantidade consumida; itens de opções diferentes podem ser combinados conforme o consumo real.
 - Um alimento marcado pode ser retirado pelo próprio checkbox ou tocando novamente na quantidade ativa; escolher outra quantidade apenas atualiza a porção registrada.
 - No topo do tracker, atalhos de refeições padrão podem preencher de uma vez pré-treino, café da manhã, almoço, lanche da tarde, pós-treino e jantar. Um segundo toque remove os itens do atalho sem apagar outros alimentos já marcados no mesmo momento.
+- O atalho pessoal `Churrasco` registra 1 pão de alho Santa Massa, 300 g de carne, 70 g de salsichão e 50 g de coração de galinha. Ele não faz parte da `Dieta Oficial`.
+- O menu recolhível `Bebidas do dia` registra por contagem cerveja (lata de 350 ml), destilado (dose de 50 ml) e energético normal (lata de 250 ml), incorporando estimativas de kcal e macros ao total diário.
+- Referências por bebida: cerveja **150 kcal, 1,3 g P, 13 g C e 0 g G**; destilado **110 kcal e 0 g de P/C/G** (energia do álcool); energético normal **110 kcal, 0 g P, 27 g C e 0 g G**.
+- Referência total do churrasco: aproximadamente **1.297 kcal, 106,6 g P, 34,7 g C e 82,8 g G**. O pão de alho usa o rótulo oficial; os valores de carne, salsichão e coração são médias provisórias e variam conforme corte e preparo.
 - A visualização `Dieta Oficial` preserva separadamente as composições completas sugeridas pela nutricionista e é somente para consulta.
 - Nenhuma ação na `Dieta Oficial` cria, altera ou remove registros.
 - Itens opcionais, como o morango, podem ser marcados separadamente no tracker.
@@ -367,15 +371,17 @@ Estas diretrizes orientam a implementação atual:
 - **18/07/2026:** a lista completa de alimentos e quantidades passou a ficar recolhida por padrão dentro de `Montar refeição personalizada`. O painel permanece aberto durante as marcações e oferece fechamento no topo e no final da lista, reduzindo a rolagem até hidratação, estatísticas e gráficos.
 - **18/07/2026:** thresholds de macros atualizados para 150 g de proteína, 200 g de carboidrato e 68 g de gordura em cards semanais, gráficos e relatório PDF.
 - **18/07/2026:** adicionado registro de musculação e corrida por intensidade e duração, com estimativa ativa baseada em MET e peso. O resumo diário passou a separar kcal ingeridas, gasto estimado do treino e kcal líquidas.
+- **19/07/2026:** adicionado menu recolhível de bebidas com contadores `+ / −` para cerveja, destilado e energético normal. As porções médias entram nos totais nutricionais e são persistidas no campo `beverages` do dia.
+- **19/07/2026:** adicionado o atalho pessoal `Churrasco` com 1 pão de alho Santa Massa, 300 g de carne, 70 g de salsichão e 50 g de coração. O pão usa o [rótulo oficial da Santa Massa](https://www.santamassa.com.br/produtos/pao-de-alho-tradicional/) para uma unidade de 80 g; carnes usam médias provisórias.
 
 ## 15. Implementação no tracker
 
-- Catálogo versionado: `js/vini-diet-plan.js`, versão `vini-nutri-2026-07-v5`.
+- Catálogo versionado: `js/vini-diet-plan.js`, versão `vini-nutri-2026-07-v6`.
 - Estimativa de exercício: `js/vini-exercise.js`, com definições MET, normalização, alternância das intensidades e cálculo puro do gasto ativo.
 - Interface e estatísticas: `js/vini-diet-ui.js`.
 - Consulta oficial: `VINI_OFFICIAL_MEALS` preserva as composições completas dos prints; não contém checkboxes, não grava dados e consolida os screenshots duplicados.
 - Persistência: campo `plan` nos documentos existentes de `diet_logs`, sem remover o mapa legado `foods`.
-- Cada dia guarda checkboxes individuais agrupados por momento alimentar, a quantidade selecionada para cada alimento, hidratação, exercícios, peso usado no cálculo e um snapshot dos totais nutricionais, kcal do treino e kcal líquidas.
+- Cada dia guarda checkboxes individuais agrupados por momento alimentar, a quantidade selecionada para cada alimento, contagens de bebidas, hidratação, exercícios, peso usado no cálculo e um snapshot dos totais nutricionais, kcal do treino e kcal líquidas.
 - Os checkboxes individuais ficam em um painel recolhível, fechado por padrão. Abrir ou fechar esse painel altera somente a interface e não interfere nas marcações nem na sincronização.
 - O checkbox e a quantidade ativa funcionam como alternância: um novo toque remove o alimento; tocar em uma quantidade diferente mantém o alimento e corrige somente a porção.
 - Os atalhos de refeição padrão funcionam como alternância: o primeiro toque aplica as porções configuradas e o segundo remove somente os itens do atalho, preservando outros alimentos do dia.
@@ -388,4 +394,4 @@ Estas diretrizes orientam a implementação atual:
 - No final da Dieta, quatro gráficos de linha acompanham kcal, proteína, carboidrato e gordura por data, respeitando `Ciclo atual` e `Histórico completo`. Cada gráfico inclui uma linha horizontal de referência.
 - As referências atuais do tracker são **2.000 kcal, 150 g de proteína, 200 g de carboidrato e 68 g de gordura**. Os três thresholds de macros foram informados pelo usuário em 18/07/2026; as 2.000 kcal permanecem provisórias enquanto não houver uma meta clínica específica.
 - Itens “à vontade” podem ser registrados, mas não entram nos macros enquanto não houver quantidade definida.
-- Registros dos formatos `vini-nutri-2026-07-v1` a `vini-nutri-2026-07-v4` são convertidos em memória para o modelo atual e só passam a v5 quando o dia é editado, sem apagar o snapshot histórico.
+- Registros dos formatos `vini-nutri-2026-07-v1` a `vini-nutri-2026-07-v5` são convertidos em memória para o modelo atual e só passam a v6 quando o dia é editado, sem apagar o snapshot histórico.

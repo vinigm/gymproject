@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import {
+  VINI_BEVERAGES,
   VINI_FOOD_GROUPS,
   VINI_DAILY_GOALS,
   VINI_MEALS,
@@ -9,7 +10,9 @@ import {
   calculateViniDietDay,
   emptyViniDietDay,
   normalizeViniDietDay,
+  nutritionForBeverageCount,
   optionNutrition,
+  setViniBeverageCount,
   withViniDietSummary,
 } from "../js/vini-diet-plan.js";
 import { TRACKING_SCOPE, trackingScopeCopy } from "../js/tracking-cycle.js";
@@ -21,15 +24,19 @@ const food = (groupId, baseId) => group(groupId).foods.find((entry) => entry.bas
 const empty = calculateViniDietDay(emptyViniDietDay());
 assert.equal(empty.hasData, false);
 assert.equal(empty.itemsChecked, 0);
+assert.equal(empty.beverageCount, 0);
 assert.equal(empty.mainMealsLogged, 0);
 assert.equal(empty.consumed.kcal, 0);
-assert.equal(VINI_PLAN_VERSION, "vini-nutri-2026-07-v5");
+assert.equal(VINI_PLAN_VERSION, "vini-nutri-2026-07-v6");
 assert.deepEqual(VINI_DAILY_GOALS, { kcal: 2000, p: 150, c: 200, f: 68 });
 assert.equal(VINI_FOOD_GROUPS.length, 7);
+assert.deepEqual(VINI_BEVERAGES.map((entry) => entry.id), ["cerveja", "destilado", "energetico_normal"]);
 assert.equal(trackingScopeCopy(TRACKING_SCOPE.OFFICIAL_DIET).title, "Dieta Oficial");
 assert.ok(food("almoco", "guisado").quantityChoices.includes(120));
 assert.ok(food("jantar", "guisado").quantityChoices.includes(120));
 assert.ok(food("almoco", "vegetais").quantityChoices.includes(70));
+assert.ok(food("jantar", "pao_alho_santa_massa").quantityChoices.includes(1));
+assert.ok(food("jantar", "carne_churrasco").quantityChoices.includes(300));
 
 for (const foodGroup of VINI_FOOD_GROUPS) {
   const ids = foodGroup.foods.map((entry) => entry.id);
@@ -133,6 +140,34 @@ const oneBanana = calculateViniDietDay({ foods: { pre_treino: ["banana"] }, amou
 const twoBananas = calculateViniDietDay({ foods: { pre_treino: ["banana"] }, amounts: { pre_treino: { banana: 2 } } });
 assert.equal(oneBanana.consumed.kcal, 39);
 assert.equal(twoBananas.consumed.kcal, 78);
+
+const churrascoFoods = ["pao_alho_santa_massa", "carne_churrasco", "salsichao", "coracao_galinha"];
+const churrascoSummary = calculateViniDietDay({
+  foods: { jantar: churrascoFoods },
+  amounts: {
+    jantar: { pao_alho_santa_massa: 1, carne_churrasco: 300, salsichao: 70, coracao_galinha: 50 },
+  },
+});
+assert.deepEqual(churrascoSummary.consumed, { kcal: 1297, p: 106.6, c: 34.7, f: 82.8 });
+
+// Bebidas são contadas por porção, persistidas separadamente dos alimentos e
+// entram automaticamente nas kcal e nos macros do dia.
+let drinks = setViniBeverageCount(emptyViniDietDay(), "cerveja", 2);
+drinks = setViniBeverageCount(drinks, "destilado", 1);
+drinks = setViniBeverageCount(drinks, "energetico_normal", 1);
+const drinksSummary = calculateViniDietDay(drinks);
+assert.deepEqual(drinks.beverages, { cerveja: 2, destilado: 1, energetico_normal: 1 });
+assert.equal(drinksSummary.beverageCount, 4);
+assert.equal(drinksSummary.itemsChecked, 0);
+assert.equal(drinksSummary.hasData, true);
+assert.deepEqual(drinksSummary.consumed, { kcal: 520, p: 2.6, c: 53, f: 0 });
+assert.deepEqual(nutritionForBeverageCount(VINI_BEVERAGES[0], 2), { kcal: 300, p: 2.6, c: 26, f: 0 });
+const storedDrinks = withViniDietSummary(drinks);
+assert.equal(storedDrinks.summary.beverageCount, 4);
+assert.deepEqual(normalizeViniDietDay(JSON.parse(JSON.stringify(storedDrinks))).beverages, drinks.beverages);
+drinks = setViniBeverageCount(drinks, "cerveja", 0);
+assert.equal(drinks.beverages.cerveja, undefined);
+assert.deepEqual(normalizeViniDietDay({ beverages: { desconhecida: 3, destilado: 200 } }).beverages, { destilado: 99 });
 
 // Um alimento em cada momento principal é suficiente para registrar cobertura,
 // sem o conceito antigo de "refeição completa".
