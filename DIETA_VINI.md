@@ -376,10 +376,11 @@ Estas diretrizes orientam a implementação atual:
 - **20/07/2026:** adicionada a Amendopower Cookies & Cream ao lanche personalizado e à predefinição `Lanche - Pasta de amendoim + whey`, com 2 fatias de pão, 30 g da pasta e 3 medidas de whey. A referência por 15 g é 87 kcal, 3,2 g de proteína, 3,7 g de carboidrato e 6,6 g de gordura, conforme a [tabela publicada pelo Sonda](https://www.sondadelivery.com.br/faco/produto/pasta-de-amendoim-cookies--cream-dacolonia-amendo-power-pote-450g/1000044454).
 - **20/07/2026:** os pontos dos quatro gráficos nutricionais ganharam detalhes interativos. No desktop, o painel abre ao passar o mouse ou focar; no celular, abre por toque e pode ficar fixado. Ele mostra totais, alimentos e porções agrupados por refeição, subtotais, bebidas, hidratação, exercício e um atalho para editar o registro daquele dia. Registros antigos sem composição preservam os totais e informam que os detalhes não estão disponíveis.
 - **20/07/2026:** corrigido o fechamento dos detalhes dos gráficos no Safari móvel, impedindo que a devolução de foco reabra o painel. O botão de fechar passou a ter área de toque maior e o cabeçalho fica fixo enquanto os detalhes são rolados.
+- **21/07/2026:** a predefinição `Lanche - Pasta de amendoim + whey` passou de 30 g para 15 g de Amendopower. Com 2 fatias de pão e 3 medidas de whey, o atalho agora totaliza aproximadamente 394 kcal, 42,5 g de proteína, 30,3 g de carboidrato e 10,7 g de gordura.
 
 ## 15. Implementação no tracker
 
-- Catálogo versionado: `js/vini-diet-plan.js`, versão `vini-nutri-2026-07-v7`.
+- Catálogo versionado: `js/vini-diet-plan.js`, versão `vini-nutri-2026-07-v8`.
 - Estimativa de exercício: `js/vini-exercise.js`, com definições MET, normalização, alternância das intensidades e cálculo puro do gasto ativo.
 - Interface e estatísticas: `js/vini-diet-ui.js`.
 - Consulta oficial: `VINI_OFFICIAL_MEALS` preserva as composições completas dos prints; não contém checkboxes, não grava dados e consolida os screenshots duplicados.
@@ -397,4 +398,4 @@ Estas diretrizes orientam a implementação atual:
 - No final da Dieta, quatro gráficos de linha acompanham kcal, proteína, carboidrato e gordura por data, respeitando `Ciclo atual` e `Histórico completo`. Cada gráfico inclui uma linha horizontal de referência e pontos interativos que detalham a composição do dia sem alterar os dados salvos.
 - As referências atuais do tracker são **2.000 kcal, 150 g de proteína, 200 g de carboidrato e 68 g de gordura**. Os três thresholds de macros foram informados pelo usuário em 18/07/2026; as 2.000 kcal permanecem provisórias enquanto não houver uma meta clínica específica.
 - Itens “à vontade” podem ser registrados, mas não entram nos macros enquanto não houver quantidade definida.
-- Registros dos formatos `vini-nutri-2026-07-v1` a `vini-nutri-2026-07-v6` são convertidos em memória para o modelo atual e só passam a v7 quando o dia é editado, sem apagar o snapshot histórico.
+- Registros dos formatos `vini-nutri-2026-07-v1` a `vini-nutri-2026-07-v7` são convertidos em memória para o modelo atual e só passam a v8 quando o dia é editado, sem apagar o snapshot histórico.

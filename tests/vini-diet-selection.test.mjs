@@ -43,7 +43,7 @@ const expectedPresets = {
   lanche_pasta_amendoim_whey: {
     groupId: "lanche_tarde",
     foods: ["whey", "pao", "pasta_amendoim_amendopower"],
-    amounts: { whey: 3, pao: 2, pasta_amendoim_amendopower: 30 },
+    amounts: { whey: 3, pao: 2, pasta_amendoim_amendopower: 15 },
   },
   pre_treino_padrao: { groupId: "pre_treino", foods: ["banana"], amounts: { banana: 2 } },
   pos_treino_padrao: { groupId: "pos_treino", foods: ["whey"], amounts: { whey: 2 } },

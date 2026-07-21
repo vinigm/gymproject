@@ -27,7 +27,7 @@ assert.equal(empty.itemsChecked, 0);
 assert.equal(empty.beverageCount, 0);
 assert.equal(empty.mainMealsLogged, 0);
 assert.equal(empty.consumed.kcal, 0);
-assert.equal(VINI_PLAN_VERSION, "vini-nutri-2026-07-v7");
+assert.equal(VINI_PLAN_VERSION, "vini-nutri-2026-07-v8");
 assert.deepEqual(VINI_DAILY_GOALS, { kcal: 2000, p: 150, c: 200, f: 68 });
 assert.equal(VINI_FOOD_GROUPS.length, 7);
 assert.deepEqual(VINI_BEVERAGES.map((entry) => entry.id), ["cerveja", "destilado", "energetico_normal"]);
@@ -156,9 +156,9 @@ assert.deepEqual(churrascoSummary.consumed, { kcal: 1297, p: 106.6, c: 34.7, f: 
 
 const pastaSnackSummary = calculateViniDietDay({
   foods: { lanche_tarde: ["whey", "pao", "pasta_amendoim_amendopower"] },
-  amounts: { lanche_tarde: { whey: 3, pao: 2, pasta_amendoim_amendopower: 30 } },
+  amounts: { lanche_tarde: { whey: 3, pao: 2, pasta_amendoim_amendopower: 15 } },
 });
-assert.deepEqual(pastaSnackSummary.consumed, { kcal: 481, p: 45.7, c: 34, f: 17.3 });
+assert.deepEqual(pastaSnackSummary.consumed, { kcal: 394, p: 42.5, c: 30.3, f: 10.7 });
 
 // Bebidas são contadas por porção, persistidas separadamente dos alimentos e
 // entram automaticamente nas kcal e nos macros do dia.

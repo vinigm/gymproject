@@ -11,7 +11,7 @@ import {
   normalizeViniExercises,
 } from "./vini-exercise.js";
 
-export const VINI_PLAN_VERSION = "vini-nutri-2026-07-v7";
+export const VINI_PLAN_VERSION = "vini-nutri-2026-07-v8";
 
 // Metas/limites diários usados nos cards, gráficos e relatório PDF. Os macros
 // foram atualizados pelo usuário em 18/07/2026; calorias permanecem como
@@ -408,7 +408,7 @@ const GUISADO_120 = item(
 );
 
 // Referência do rótulo da Amendopower Cookies & Cream 450 g: porção de 15 g
-// com 87 kcal, 3,2 g P, 3,7 g C e 6,6 g G. O preset usa 30 g.
+// com 87 kcal, 3,2 g P, 3,7 g C e 6,6 g G. O preset usa 15 g.
 const PASTA_AMENDOIM_AMENDOPOWER = item(
   "pasta_amendoim_amendopower",
   "Amendopower Cookies & Cream",
