@@ -252,6 +252,7 @@ function renderTracker() {
     ${dailySummaryHTML(summary)}
     ${customFoodsHTML(day, summary)}
     ${beveragesHTML(day, summary)}
+    ${additionalKcalHTML(day)}
     ${hydrationHTML(day, summary)}
     ${weeklyHTML()}
     ${cycleStatsHTML()}
@@ -305,6 +306,33 @@ function beveragesHTML(day, summary) {
             }).join("")}
           </div>
         </div>` : ""}
+    </section>`;
+}
+
+function additionalKcalHTML(day) {
+  return `
+    <section class="block vini-additional-kcal-block${day.additionalKcal ? " has-value" : ""}">
+      <div class="block-head">
+        <h2>🍬 Kcal adicionais</h2>
+        <span class="muted" style="font-size:11px">estimativa livre</span>
+      </div>
+      <div class="vini-additional-kcal-card">
+        <label for="vini-additional-kcal-input">
+          <span>
+            <strong>Calorias extras do dia</strong>
+            <small>Balas, beliscos e outras coisas que não estão na lista</small>
+          </span>
+          <span class="vini-additional-kcal-field">
+            <input type="number" id="vini-additional-kcal-input" min="0" max="10000" step="1"
+                   value="${day.additionalKcal}" inputmode="numeric" aria-label="Calorias adicionais do dia" />
+            <b>kcal</b>
+          </span>
+        </label>
+        <div class="vini-additional-kcal-actions">
+          <p>Esse valor entra nas calorias totais e líquidas, mas não adiciona macros estimados.</p>
+          <button type="button" data-additional-kcal-reset ${day.additionalKcal <= 0 ? "disabled" : ""}>zerar</button>
+        </div>
+      </div>
     </section>`;
 }
 
@@ -809,6 +837,12 @@ function bindTracker() {
       return setViniBeverageCount(day, beverageId, count + Number(button.dataset.beverageStep));
     }));
   });
+  tracker.root.querySelector("#vini-additional-kcal-input")?.addEventListener("change", (event) => mutateCurrentDay((day) => {
+    day.additionalKcal = clamp(Math.round(Number(event.target.value) || 0), 0, 10000);
+  }));
+  tracker.root.querySelector("[data-additional-kcal-reset]")?.addEventListener("click", () => mutateCurrentDay((day) => {
+    day.additionalKcal = 0;
+  }));
   tracker.root.querySelector("[data-export-diet-pdf]")?.addEventListener("click", (event) => {
     const button = event.currentTarget;
     const records = recordsInScope();

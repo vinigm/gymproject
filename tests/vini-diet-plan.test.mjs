@@ -27,7 +27,7 @@ assert.equal(empty.itemsChecked, 0);
 assert.equal(empty.beverageCount, 0);
 assert.equal(empty.mainMealsLogged, 0);
 assert.equal(empty.consumed.kcal, 0);
-assert.equal(VINI_PLAN_VERSION, "vini-nutri-2026-07-v8");
+assert.equal(VINI_PLAN_VERSION, "vini-nutri-2026-07-v9");
 assert.deepEqual(VINI_DAILY_GOALS, { kcal: 2000, p: 150, c: 200, f: 68 });
 assert.equal(VINI_FOOD_GROUPS.length, 7);
 assert.deepEqual(VINI_BEVERAGES.map((entry) => entry.id), ["cerveja", "destilado", "energetico_normal"]);
@@ -159,6 +159,17 @@ const pastaSnackSummary = calculateViniDietDay({
   amounts: { lanche_tarde: { whey: 3, pao: 2, pasta_amendoim_amendopower: 15 } },
 });
 assert.deepEqual(pastaSnackSummary.consumed, { kcal: 394, p: 42.5, c: 30.3, f: 10.7 });
+
+const additionalOnly = calculateViniDietDay({ additionalKcal: 90 });
+assert.deepEqual(additionalOnly.consumed, { kcal: 90, p: 0, c: 0, f: 0 });
+assert.equal(additionalOnly.additionalKcal, 90);
+assert.equal(additionalOnly.netKcal, 90);
+assert.equal(additionalOnly.hasData, true);
+const storedAdditional = withViniDietSummary({ additionalKcal: 90 });
+assert.equal(storedAdditional.additionalKcal, 90);
+assert.equal(storedAdditional.summary.additionalKcal, 90);
+assert.equal(normalizeViniDietDay(storedAdditional).additionalKcal, 90);
+assert.equal(normalizeViniDietDay({ additionalKcal: 99999 }).additionalKcal, 10000);
 
 // Bebidas são contadas por porção, persistidas separadamente dos alimentos e
 // entram automaticamente nas kcal e nos macros do dia.

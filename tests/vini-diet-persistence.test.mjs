@@ -40,6 +40,11 @@ assert.ok(ui.indexOf("${dailySummaryHTML(summary)}") < ui.indexOf("${customFoods
 assert.ok(ui.indexOf("${customFoodsHTML(day, summary)}") < ui.indexOf("${hydrationHTML(day, summary)}"));
 assert.ok(ui.indexOf("${customFoodsHTML(day, summary)}") < ui.indexOf("${beveragesHTML(day, summary)}"));
 assert.ok(ui.indexOf("${beveragesHTML(day, summary)}") < ui.indexOf("${hydrationHTML(day, summary)}"));
+assert.ok(ui.indexOf("${beveragesHTML(day, summary)}") < ui.indexOf("${additionalKcalHTML(day)}"));
+assert.ok(ui.indexOf("${additionalKcalHTML(day)}") < ui.indexOf("${hydrationHTML(day, summary)}"));
+assert.match(ui, /id="vini-additional-kcal-input"/);
+assert.match(ui, /data-additional-kcal-reset/);
+assert.match(ui, /day\.additionalKcal = clamp/);
 assert.ok(ui.indexOf("${hydrationHTML(day, summary)}") < ui.indexOf("${weeklyHTML()}"));
 assert.ok(ui.indexOf("${weeklyHTML()}") < ui.indexOf("${saveControlsHTML()}"));
 assert.ok(ui.indexOf("${cycleStatsHTML()}") < ui.indexOf("${saveControlsHTML()}"));

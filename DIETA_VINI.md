@@ -377,15 +377,16 @@ Estas diretrizes orientam a implementação atual:
 - **20/07/2026:** os pontos dos quatro gráficos nutricionais ganharam detalhes interativos. No desktop, o painel abre ao passar o mouse ou focar; no celular, abre por toque e pode ficar fixado. Ele mostra totais, alimentos e porções agrupados por refeição, subtotais, bebidas, hidratação, exercício e um atalho para editar o registro daquele dia. Registros antigos sem composição preservam os totais e informam que os detalhes não estão disponíveis.
 - **20/07/2026:** corrigido o fechamento dos detalhes dos gráficos no Safari móvel, impedindo que a devolução de foco reabra o painel. O botão de fechar passou a ter área de toque maior e o cabeçalho fica fixo enquanto os detalhes são rolados.
 - **21/07/2026:** a predefinição `Lanche - Pasta de amendoim + whey` passou de 30 g para 15 g de Amendopower. Com 2 fatias de pão e 3 medidas de whey, o atalho agora totaliza aproximadamente 394 kcal, 42,5 g de proteína, 30,3 g de carboidrato e 10,7 g de gordura.
+- **22/07/2026:** adicionado o campo diário `Kcal adicionais` abaixo de Bebidas para registrar uma estimativa livre de balas, beliscos e outros itens fora do catálogo. O valor entra nas calorias ingeridas, kcal líquidas, médias, histórico, gráficos e PDF, sem atribuir proteína, carboidrato ou gordura inexistentes. O detalhe dos gráficos identifica essa parcela separadamente.
 
 ## 15. Implementação no tracker
 
-- Catálogo versionado: `js/vini-diet-plan.js`, versão `vini-nutri-2026-07-v8`.
+- Catálogo versionado: `js/vini-diet-plan.js`, versão `vini-nutri-2026-07-v9`.
 - Estimativa de exercício: `js/vini-exercise.js`, com definições MET, normalização, alternância das intensidades e cálculo puro do gasto ativo.
 - Interface e estatísticas: `js/vini-diet-ui.js`.
 - Consulta oficial: `VINI_OFFICIAL_MEALS` preserva as composições completas dos prints; não contém checkboxes, não grava dados e consolida os screenshots duplicados.
 - Persistência: campo `plan` nos documentos existentes de `diet_logs`, sem remover o mapa legado `foods`.
-- Cada dia guarda checkboxes individuais agrupados por momento alimentar, a quantidade selecionada para cada alimento, contagens de bebidas, hidratação, exercícios, peso usado no cálculo e um snapshot dos totais nutricionais, kcal do treino e kcal líquidas.
+- Cada dia guarda checkboxes individuais agrupados por momento alimentar, a quantidade selecionada para cada alimento, contagens de bebidas, kcal adicionais, hidratação, exercícios, peso usado no cálculo e um snapshot dos totais nutricionais, kcal do treino e kcal líquidas.
 - Os checkboxes individuais ficam em um painel recolhível, fechado por padrão. Abrir ou fechar esse painel altera somente a interface e não interfere nas marcações nem na sincronização.
 - O checkbox e a quantidade ativa funcionam como alternância: um novo toque remove o alimento; tocar em uma quantidade diferente mantém o alimento e corrige somente a porção.
 - Os atalhos de refeição padrão funcionam como alternância: o primeiro toque aplica as porções configuradas e o segundo remove somente os itens do atalho, preservando outros alimentos do dia.
@@ -398,4 +399,4 @@ Estas diretrizes orientam a implementação atual:
 - No final da Dieta, quatro gráficos de linha acompanham kcal, proteína, carboidrato e gordura por data, respeitando `Ciclo atual` e `Histórico completo`. Cada gráfico inclui uma linha horizontal de referência e pontos interativos que detalham a composição do dia sem alterar os dados salvos.
 - As referências atuais do tracker são **2.000 kcal, 150 g de proteína, 200 g de carboidrato e 68 g de gordura**. Os três thresholds de macros foram informados pelo usuário em 18/07/2026; as 2.000 kcal permanecem provisórias enquanto não houver uma meta clínica específica.
 - Itens “à vontade” podem ser registrados, mas não entram nos macros enquanto não houver quantidade definida.
-- Registros dos formatos `vini-nutri-2026-07-v1` a `vini-nutri-2026-07-v7` são convertidos em memória para o modelo atual e só passam a v8 quando o dia é editado, sem apagar o snapshot histórico.
+- Registros dos formatos `vini-nutri-2026-07-v1` a `vini-nutri-2026-07-v8` são convertidos em memória para o modelo atual e só passam a v9 quando o dia é editado, sem apagar o snapshot histórico.

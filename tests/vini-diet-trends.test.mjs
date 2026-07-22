@@ -16,6 +16,7 @@ const detailedDay = normalizeViniDietDay({
     almoco: { arroz: 150, frango: 120, vegetais: 50 },
   },
   beverages: { cerveja: 2 },
+  additionalKcal: 90,
   hydrationMl: 3000,
   trainingDay: true,
   exerciseWeightKg: 80,
@@ -67,6 +68,7 @@ assert.match(details, /Almoço/);
 assert.match(details, /Arroz branco cozido/);
 assert.match(details, /150g/);
 assert.match(details, /2 × 1 lata · 350 ml/);
+assert.match(details, /Kcal adicionais:.*\+90 kcal/);
 assert.match(details, /Água registrada/);
 assert.match(details, /Musculação · Média · 60 min/);
 assert.match(details, /Ver registro do dia/);

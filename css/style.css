@@ -3426,6 +3426,21 @@ body.presence-fullscreen .presence-fs-exit { display: flex; }
 .vini-beverage-stepper button:active { transform: scale(.95); }
 .vini-beverage-stepper button:disabled { opacity: .32; cursor: not-allowed; }
 .vini-beverage-stepper output { color: #fbbf24; font-size: 15px; font-weight: 900; text-align: center; font-variant-numeric: tabular-nums; }
+.vini-additional-kcal-block { margin-top: -4px; }
+.vini-additional-kcal-card { padding: 13px; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
+.vini-additional-kcal-block.has-value .vini-additional-kcal-card { background: rgba(251,191,36,.045); border-color: rgba(251,191,36,.52); }
+.vini-additional-kcal-card > label { display: flex; align-items: center; justify-content: space-between; gap: 14px; cursor: text; }
+.vini-additional-kcal-card > label > span:first-child { display: flex; min-width: 0; flex-direction: column; gap: 3px; }
+.vini-additional-kcal-card > label strong { font-size: 12px; }
+.vini-additional-kcal-card > label small { color: var(--muted); font-size: 9px; line-height: 1.35; }
+.vini-additional-kcal-field { display: grid; min-width: 126px; grid-template-columns: minmax(72px, 1fr) auto; align-items: center; gap: 7px; padding: 5px 8px; background: var(--card-2); border: 1px solid var(--border); border-radius: 10px; }
+.vini-additional-kcal-field:focus-within { border-color: #fbbf24; box-shadow: 0 0 0 2px rgba(251,191,36,.12); }
+.vini-additional-kcal-field input { width: 100%; min-width: 0; padding: 3px 0; color: #fbbf24; background: transparent; border: 0; outline: 0; font-size: 18px; font-weight: 900; text-align: right; font-variant-numeric: tabular-nums; }
+.vini-additional-kcal-field b { color: var(--muted); font-size: 10px; }
+.vini-additional-kcal-actions { display: flex; margin-top: 10px; padding-top: 9px; align-items: center; justify-content: space-between; gap: 10px; border-top: 1px dashed var(--border); }
+.vini-additional-kcal-actions p { margin: 0; color: var(--muted); font-size: 8px; line-height: 1.4; }
+.vini-additional-kcal-actions button { flex: none; padding: 5px 8px; color: #fbbf24; border: 1px solid rgba(251,191,36,.25); border-radius: 8px; font-size: 9px; font-weight: 800; }
+.vini-additional-kcal-actions button:disabled { opacity: .3; cursor: not-allowed; }
 .vini-food-groups { display: flex; flex-direction: column; gap: 14px; }
 .vini-food-group-card { overflow: hidden; background: var(--card); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow); }
 .vini-food-group-card.has-food { border-color: rgba(52,211,153,.5); }
@@ -3676,6 +3691,8 @@ body.presence-fullscreen .presence-fs-exit { display: flex; }
 .vini-trend-tooltip-empty { margin: 0; padding: 12px; color: var(--muted); background: rgba(255,255,255,.025); border: 1px dashed var(--border); border-radius: 10px; font-size: 9px; line-height: 1.5; text-align: center; }
 .vini-trend-tooltip-water { margin: 0; padding: 8px 9px; color: var(--muted); background: rgba(56,189,248,.06); border: 1px solid rgba(56,189,248,.16); border-radius: 9px; font-size: 9px; }
 .vini-trend-tooltip-water b { color: var(--text); }
+.vini-trend-tooltip-extra { margin: 0; padding: 8px 9px; color: var(--muted); background: rgba(251,191,36,.06); border: 1px solid rgba(251,191,36,.18); border-radius: 9px; font-size: 9px; }
+.vini-trend-tooltip-extra b { color: #fbbf24; }
 .vini-trend-tooltip-exercise { display: flex; padding: 9px; flex-direction: column; gap: 4px; background: rgba(251,191,36,.055); border: 1px solid rgba(251,191,36,.18); border-radius: 10px; }
 .vini-trend-tooltip-exercise > strong { color: #fbbf24; font-size: 10px; }
 .vini-trend-tooltip-exercise > span { color: var(--text); font-size: 8px; }
@@ -3737,6 +3754,8 @@ body.presence-fullscreen .presence-fs-exit { display: flex; }
   .vini-history-nutri { grid-column: 1; text-align: left; }
   .vini-history-score { grid-column: 2; grid-row: 1 / span 2; }
   .vini-trend-head { align-items: flex-start; flex-direction: column; }
+  .vini-additional-kcal-card > label { align-items: stretch; flex-direction: column; }
+  .vini-additional-kcal-field { width: 100%; }
   .vini-trends-block > .block-head { align-items: flex-start; }
   .vini-trends-actions { align-items: flex-end; flex-direction: column; }
 }

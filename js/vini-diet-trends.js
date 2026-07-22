@@ -241,6 +241,7 @@ export function viniTrendDetailHTML(record, metricKey = "kcal") {
   const metric = VINI_TREND_METRICS.find((entry) => entry.key === metricKey) || VINI_TREND_METRICS[0];
   const consumed = record?.summary?.consumed || { kcal: 0, p: 0, c: 0, f: 0 };
   const metricValue = Number(consumed[metric.key]) || 0;
+  const additionalKcal = Number(record?.summary?.additionalKcal ?? record?.day?.additionalKcal) || 0;
   const hydration = Number(record?.summary?.hydrationMl ?? record?.day?.hydrationMl) || 0;
   return `
     <div class="vini-trend-tooltip-head">
@@ -259,6 +260,7 @@ export function viniTrendDetailHTML(record, metricKey = "kcal") {
     <div class="vini-trend-tooltip-content">
       ${foodGroupsDetailHTML(record)}
       ${beverageDetailHTML(record)}
+      ${additionalKcal ? `<p class="vini-trend-tooltip-extra">🍬 Kcal adicionais: <b>+${formatNumber(additionalKcal)} kcal</b></p>` : ""}
       ${hydration ? `<p class="vini-trend-tooltip-water">💧 Água registrada: <b>${formatNumber(hydration)} ml</b></p>` : ""}
       ${exerciseDetailHTML(record)}
     </div>

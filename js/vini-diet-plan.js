@@ -11,7 +11,7 @@ import {
   normalizeViniExercises,
 } from "./vini-exercise.js";
 
-export const VINI_PLAN_VERSION = "vini-nutri-2026-07-v8";
+export const VINI_PLAN_VERSION = "vini-nutri-2026-07-v9";
 
 // Metas/limites diários usados nos cards, gráficos e relatório PDF. Os macros
 // foram atualizados pelo usuário em 18/07/2026; calorias permanecem como
@@ -618,6 +618,7 @@ export function emptyViniDietDay() {
     foods: {},
     amounts: {},
     beverages: {},
+    additionalKcal: 0,
     hydrationMl: 0,
     trainingDay: false,
     exercises: {},
@@ -657,6 +658,7 @@ function cleanSummary(summary) {
     requiredMeals: Math.max(0, finiteNumber(summary.requiredMeals, VINI_REQUIRED_MEALS.length)),
     itemsChecked: Math.max(0, finiteNumber(summary.itemsChecked)),
     beverageCount: Math.max(0, finiteNumber(summary.beverageCount)),
+    additionalKcal: Math.max(0, Math.round(finiteNumber(summary.additionalKcal))),
     mainMealsLogged: Math.max(0, finiteNumber(summary.mainMealsLogged, summary.completedMeals)),
     mealCoveragePct: Math.max(0, Math.min(100, finiteNumber(summary.mealCoveragePct, summary.adherencePct))),
     hydrationMl: Math.max(0, finiteNumber(summary.hydrationMl)),
@@ -705,6 +707,7 @@ function legacyFoodDescriptor(groupId, legacyFoodId) {
 export function normalizeViniDietDay(raw) {
   const out = emptyViniDietDay();
   out.version = String(raw?.version || VINI_PLAN_VERSION);
+  out.additionalKcal = Math.max(0, Math.min(10000, Math.round(finiteNumber(raw?.additionalKcal))));
   out.hydrationMl = Math.max(0, Math.min(10000, Math.round(finiteNumber(raw?.hydrationMl))));
   out.exercises = normalizeViniExercises(raw?.exercises);
   out.exerciseWeightKg = Math.max(0, Math.round(finiteNumber(raw?.exerciseWeightKg) * 10) / 10);
@@ -852,6 +855,7 @@ export function calculateViniDietDay(raw, { useSnapshot = false } = {}) {
     beverageCount += count;
     addNutrition(consumed, nutritionForBeverageCount(beverage, count));
   }
+  consumed.kcal += day.additionalKcal;
 
   const mainMealsLogged = VINI_REQUIRED_MEALS.filter((groupId) => foodGroups[groupId]?.hasFood).length;
   const mealCoveragePct = VINI_REQUIRED_MEALS.length
@@ -866,7 +870,8 @@ export function calculateViniDietDay(raw, { useSnapshot = false } = {}) {
     || day.trainingDay
     || exercise.items.length > 0
     || itemsChecked > 0
-    || beverageCount > 0;
+    || beverageCount > 0
+    || day.additionalKcal > 0;
 
   const result = {
     day,
@@ -884,6 +889,7 @@ export function calculateViniDietDay(raw, { useSnapshot = false } = {}) {
     mealCoveragePct,
     itemsChecked,
     beverageCount,
+    additionalKcal: day.additionalKcal,
     quantifiedItemsChecked,
     unquantifiedItemsChecked,
     hydrationMl: day.hydrationMl,
@@ -903,6 +909,7 @@ export function calculateViniDietDay(raw, { useSnapshot = false } = {}) {
     result.requiredMeals = day.summary.requiredMeals;
     result.itemsChecked = day.summary.itemsChecked;
     result.beverageCount = day.summary.beverageCount || beverageCount;
+    result.additionalKcal = day.summary.additionalKcal || day.additionalKcal;
     result.mainMealsLogged = day.summary.mainMealsLogged;
     result.mealCoveragePct = day.summary.mealCoveragePct;
     result.hydrationMl = day.summary.hydrationMl;
@@ -928,6 +935,7 @@ export function withViniDietSummary(raw) {
     requiredMeals: calculated.requiredMeals,
     itemsChecked: calculated.itemsChecked,
     beverageCount: calculated.beverageCount,
+    additionalKcal: calculated.additionalKcal,
     mainMealsLogged: calculated.mainMealsLogged,
     mealCoveragePct: calculated.mealCoveragePct,
     hydrationMl: calculated.hydrationMl,
