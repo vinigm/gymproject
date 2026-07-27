@@ -85,7 +85,7 @@ No iPhone/Android, abrir o site no navegador e usar "Adicionar à tela de iníci
 | `water-options.js` | Fonte compartilhada das opções de hidratação (0,5–5 L), formatação, conversão e pontos padrão |
 | `points-engine.js` | `pointsForDay(day)`: único ponto de cálculo dos pontos de um dia |
 | `points-utils.js` | Helpers puros: `loadAndApplyConfig`, breakdown, agregações, recordes, totais |
-| `tracking-cycle.js` | Ciclo de acompanhamento e filtros de escopo (`Ciclo atual` x `Histórico completo`) sem apagar dados; no Kg Vini também monta o acesso à `Dieta Oficial` |
+| `tracking-cycle.js` | Ciclo de acompanhamento e filtros de escopo (`Ciclo atual`, `Histórico completo` e `Dieta Oficial`) sem apagar dados |
 | `points-page.js` | Página Pontos |
 | `casal-page.js` | Loja do casal |
 | `victoria-page.js` | Loja pessoal da Vivi |
@@ -103,7 +103,10 @@ No iPhone/Android, abrir o site no navegador e usar "Adicionar à tela de iníci
 | `kg-vini-page.js` | Entrada do Kg Vini; reutiliza a implementação compartilhada |
 | `vini-diet-plan.js` | Catálogo versionado do plano do Vini, valores nutricionais e cálculos puros |
 | `vini-diet-selection.js` | Seleção individual, quantidades e atalhos das refeições padrão do Vini |
-| `vini-diet-ui.js` | Checklist do plano do Vini, hidratação, histórico e estatísticas diárias/semanais/ciclo |
+| `vivi-diet-plan.js` | Catálogo versionado do PDF da Vivi, referências nutricionais e cálculos puros |
+| `vivi-diet-selection.js` | Seleção individual, quantidades e 19 atalhos das refeições prescritas para a Vivi |
+| `diet-profile.js` / `diet-selection-profile.js` | Selecionam o catálogo e as ações de Vini ou Vivi a partir do usuário da página |
+| `vini-diet-ui.js` | UI compartilhada dos dois planos: checklist, hidratação, histórico e estatísticas diárias/semanais/ciclo |
 | `vini-exercise.js` | Intensidades MET, duração e estimativa de calorias ativas de musculação/corrida |
 | `vini-diet-trends.js` | Gráficos de evolução de kcal, proteína, carboidrato e gordura |
 | `vini-diet-pdf.js` | Geração local do relatório PDF com médias semanais e gráficos nutricionais |
@@ -123,7 +126,11 @@ No iPhone/Android, abrir o site no navegador e usar "Adicionar à tela de iníci
 | `PROCESSO.md` | História e arquitetura do projeto |
 | `DIETA_VINI.md` | Fonte auditável do plano alimentar do Vini e decisões da integração com o tracker |
 | `dieta_vini/` | 21 screenshots-fonte do plano alimentar (19 conteúdos únicos) |
+| `DIETA_VIVI.md` | Transcrição auditável do plano da Vivi e convenções da integração |
+| `dieta_vivi/` | PDF original de 8 páginas do plano alimentar da Vivi |
 | `tests/vini-diet-plan.test.mjs` | Testes dos cálculos, snapshots, opcionais, hidratação, bebidas, churrasco e arroz + purê |
+| `tests/vivi-diet-plan.test.mjs` | Testes das refeições, porções, presets, hidratação, histórico legado e cálculos da Vivi |
+| `tests/vivi-diet-integration.test.mjs` | Protege a seleção do perfil, consulta oficial, PDF e integração da página da Vivi |
 | `tests/tracker-run-distance.test.mjs` | Testes das opções, seleção, troca e limpeza da distância de corrida |
 | `tests/water-options.test.mjs` | Testes das opções de água nos dois cards, conversão em litros e pontuação |
 | `tests/stats-cleanup.test.mjs` | Protege a limpeza da Stats e a permanência das seções gerais |
@@ -273,13 +280,15 @@ Cores: OCUPADO (fase foco) = `is-ocupado` + `presence-busy` (vermelho); Disponí
 
 ### Kg Vini e Kg Vivi (peso + dieta)
 
-**O que faz.** `kg-vivi.html` e `kg-vini.html`: acompanhamento individual de peso (registro, gráfico e IMC) e alimentação. O atributo `data-kg-user="victoria|vinicius"` do `<body>` define o usuário e separa os dados pelo `userId`. A Vivi mantém o tracker genérico por alimentos; o Vini usa o plano prescrito e versionado em `DIETA_VINI.md`.
+**O que faz.** `kg-vivi.html` e `kg-vini.html`: acompanhamento individual de peso (registro, gráfico e IMC) e alimentação. O atributo `data-kg-user="victoria|vinicius"` do `<body>` define o usuário, separa os dados pelo `userId` e seleciona o plano versionado de `DIETA_VIVI.md` ou `DIETA_VINI.md`.
 
 **Como funciona por baixo.** A implementação é compartilhada por `kg-vivi-page.js`; `kg-vini-page.js` é a entrada da nova página. O seletor `#kg-section-seg` ("⚖️ Peso" / "🍽️ Dieta") usa `habitos-kg-section` para Vivi e `habitos-kg-section-vinicius` para Vini.
 
 - **Peso** — `renderWeight()` monta hero, formulário, gráfico, IMC e últimos registros. O registro continua sem horário e separado por usuário. Gráfico, comparação e lista abrem no ciclo atual; o hero também mostra a variação desde a primeira pesagem do ciclo. `Histórico completo` recupera visualmente todas as pesagens anteriores.
-- **Dieta da Vivi** — `renderDiet()` monta o cardápio genérico, resumo, metas provisórias, histórico e estatísticas. `computeNutrition` soma kcal/proteína/carbo/gordura e `setDietDay` persiste o mapa `foods` por usuário/data.
-- **Dieta do Vini** — `renderViniDietTracker()` monta navegação por data, resumo nutricional, checkboxes individuais com seletores de quantidade agrupados por momento alimentar, hidratação, semana, ciclo e histórico editável. No topo, onze atalhos aplicam pré-treino, café, dois almoços, três lanches alternativos, pós-treino, dois jantares e churrasco; o novo lanche usa 2 fatias de pão, 15 g de Amendopower Cookies & Cream e 3 medidas de whey. O primeiro toque aplica e o segundo remove somente os itens daquele atalho. Logo abaixo, `Treino do dia` registra musculação e corrida separadamente em intensidade leve/média/intensa e duração de 20 a 90 minutos; as duas atividades podem coexistir. As alternativas adicionais de almoço/jantar usam 120 g de guisado, 150 g de arroz e 70 g de legumes. `Bebidas do dia` é outro painel recolhível e mantém contadores por porção de cerveja, destilado e energético normal; cada `+ / −` recalcula o resumo e persiste junto do dia. Logo abaixo, `Refeições adicionais` aceita uma descrição e valores livres de kcal, proteína, carboidrato e gordura para itens fora do catálogo; cada campo afeta somente o respectivo total, sem inferir automaticamente kcal a partir dos macros. Para reduzir a altura da página, a lista completa de alimentos é renderizada somente quando `tracker.customFoodsOpen` está ativo pelo botão `Montar refeição personalizada`; o estado permanece aberto durante mutações do dia, fecha ao trocar data/escopo e tem uma ação de fechamento também no final da lista. A semana destaca as médias diárias de kcal e macros entre os dias registrados; a evolução mostra quatro gráficos por tempo e permite exportá-los, com as mesmas médias, em um PDF gerado integralmente no navegador. O plano `vini-nutri-2026-07-v10` contabiliza cobertura de 4 momentos principais (café, almoço, lanche e jantar); pré/pós-treino e belisco são contextuais. Cada mudança chama `withViniDietSummary` antes de `setViniDietPlanDay`, preservando um snapshot de kcal/macros, refeições adicionais, exercício e kcal líquidas junto dos alimentos, quantidades e bebidas registrados. Os detalhes dos gráficos exibem a descrição e os valores manuais separadamente para facilitar a análise de pontos fora da curva. No Kg Vini, o seletor de acompanhamento oferece ainda `Dieta Oficial`: `renderViniOfficialDiet()` troca a área de conteúdo por uma consulta estática das 18 composições completas e da hidratação, sem inputs nem persistência; os alimentos pessoais adicionais não entram nessa consulta. Ao entrar nela a seção muda para Dieta, e abrir Peso retorna ao Ciclo atual.
+- **Tracker compartilhado** — `renderViniDietTracker()` monta para os dois usuários navegação por data, refeições predefinidas removíveis, seleção individual com quantidades, treino, resumo nutricional, bebidas, refeições adicionais, hidratação, semana, ciclo, histórico, quatro gráficos com detalhes e relatório PDF. `diet-profile.js` seleciona os dados corretos sem misturar usuários. Cada mudança cria um snapshot e persiste em `diet_logs`; o botão de salvar permanece no final.
+- **Dieta da Vivi** — o plano `vivi-nutri-2026-02-v1` contém 7 momentos alimentares, 19 composições predefinidas e 4 momentos principais para cobertura (desjejum, almoço, lanche da tarde e jantar). Inclui as alternativas com cereal, batata, mandioca, refeição pronta, três tigelas, barra, salgado, panqueca, pré-treino e opções para dias de aula. A hidratação usa a referência prescrita de 35 ml/kg, apresentada no PDF como aproximadamente 1,6 L. O documento não fornece metas clínicas de kcal/macros; por isso as referências de 2.000 kcal, 90 g P, 250 g C e 65 g G continuam explicitamente provisórias.
+- **Dieta do Vini** — o plano `vini-nutri-2026-07-v10` mantém os onze atalhos pessoais, churrasco, guisado, pasta de amendoim, porções e metas já configuradas. A generalização da UI não altera o catálogo nem os cálculos do Vini.
+- **Dieta Oficial** — existe nos dois Kg. `renderViniOfficialDiet()` usa o perfil ativo para mostrar uma consulta estática sem inputs: 18 composições dos prints no Vini e 19 composições organizadas do PDF na Vivi. As instruções clínicas completas da Vivi permanecem em `DIETA_VIVI.md` e no PDF original.
 
 **Metas diárias da Vivi (`GOALS`).** Valores **provisórios** (comentário explícito no código: "Quando tiver os certos, troque só aqui"; a UI mostra a nota "metas provisórias — ajuste quando tiver os números certos"):
 
@@ -290,7 +299,7 @@ Cores: OCUPADO (fase foco) = `is-ocupado` + `presence-busy` (vermelho); Disponí
 | Carbo (`c`) | 250 g |
 | Gordura (`f`) | 65 g |
 
-**Cardápio genérico da Vivi (`DIET_MENU`).** 4 refeições, cada uma com seus alimentos, opções de quantidade e perfil nutricional aproximado. `per: "unit"` = valores por unidade; `per: "100g"` = valores por 100 g. `FOOD_NUTRI` indexa por `${refeição.alimento}`.
+**Cardápio genérico legado da Vivi (`DIET_MENU`).** Este catálogo de 4 refeições não é mais renderizado. Ele permanece temporariamente no módulo para interpretar o formato antigo `foods`; `diet-storage.js` o converte em snapshot histórico e os dados anteriores continuam nos gráficos.
 
 | Refeição (key) | Alimentos (opções · `per`) — kcal / P / C / G |
 | --- | --- |
@@ -301,9 +310,9 @@ Cores: OCUPADO (fase foco) = `is-ocupado` + `presence-busy` (vermelho); Disponí
 
 **Plano do Vini (`VINI_MEALS`, `VINI_FOOD_GROUPS` e `VINI_OFFICIAL_MEALS`).** `VINI_MEALS` preserva a estrutura usada pelo tracker: pré-treino, café da manhã, 5 opções de almoço, 5 opções técnicas de lanche, pós-treino, 5 opções de jantar e belisco. `VINI_FOOD_GROUPS` achata esse catálogo para a interface: cada alimento aparece em um único card por momento, enquanto as porções prescritas e faixas úteis viram botões de quantidade. Banana, ovos e produtos inteiros usam unidades; pão usa fatias; whey usa medidas; líquidos usam ml; os demais alimentos mensuráveis usam gramas. Os macros são escalados pela razão entre a quantidade registrada e a quantidade de referência. `VINI_OFFICIAL_MEALS` é a projeção fiel para consulta: reúne Pro Force e Natural Whey como alternativas dentro da mesma refeição do `IMG_3071.PNG`, resultando nas 18 composições completas mostradas nos prints. Itens “à vontade” são registráveis, mas não entram na soma nutricional.
 
-**Estatísticas do Vini.** O dia mostra kcal/macros somados a partir dos alimentos e quantidades marcados, quantidade de alimentos, cobertura dos 4 momentos principais e hidratação. Quando há treino, o hero separa kcal ingeridas, gasto ativo estimado e kcal líquidas. `vini-exercise.js` usa `(MET − 1) × peso × horas`, com a pesagem mais recente do Kg Vini; a subtração de 1 MET evita contar novamente o gasto de repouso. Os valores do Compêndio 2024 são musculação 3,5/5,0/6,0 MET e corrida 7,5/9,3/10,5 MET. A semana da data selecionada mostra dias registrados, kcal totais e médias, macros totais e médios, distribuição energética P/C/G, média de alimentos por registro e comparação com a semana anterior. O ciclo mostra médias, água, melhor sequência, marcos de dias, frequência por momento e alimentos mais marcados com sua quantidade acumulada. Ao final da Dieta, `vini-diet-trends.js` gera quatro SVGs independentes (kcal ingeridas, proteína, carboidrato e gordura) com eixo temporal proporcional às datas, rolagem horizontal em períodos longos e linha horizontal tracejada para `VINI_DAILY_GOALS`. As referências atuais são 2.000 kcal, 150 g P, 200 g C e 68 g G; os thresholds de macros foram informados pelo usuário em 18/07/2026 e as calorias permanecem provisórias. Tudo respeita `Ciclo atual` x `Histórico completo`.
+**Estatísticas dos planos.** O dia mostra kcal/macros somados a partir dos alimentos e quantidades marcados, quantidade de alimentos, cobertura dos 4 momentos principais e hidratação. Quando há treino, o hero separa kcal ingeridas, gasto ativo estimado e kcal líquidas. `vini-exercise.js` é compartilhado e usa `(MET − 1) × peso × horas`, com a pesagem mais recente do usuário. Semana, ciclo, histórico, tooltips dos gráficos e PDF usam as metas e o catálogo escolhidos pelo perfil ativo.
 
-**Arquivos.** `kg-vini.html`, `kg-vivi.html`, `js/kg-vini-page.js`, `js/kg-vivi-page.js`, `js/vini-diet-plan.js`, `js/vini-diet-ui.js`, `js/vini-exercise.js`, `js/vini-diet-trends.js`, `js/vini-official-diet.js`, `js/weight-storage.js`, `js/diet-storage.js`, `js/tracking-cycle.js`, `DIETA_VINI.md`.
+**Arquivos.** `kg-vini.html`, `kg-vivi.html`, `js/kg-vivi-page.js`, `js/diet-profile.js`, `js/diet-selection-profile.js`, `js/vini-diet-plan.js`, `js/vivi-diet-plan.js`, `js/vini-diet-selection.js`, `js/vivi-diet-selection.js`, `js/vini-diet-ui.js`, `js/vini-exercise.js`, `js/vini-diet-trends.js`, `js/vini-official-diet.js`, `js/vini-diet-pdf.js`, `js/weight-storage.js`, `js/diet-storage.js`, `js/tracking-cycle.js`, `DIETA_VINI.md`, `DIETA_VIVI.md`.
 
 ### Vivi
 
@@ -383,9 +392,9 @@ Todas as coleções têm um módulo de storage próprio com fallback automático
 - **Módulo**: `js/diet-storage.js` (`COL = "diet_logs"`).
 - **Campos comuns**: `userId`, `date` (`YYYY-MM-DD`) e `updatedAt` (serverTimestamp).
 - **Tracker genérico/legado**: `foods` (mapa `{ "refeição.alimento": quantidade }`, ex.: `{ "cafe.ovo": 2, "almoco.arroz": 100 }`). `cleanFoods` remove quantidades ≤ 0.
-- **Plano do Vini**: `planVersion` e `plan`, contendo `{ version, foods, amounts, beverages, meals, hydrationMl, trainingDay, summary }`. `foods[groupId]` guarda os IDs dos alimentos marcados, `amounts[groupId][foodId]` guarda sua quantidade e `beverages[beverageId]` guarda a contagem de porções consumidas. `meals` permanece somente para leitura e migração do formato v1 (`{ optionId, checked[] }`); IDs de porção da v2 também são migrados. `summary` guarda o snapshot de `consumed`, quantidade de itens e bebidas, cobertura dos momentos principais e hidratação.
+- **Planos estruturados**: Vini e Vivi usam `planVersion` e `plan`, contendo `{ version, foods, amounts, beverages, meals, hydrationMl, trainingDay, summary }`. `foods[groupId]` guarda os IDs dos alimentos marcados, `amounts[groupId][foodId]` guarda sua quantidade e `beverages[beverageId]` guarda a contagem de porções consumidas. `summary` guarda o snapshot de consumo, itens, bebidas, cobertura, exercício e hidratação.
 - **Compatibilidade**: `setDietDay` e `setViniDietPlanDay` usam `setDoc(..., {merge:true})`; portanto `foods` e `plan` coexistem e nenhum registro do formato anterior é apagado.
-- **Persistência do plano do Vini**: cada alteração é copiada de forma síncrona para `habitos-diet-logs-v1` antes de entrar na fila do Firestore. O campo local `planPendingSync` protege a versão ainda não enviada contra sobrescrita por um documento remoto antigo. A tela mantém autosave e exibe o botão explícito **Salvar marcações** no final absoluto da Dieta, depois dos gráficos; ele também permite repetir a sincronização se a nuvem falhar. A leitura começa pelo cache local, mescla o Firestore por cima e, se a query por `userId` for recusada, tenta os IDs determinísticos em lotes desde o início do plano atual (`2026-07-15`).
+- **Persistência dos planos**: cada alteração é copiada de forma síncrona para `habitos-diet-logs-v1` antes de entrar na fila do Firestore. O campo local `planPendingSync` protege a versão ainda não enviada contra sobrescrita por um documento remoto antigo. A tela mantém autosave e exibe **Salvar marcações** no final. Na Vivi, documentos antigos que tenham somente o mapa `foods` são convertidos em snapshots históricos, sem apagar nem reescrever o dado original.
 
 ### Regras de pontuação (`DEFAULT_POINTS`)
 

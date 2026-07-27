@@ -19,9 +19,10 @@ import {
   setViniFoodChecked,
   toggleViniMealPreset,
   toggleViniFoodQuantity,
-} from "./vini-diet-selection.js";
+} from "./diet-selection-profile.js";
 import { bindViniTrendTooltips, viniDietTrendsHTML } from "./vini-diet-trends.js";
 import {
+  DIET_PROFILE,
   VINI_BEVERAGES,
   VINI_FOOD_GROUPS,
   VINI_DAILY_GOALS,
@@ -36,9 +37,9 @@ import {
   nutritionForFoodQuantity,
   setViniBeverageCount,
   withViniDietSummary,
-} from "./vini-diet-plan.js";
+} from "./diet-profile.js";
 
-const USER = "vinicius";
+const USER = DIET_PROFILE.userId;
 const WEEKDAYS = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"];
 
 const tracker = {
@@ -465,7 +466,7 @@ function exerciseTrackerHTML(day, summary) {
       </div>
       ${weightKg > 0
         ? `<p class="vini-exercise-method">Estimativa ativa calculada com <strong>${formatNumber(weightKg, 1)} kg</strong> · MET − repouso. O valor real pode variar.</p>`
-        : `<p class="vini-exercise-method is-warning">Cadastre uma pesagem no Kg Vini para calcular o gasto estimado.</p>`}
+        : `<p class="vini-exercise-method is-warning">Cadastre uma pesagem no Kg ${DIET_PROFILE.personName} para calcular o gasto estimado.</p>`}
       ${legacyTraining ? `<p class="vini-exercise-method is-warning">Este dia tem um registro antigo de treino sem intensidade. Escolha uma opção acima para calcular as kcal.</p>` : ""}
     </section>`;
 }
@@ -593,6 +594,7 @@ function hydrationHTML(day, summary) {
   const target = summary.hydrationTargetMl;
   const baseReached = day.hydrationMl >= VINI_HYDRATION.baseMl;
   const trainingExtra = Math.max(0, day.hydrationMl - VINI_HYDRATION.baseMl);
+  const baseLabel = `${formatNumber(VINI_HYDRATION.baseMl / 1000, 1)} L`;
   return `
     <section class="block">
       <div class="block-head"><h2>💧 Hidratação</h2><span class="muted" style="font-size:11px">meta mínima ${formatNumber(target)} ml</span></div>
@@ -611,7 +613,7 @@ function hydrationHTML(day, summary) {
           <small>ml</small>
         </label>
         <p class="vini-water-note ${baseReached ? "is-good" : ""}">
-          ${baseReached ? `Base de 2,5 L atingida${day.trainingDay ? ` · adicional registrado: ${formatNumber(trainingExtra)} ml` : ""}.` : `Faltam ${formatNumber(VINI_HYDRATION.baseMl - day.hydrationMl)} ml para a base de 2,5 L.`}
+          ${baseReached ? `Base de ${baseLabel} atingida${day.trainingDay && trainingExtra ? ` · adicional registrado: ${formatNumber(trainingExtra)} ml` : ""}.` : `Faltam ${formatNumber(VINI_HYDRATION.baseMl - day.hydrationMl)} ml para a base de ${baseLabel}.`}
         </p>
       </div>
     </section>`;
@@ -899,6 +901,8 @@ function bindTracker() {
         scopeLabel: tracker.scope === "history" ? "Histórico completo" : "Ciclo atual",
         generatedAt: new Date(),
         fileDate: todayISO(),
+        reportTitle: DIET_PROFILE.reportTitle,
+        reportSlug: DIET_PROFILE.reportSlug,
         weekly: { start, end, days: weekly.days, averages: weekly.averages },
       });
       button.textContent = "PDF gerado ✓";

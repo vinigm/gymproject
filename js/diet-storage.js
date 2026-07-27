@@ -7,12 +7,21 @@ import {
   doc, getDoc, setDoc, collection, query, where, getDocs, serverTimestamp
 } from "./firebase-config.js";
 import { normalizeViniDietDay } from "./vini-diet-plan.js";
+import { legacyViviPlanFromFoods, normalizeViviDietDay } from "./vivi-diet-plan.js";
 
 const COL = "diet_logs";
 const LS_KEY = "habitos-diet-logs-v1";
 const VINI_DIET_PLAN_START_DATE = "2026-07-15";
 
 function keyOf(userId, date) { return `${userId}_${date}`; }
+function normalizePlan(userId, plan) {
+  return userId === "victoria" ? normalizeViviDietDay(plan) : normalizeViniDietDay(plan);
+}
+function planFromEntry(userId, entry) {
+  if (entry?.plan) return normalizePlan(userId, entry.plan);
+  if (userId === "victoria" && entry?.foods) return legacyViviPlanFromFoods(cleanFoods(entry.foods));
+  return normalizePlan(userId, null);
+}
 function readLS() { try { return JSON.parse(localStorage.getItem(LS_KEY)) || {}; } catch { return {}; } }
 function writeLS(o) { try { localStorage.setItem(LS_KEY, JSON.stringify(o)); } catch {} }
 function writeLocalPlanDay(userId, date, plan, { pendingSync = false } = {}) {
@@ -33,15 +42,15 @@ function localPlanEntry(userId, date) {
 function markLocalPlanSynced(userId, date, plan) {
   const cached = localPlanEntry(userId, date);
   if (!cached.plan) return;
-  const cachedPlan = normalizeViniDietDay(cached.plan);
+  const cachedPlan = normalizePlan(userId, cached.plan);
   if (JSON.stringify(cachedPlan) !== JSON.stringify(plan)) return;
   writeLocalPlanDay(userId, date, cachedPlan);
 }
 function localPlanMap(userId) {
   const map = {};
   Object.values(readLS())
-    .filter((value) => value.userId === userId && value.date && value.plan)
-    .forEach((value) => { map[value.date] = normalizeViniDietDay(value.plan); });
+    .filter((value) => value.userId === userId && value.date && (value.plan || value.foods))
+    .forEach((value) => { map[value.date] = planFromEntry(userId, value); });
   return map;
 }
 function isoDateRange(startDate, endDate) {
@@ -130,13 +139,13 @@ export async function getDietMap(userId) {
 
 export async function getViniDietPlanDay(userId, date) {
   const cached = localPlanEntry(userId, date);
-  const local = normalizeViniDietDay(cached.plan);
+  const local = planFromEntry(userId, cached);
   if (isConfigured) {
     try {
       const s = await getDoc(doc(db, COL, keyOf(userId, date)));
-      if (!s.exists() || !s.data().plan) return local;
+      if (!s.exists() || (!s.data().plan && !(userId === "victoria" && s.data().foods))) return local;
       if (cached.plan && cached.planPendingSync) return local;
-      const remote = normalizeViniDietDay(s.data().plan);
+      const remote = planFromEntry(userId, s.data());
       writeLocalPlanDay(userId, date, remote);
       return remote;
     } catch (e) {
@@ -148,11 +157,11 @@ export async function getViniDietPlanDay(userId, date) {
 }
 
 export function cacheViniDietPlanDay(userId, date, plan) {
-  writeLocalPlanDay(userId, date, normalizeViniDietDay(plan), { pendingSync: isConfigured });
+  writeLocalPlanDay(userId, date, normalizePlan(userId, plan), { pendingSync: isConfigured });
 }
 
 export async function setViniDietPlanDay(userId, date, plan) {
-  const clean = normalizeViniDietDay(plan);
+  const clean = normalizePlan(userId, plan);
   // Salva no browser antes da sincronização remota para não perder marcações
   // quando a conexão cai ou as regras do Firestore recusam a gravação.
   cacheViniDietPlanDay(userId, date, clean);
@@ -179,10 +188,10 @@ export async function getViniDietPlanMap(userId) {
       const snap = await getDocs(q);
       snap.forEach((entry) => {
         const value = entry.data();
-        if (!value.date || !value.plan) return;
+        if (!value.date || (!value.plan && !(userId === "victoria" && value.foods))) return;
         const cached = localPlanEntry(userId, value.date);
         if (cached.plan && cached.planPendingSync) return;
-        const remote = normalizeViniDietDay(value.plan);
+        const remote = planFromEntry(userId, value);
         map[value.date] = remote;
         writeLocalPlanDay(userId, value.date, remote);
       });
@@ -196,8 +205,8 @@ export async function getViniDietPlanMap(userId) {
         const entries = await Promise.all(batch.map(async (date) => {
           try {
             const snapshot = await getDoc(doc(db, COL, keyOf(userId, date)));
-            return snapshot.exists() && snapshot.data().plan
-              ? [date, normalizeViniDietDay(snapshot.data().plan)]
+            return snapshot.exists() && (snapshot.data().plan || (userId === "victoria" && snapshot.data().foods))
+              ? [date, planFromEntry(userId, snapshot.data())]
               : null;
           } catch {
             return null;

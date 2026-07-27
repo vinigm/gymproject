@@ -1,4 +1,4 @@
-import { VINI_OFFICIAL_MEALS } from "./vini-diet-plan.js";
+import { DIET_PROFILE, VINI_OFFICIAL_MEALS } from "./diet-profile.js";
 
 export function renderViniOfficialDiet(root) {
   if (!root) return;
@@ -11,12 +11,12 @@ export function viniOfficialDietHTML() {
     <section class="vini-official-intro">
       <span class="vini-official-kicker">Consulta · plano da nutricionista</span>
       <h2>Dieta Oficial</h2>
-      <p>As refeições abaixo reproduzem as composições completas dos prints. Esta área é somente para consulta e não altera seus registros.</p>
+      <p>${DIET_PROFILE.officialIntro}</p>
       <div class="vini-official-summary">
         <strong>${optionCount}</strong><span>opções completas</span>
         <strong>${VINI_OFFICIAL_MEALS.length}</strong><span>momentos alimentares</span>
       </div>
-      <small>Os screenshots repetidos foram consolidados; nenhuma composição foi removida.</small>
+      <small>${DIET_PROFILE.officialFootnote}</small>
     </section>
 
     <div class="vini-official-meals">
@@ -25,8 +25,8 @@ export function viniOfficialDietHTML() {
 
     <section class="vini-official-hydration">
       <div><span>💧</span><strong>Hidratação</strong></div>
-      <p>Consumo médio de 2,5 litros de água + 500 ml - 1 litro durante o treino</p>
-      <small>Fonte: IMG_3083.PNG</small>
+      <p>${DIET_PROFILE.hydrationDescription}</p>
+      <small>Fonte: ${DIET_PROFILE.hydrationSource}</small>
     </section>`;
 }
 

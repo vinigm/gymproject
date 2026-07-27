@@ -5,7 +5,7 @@ import {
   formatFoodQuantity,
   nutritionForBeverageCount,
   nutritionForFoodQuantity,
-} from "./vini-diet-plan.js";
+} from "./diet-profile.js";
 
 export const VINI_TREND_METRICS = Object.freeze([
   Object.freeze({ key: "kcal", label: "Calorias", short: "kcal", unit: "kcal", cls: "is-kcal" }),
@@ -436,7 +436,7 @@ export function viniDietTrendsHTML(records, {
           ${clean.length ? `<button type="button" class="ghost-btn vini-export-pdf-btn" data-export-diet-pdf>Exportar PDF</button>` : ""}
         </div>
       </div>
-      <p class="vini-trends-note">Cada gráfico mostra o consumo registrado por data. A linha tracejada é uma referência estimada das porções oficiais, pois os prints não informam metas clínicas.</p>
+      <p class="vini-trends-note">Cada gráfico mostra o consumo registrado por data. A linha tracejada é uma referência estimada do tracker, pois o plano oficial não informa metas clínicas de kcal e macros.</p>
       ${clean.length ? `<div class="vini-trends-list">${VINI_TREND_METRICS.map((metric) => chartHTML(clean, metric, goals, chartWidth)).join("")}</div>` : `
         <div class="stat-card"><p class="muted" style="margin:0">Registre alimentos para acompanhar kcal e macros ao longo do tempo.</p></div>`}
     </section>`;

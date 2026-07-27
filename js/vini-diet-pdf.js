@@ -1,4 +1,4 @@
-import { VINI_DAILY_GOALS } from "./vini-diet-plan.js";
+import { VINI_DAILY_GOALS } from "./diet-profile.js";
 import { VINI_TREND_METRICS } from "./vini-diet-trends.js";
 
 const PAGE = Object.freeze({ width: 842, height: 595 });
@@ -177,9 +177,9 @@ function drawChart(commands, records, metric, goals, x, y, width, height) {
   });
 }
 
-function drawHeader(commands, subtitle) {
+function drawHeader(commands, subtitle, reportTitle) {
   fillRect(commands, 0, PAGE.height - 54, PAGE.width, 54, COLORS.header);
-  drawText(commands, "Relatorio nutricional - Kg Vini", 36, PAGE.height - 31, 19, { bold: true, color: COLORS.white });
+  drawText(commands, reportTitle, 36, PAGE.height - 31, 19, { bold: true, color: COLORS.white });
   drawText(commands, subtitle, PAGE.width - 36, PAGE.height - 29, 8.5, { color: "#cbd5e1", align: "right" });
 }
 
@@ -209,9 +209,10 @@ function drawWeeklyAverages(commands, weekly, goals) {
 
 function pageContents(records, options) {
   const goals = options.goals || VINI_DAILY_GOALS;
+  const reportTitle = ascii(options.reportTitle || "Relatório nutricional - Kg Vini");
   const subtitle = `${ascii(options.scopeLabel || "Ciclo atual")} | ${records.length} dias | gerado em ${generatedDate(options.generatedAt)}`;
   const first = [];
-  drawHeader(first, subtitle);
+  drawHeader(first, subtitle, reportTitle);
   drawWeeklyAverages(first, options.weekly, goals);
   drawChart(first, records, VINI_TREND_METRICS[0], goals, 36, 249, 770, 195);
   drawChart(first, records, VINI_TREND_METRICS[1], goals, 36, 34, 770, 195);
@@ -219,7 +220,7 @@ function pageContents(records, options) {
   drawText(first, "1/2", PAGE.width - 36, 16, 7, { color: COLORS.muted, align: "right" });
 
   const second = [];
-  drawHeader(second, subtitle);
+  drawHeader(second, subtitle, reportTitle);
   drawChart(second, records, VINI_TREND_METRICS[2], goals, 36, 298, 770, 220);
   drawChart(second, records, VINI_TREND_METRICS[3], goals, 36, 54, 770, 220);
   drawText(second, "A linha tracejada representa a meta estimada configurada no tracker.", 36, 23, 7, { color: COLORS.muted });
@@ -264,7 +265,8 @@ export function createViniDietPdf(records, options = {}) {
 export function downloadViniDietPdf(records, options = {}) {
   const bytes = createViniDietPdf(records, options);
   const date = options.fileDate || new Date().toISOString().slice(0, 10);
-  const filename = `relatorio-nutricional-vini-${date}.pdf`;
+  const slug = String(options.reportSlug || "vini").replace(/[^a-z0-9_-]/gi, "").toLowerCase() || "vini";
+  const filename = `relatorio-nutricional-${slug}-${date}.pdf`;
   const url = URL.createObjectURL(new Blob([bytes], { type: "application/pdf" }));
   const link = document.createElement("a");
   link.href = url;

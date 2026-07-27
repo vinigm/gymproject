@@ -1,7 +1,7 @@
 // Implementação compartilhada das páginas "Kg Vivi" e "Kg Vini".
 // O usuário vem de data-kg-user no <body>; na ausência, mantém Vivi como padrão.
 // São duas seções: Peso (registro + gráfico + IMC) e Dieta
-// (checklist de refeições, histórico e estatísticas no Kg Vini).
+// (tracker estruturado, histórico, gráficos e plano oficial por pessoa).
 
 import { setupAuthGate, renderAuthFooter } from "./auth.js";
 import { mountNavMenu } from "./nav-menu.js";
@@ -159,7 +159,7 @@ function render() {
   mountTrackingScopeControl("kg-cycle-scope", {
     scope: stateData.trackingScope,
     userIds: [USER],
-    includeOfficialDiet: IS_VINI,
+    includeOfficialDiet: true,
     onChange: (nextScope) => {
       stateData.trackingScope = nextScope;
       if (nextScope === TRACKING_SCOPE.OFFICIAL_DIET) {
@@ -418,11 +418,9 @@ function renderDiet() {
   const el = document.getElementById("kg-section");
   if (!el) return;
 
-  if (IS_VINI) {
-    if (stateData.trackingScope === TRACKING_SCOPE.OFFICIAL_DIET) renderViniOfficialDiet(el);
-    else renderViniDietTracker(el, { scope: stateData.trackingScope });
-    return;
-  }
+  if (stateData.trackingScope === TRACKING_SCOPE.OFFICIAL_DIET) renderViniOfficialDiet(el);
+  else renderViniDietTracker(el, { scope: stateData.trackingScope });
+  return;
 
   el.innerHTML = `
     <section class="block">
@@ -729,12 +727,7 @@ document.addEventListener("DOMContentLoaded", () => {
         stateData.height = loadHeight(USER, IS_VINI ? null : DEFAULT_HEIGHT_M);
         stateData.entries = await getWeightEntries(USER);
         await seedIfEmpty();
-        if (IS_VINI) {
-          await loadViniDietTracker();
-        } else {
-          stateData.dietFoods = await getDietDay(USER, todayISO());
-          stateData.dietMap = await getDietMap(USER);
-        }
+        await loadViniDietTracker();
         render();
       } catch (err) {
         console.error(`Erro ao inicializar Kg ${PERSON_NAME}:`, err);
