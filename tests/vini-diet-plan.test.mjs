@@ -27,7 +27,7 @@ assert.equal(empty.itemsChecked, 0);
 assert.equal(empty.beverageCount, 0);
 assert.equal(empty.mainMealsLogged, 0);
 assert.equal(empty.consumed.kcal, 0);
-assert.equal(VINI_PLAN_VERSION, "vini-nutri-2026-07-v9");
+assert.equal(VINI_PLAN_VERSION, "vini-nutri-2026-07-v10");
 assert.deepEqual(VINI_DAILY_GOALS, { kcal: 2000, p: 150, c: 200, f: 68 });
 assert.equal(VINI_FOOD_GROUPS.length, 7);
 assert.deepEqual(VINI_BEVERAGES.map((entry) => entry.id), ["cerveja", "destilado", "energetico_normal"]);
@@ -160,16 +160,34 @@ const pastaSnackSummary = calculateViniDietDay({
 });
 assert.deepEqual(pastaSnackSummary.consumed, { kcal: 394, p: 42.5, c: 30.3, f: 10.7 });
 
-const additionalOnly = calculateViniDietDay({ additionalKcal: 90 });
-assert.deepEqual(additionalOnly.consumed, { kcal: 90, p: 0, c: 0, f: 0 });
-assert.equal(additionalOnly.additionalKcal, 90);
-assert.equal(additionalOnly.netKcal, 90);
+const additionalOnly = calculateViniDietDay({
+  additionalMeal: "1 pedaço de torta",
+  additionalNutrition: { kcal: 320, p: 4, c: 42, f: 16 },
+});
+assert.deepEqual(additionalOnly.consumed, { kcal: 320, p: 4, c: 42, f: 16 });
+assert.equal(additionalOnly.additionalMeal, "1 pedaço de torta");
+assert.deepEqual(additionalOnly.additionalNutrition, { kcal: 320, p: 4, c: 42, f: 16 });
+assert.equal(additionalOnly.netKcal, 320);
 assert.equal(additionalOnly.hasData, true);
-const storedAdditional = withViniDietSummary({ additionalKcal: 90 });
-assert.equal(storedAdditional.additionalKcal, 90);
-assert.equal(storedAdditional.summary.additionalKcal, 90);
-assert.equal(normalizeViniDietDay(storedAdditional).additionalKcal, 90);
-assert.equal(normalizeViniDietDay({ additionalKcal: 99999 }).additionalKcal, 10000);
+const storedAdditional = withViniDietSummary({
+  additionalMeal: "1 pedaço de torta",
+  additionalNutrition: { kcal: 320, p: 4, c: 42, f: 16 },
+});
+assert.equal(storedAdditional.additionalMeal, "1 pedaço de torta");
+assert.deepEqual(storedAdditional.summary.additionalNutrition, { kcal: 320, p: 4, c: 42, f: 16 });
+assert.equal(storedAdditional.summary.additionalMeal, "1 pedaço de torta");
+assert.deepEqual(normalizeViniDietDay(storedAdditional).additionalNutrition, { kcal: 320, p: 4, c: 42, f: 16 });
+
+// O formato anterior continua legível e migra as kcal extras sem perder dados.
+assert.deepEqual(
+  normalizeViniDietDay({ additionalKcal: 90 }).additionalNutrition,
+  { kcal: 90, p: 0, c: 0, f: 0 }
+);
+assert.equal(normalizeViniDietDay({ additionalKcal: 99999 }).additionalNutrition.kcal, 10000);
+assert.deepEqual(
+  normalizeViniDietDay({ additionalNutrition: { kcal: 12.7, p: 4.44, c: 9999, f: -2 } }).additionalNutrition,
+  { kcal: 13, p: 4.4, c: 1000, f: 0 }
+);
 
 // Bebidas são contadas por porção, persistidas separadamente dos alimentos e
 // entram automaticamente nas kcal e nos macros do dia.

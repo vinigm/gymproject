@@ -241,7 +241,18 @@ export function viniTrendDetailHTML(record, metricKey = "kcal") {
   const metric = VINI_TREND_METRICS.find((entry) => entry.key === metricKey) || VINI_TREND_METRICS[0];
   const consumed = record?.summary?.consumed || { kcal: 0, p: 0, c: 0, f: 0 };
   const metricValue = Number(consumed[metric.key]) || 0;
-  const additionalKcal = Number(record?.summary?.additionalKcal ?? record?.day?.additionalKcal) || 0;
+  const additionalSource = record?.summary?.additionalNutrition
+    || record?.day?.additionalNutrition
+    || {};
+  const additionalNutrition = {
+    kcal: Number(additionalSource.kcal ?? record?.summary?.additionalKcal ?? record?.day?.additionalKcal) || 0,
+    p: Number(additionalSource.p) || 0,
+    c: Number(additionalSource.c) || 0,
+    f: Number(additionalSource.f) || 0,
+  };
+  const additionalMeal = String(record?.day?.additionalMeal || record?.summary?.additionalMeal || "").trim();
+  const hasAdditionalMeal = Boolean(additionalMeal)
+    || Object.values(additionalNutrition).some((value) => value > 0);
   const hydration = Number(record?.summary?.hydrationMl ?? record?.day?.hydrationMl) || 0;
   return `
     <div class="vini-trend-tooltip-head">
@@ -260,7 +271,16 @@ export function viniTrendDetailHTML(record, metricKey = "kcal") {
     <div class="vini-trend-tooltip-content">
       ${foodGroupsDetailHTML(record)}
       ${beverageDetailHTML(record)}
-      ${additionalKcal ? `<p class="vini-trend-tooltip-extra">🍬 Kcal adicionais: <b>+${formatNumber(additionalKcal)} kcal</b></p>` : ""}
+      ${hasAdditionalMeal ? `
+        <section class="vini-trend-tooltip-extra">
+          <strong>🍰 Refeições adicionais:${additionalMeal ? ` ${escapeHTML(additionalMeal)}` : ""}</strong>
+          <span>
+            <b>+${formatNumber(additionalNutrition.kcal)} kcal</b>
+            <b>P +${formatNumber(additionalNutrition.p, Number.isInteger(additionalNutrition.p) ? 0 : 1)} g</b>
+            <b>C +${formatNumber(additionalNutrition.c, Number.isInteger(additionalNutrition.c) ? 0 : 1)} g</b>
+            <b>G +${formatNumber(additionalNutrition.f, Number.isInteger(additionalNutrition.f) ? 0 : 1)} g</b>
+          </span>
+        </section>` : ""}
       ${hydration ? `<p class="vini-trend-tooltip-water">💧 Água registrada: <b>${formatNumber(hydration)} ml</b></p>` : ""}
       ${exerciseDetailHTML(record)}
     </div>

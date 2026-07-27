@@ -57,6 +57,15 @@ const tracker = {
 };
 
 function pad2(value) { return String(value).padStart(2, "0"); }
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (character) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;",
+  })[character]);
+}
 function toISODate(date) { return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`; }
 function fromISODate(iso) {
   const [year, month, day] = String(iso || "").split("-").map(Number);
@@ -252,7 +261,7 @@ function renderTracker() {
     ${dailySummaryHTML(summary)}
     ${customFoodsHTML(day, summary)}
     ${beveragesHTML(day, summary)}
-    ${additionalKcalHTML(day)}
+    ${additionalMealHTML(day)}
     ${hydrationHTML(day, summary)}
     ${weeklyHTML()}
     ${cycleStatsHTML()}
@@ -309,28 +318,49 @@ function beveragesHTML(day, summary) {
     </section>`;
 }
 
-function additionalKcalHTML(day) {
+function additionalMealHTML(day) {
+  const nutrition = day.additionalNutrition || { kcal: 0, p: 0, c: 0, f: 0 };
+  const hasValue = Boolean(day.additionalMeal)
+    || Object.values(nutrition).some((value) => Number(value) > 0);
+  const fields = [
+    { key: "kcal", label: "Calorias", unit: "kcal", max: 10000, step: 1, inputMode: "numeric" },
+    { key: "p", label: "Proteína", unit: "g", max: 1000, step: 0.1, inputMode: "decimal" },
+    { key: "c", label: "Carboidrato", unit: "g", max: 1000, step: 0.1, inputMode: "decimal" },
+    { key: "f", label: "Gordura", unit: "g", max: 1000, step: 0.1, inputMode: "decimal" },
+  ];
   return `
-    <section class="block vini-additional-kcal-block${day.additionalKcal ? " has-value" : ""}">
+    <section class="block vini-additional-meal-block${hasValue ? " has-value" : ""}">
       <div class="block-head">
-        <h2>🍬 Kcal adicionais</h2>
+        <h2>🍰 Refeições adicionais</h2>
         <span class="muted" style="font-size:11px">estimativa livre</span>
       </div>
-      <div class="vini-additional-kcal-card">
-        <label for="vini-additional-kcal-input">
-          <span>
-            <strong>Calorias extras do dia</strong>
-            <small>Balas, beliscos e outras coisas que não estão na lista</small>
-          </span>
-          <span class="vini-additional-kcal-field">
-            <input type="number" id="vini-additional-kcal-input" min="0" max="10000" step="1"
-                   value="${day.additionalKcal}" inputmode="numeric" aria-label="Calorias adicionais do dia" />
-            <b>kcal</b>
-          </span>
+      <div class="vini-additional-meal-card">
+        <label class="vini-additional-meal-description" for="vini-additional-meal-input">
+          <strong>O que você comeu?</strong>
+          <small>Esse texto aparecerá nos detalhes dos gráficos.</small>
+          <input type="text" id="vini-additional-meal-input" maxlength="300"
+                 value="${escapeHTML(day.additionalMeal)}"
+                 placeholder="Ex.: 1 pedaço de torta, 2 bifes à milanesa"
+                 aria-label="Descrição das refeições adicionais do dia" />
         </label>
-        <div class="vini-additional-kcal-actions">
-          <p>Esse valor entra nas calorias totais e líquidas, mas não adiciona macros estimados.</p>
-          <button type="button" data-additional-kcal-reset ${day.additionalKcal <= 0 ? "disabled" : ""}>zerar</button>
+        <div class="vini-additional-nutrition-grid">
+          ${fields.map((field) => `
+            <label class="vini-additional-nutrition-field vini-additional-nutrition-${field.key}"
+                   for="vini-additional-${field.key}-input">
+              <span>${field.label}</span>
+              <span>
+                <input type="number" id="vini-additional-${field.key}-input"
+                       min="0" max="${field.max}" step="${field.step}"
+                       value="${nutrition[field.key] || ""}" inputmode="${field.inputMode}"
+                       data-additional-nutrition="${field.key}"
+                       aria-label="${field.label} adicional do dia" />
+                <b>${field.unit}</b>
+              </span>
+            </label>`).join("")}
+        </div>
+        <div class="vini-additional-meal-actions">
+          <p>Cada valor entra somente no respectivo total; as kcal não são deduzidas automaticamente dos macros.</p>
+          <button type="button" data-additional-meal-reset ${!hasValue ? "disabled" : ""}>zerar tudo</button>
         </div>
       </div>
     </section>`;
@@ -837,11 +867,22 @@ function bindTracker() {
       return setViniBeverageCount(day, beverageId, count + Number(button.dataset.beverageStep));
     }));
   });
-  tracker.root.querySelector("#vini-additional-kcal-input")?.addEventListener("change", (event) => mutateCurrentDay((day) => {
-    day.additionalKcal = clamp(Math.round(Number(event.target.value) || 0), 0, 10000);
+  tracker.root.querySelector("#vini-additional-meal-input")?.addEventListener("change", (event) => mutateCurrentDay((day) => {
+    day.additionalMeal = String(event.target.value || "").trim().slice(0, 300);
   }));
-  tracker.root.querySelector("[data-additional-kcal-reset]")?.addEventListener("click", () => mutateCurrentDay((day) => {
-    day.additionalKcal = 0;
+  tracker.root.querySelectorAll("[data-additional-nutrition]").forEach((input) => {
+    input.addEventListener("change", (event) => mutateCurrentDay((day) => {
+      const metric = event.target.dataset.additionalNutrition;
+      const max = metric === "kcal" ? 10000 : 1000;
+      const rawValue = clamp(Number(event.target.value) || 0, 0, max);
+      day.additionalNutrition[metric] = metric === "kcal"
+        ? Math.round(rawValue)
+        : Math.round(rawValue * 10) / 10;
+    }));
+  });
+  tracker.root.querySelector("[data-additional-meal-reset]")?.addEventListener("click", () => mutateCurrentDay((day) => {
+    day.additionalMeal = "";
+    day.additionalNutrition = { kcal: 0, p: 0, c: 0, f: 0 };
   }));
   tracker.root.querySelector("[data-export-diet-pdf]")?.addEventListener("click", (event) => {
     const button = event.currentTarget;
