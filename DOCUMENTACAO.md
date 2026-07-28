@@ -65,8 +65,8 @@ No iPhone/Android, abrir o site no navegador e usar "Adicionar à tela de iníci
 | `alongamento.html` | Ferramenta de alongamento guiado (timer com auto-avanço) |
 | `pomodoro.html` | Timer Pomodoro (foco/pausas) com estatísticas por usuário |
 | `presence.html` | Status/presença (painel de foco Pomodoro para tablet, tempo real) |
-| `kg-vini.html` | Peso + plano alimentar estruturado do Vini, com kcal/macros e estatísticas semanais |
-| `kg-vivi.html` | Peso + dieta da Vivi (registro, gráfico, IMC, alimentos) |
+| `kg-vini.html` | Peso, dieta, estatísticas e gráficos nutricionais do Vini |
+| `kg-vivi.html` | Peso, dieta, estatísticas e gráficos nutricionais da Vivi |
 | `config.html` | Configuração da tabela de pontos/prêmios (persistida em `config/points`) |
 
 ### JavaScript (`js/`)
@@ -99,14 +99,14 @@ No iPhone/Android, abrir o site no navegador e usar "Adicionar à tela de iníci
 | `stretch-storage.js` | Storage de `stretch_sessions` |
 | `presence-page.js` | Página de status/presença (ciclo Pomodoro, Wake Lock, fullscreen) |
 | `presence-storage.js` | Storage de `presence` (tempo real via `onSnapshot`) |
-| `kg-vivi-page.js` | Implementação compartilhada das páginas de peso + dieta de Vini e Vivi |
+| `kg-vivi-page.js` | Implementação compartilhada das páginas Peso, Dieta, Stats e Graphs de Vini e Vivi |
 | `kg-vini-page.js` | Entrada do Kg Vini; reutiliza a implementação compartilhada |
 | `vini-diet-plan.js` | Catálogo versionado do plano do Vini, valores nutricionais e cálculos puros |
 | `vini-diet-selection.js` | Seleção individual, quantidades e atalhos das refeições padrão do Vini |
 | `vivi-diet-plan.js` | Catálogo versionado do PDF da Vivi, referências nutricionais e cálculos puros |
 | `vivi-diet-selection.js` | Seleção individual, quantidades e 19 atalhos das refeições prescritas para a Vivi |
 | `diet-profile.js` / `diet-selection-profile.js` | Selecionam o catálogo e as ações de Vini ou Vivi a partir do usuário da página |
-| `vini-diet-ui.js` | UI compartilhada dos dois planos: checklist, hidratação, histórico e estatísticas diárias/semanais/ciclo |
+| `vini-diet-ui.js` | UI compartilhada dos dois planos: registro alimentar, hidratação, estatísticas semanais/ciclo e gráficos |
 | `vini-exercise.js` | Intensidades MET, duração e estimativa de calorias ativas de musculação/corrida |
 | `vini-diet-trends.js` | Gráficos de evolução de kcal, proteína, carboidrato e gordura |
 | `vini-diet-pdf.js` | Geração local do relatório PDF com médias semanais e gráficos nutricionais |
@@ -282,10 +282,10 @@ Cores: OCUPADO (fase foco) = `is-ocupado` + `presence-busy` (vermelho); Disponí
 
 **O que faz.** `kg-vivi.html` e `kg-vini.html`: acompanhamento individual de peso (registro, gráfico e IMC) e alimentação. O atributo `data-kg-user="victoria|vinicius"` do `<body>` define o usuário, separa os dados pelo `userId` e seleciona o plano versionado de `DIETA_VIVI.md` ou `DIETA_VINI.md`.
 
-**Como funciona por baixo.** A implementação é compartilhada por `kg-vivi-page.js`; `kg-vini-page.js` é a entrada da nova página. O seletor `#kg-section-seg` ("⚖️ Peso" / "🍽️ Dieta") usa `habitos-kg-section` para Vivi e `habitos-kg-section-vinicius` para Vini.
+**Como funciona por baixo.** A implementação é compartilhada por `kg-vivi-page.js`; `kg-vini-page.js` é a entrada da página do Vini. O seletor `#kg-section-seg` oferece as páginas `Peso`, `Dieta`, `Stats` e `Graphs` e usa `habitos-kg-section` para Vivi e `habitos-kg-section-vinicius` para Vini.
 
 - **Peso** — `renderWeight()` monta hero, formulário, gráfico, IMC e últimos registros. O registro continua sem horário e separado por usuário. Gráfico, comparação e lista abrem no ciclo atual; o hero também mostra a variação desde a primeira pesagem do ciclo. `Histórico completo` recupera visualmente todas as pesagens anteriores.
-- **Tracker compartilhado** — `renderViniDietTracker()` monta para os dois usuários navegação por data, refeições predefinidas removíveis, seleção individual com quantidades, treino, resumo nutricional, bebidas, refeições adicionais, hidratação, semana, ciclo, histórico, quatro gráficos com detalhes e relatório PDF. `diet-profile.js` seleciona os dados corretos sem misturar usuários. Cada mudança cria um snapshot e persiste em `diet_logs`; o botão de salvar permanece no final.
+- **Tracker compartilhado** — `renderViniDietTracker()` recebe a visualização ativa. `Dieta` contém somente o registro por data, refeições predefinidas removíveis, seleção individual, treino, resumo, bebidas, refeições adicionais, hidratação e o botão final de salvar. `Stats` reúne semana e estatísticas do ciclo. `Graphs` reúne os quatro gráficos interativos e a exportação em PDF. O histórico alimentar deixou de ser renderizado, mas todos os documentos permanecem em `diet_logs` e continuam alimentando Stats, Graphs e a edição pelo seletor de data.
 - **Dieta da Vivi** — o plano `vivi-nutri-2026-02-v1` contém 7 momentos alimentares, 19 composições predefinidas e 4 momentos principais para cobertura (desjejum, almoço, lanche da tarde e jantar). Inclui as alternativas com cereal, batata, mandioca, refeição pronta, três tigelas, barra, salgado, panqueca, pré-treino e opções para dias de aula. A hidratação usa a referência prescrita de 35 ml/kg, apresentada no PDF como aproximadamente 1,6 L. O documento não fornece metas clínicas de kcal/macros; por isso as referências de 2.000 kcal, 90 g P, 250 g C e 65 g G continuam explicitamente provisórias.
 - **Dieta do Vini** — o plano `vini-nutri-2026-07-v10` mantém os onze atalhos pessoais, churrasco, guisado, pasta de amendoim, porções e metas já configuradas. A generalização da UI não altera o catálogo nem os cálculos do Vini.
 - **Dieta Oficial** — existe nos dois Kg. `renderViniOfficialDiet()` usa o perfil ativo para mostrar uma consulta estática sem inputs: 18 composições dos prints no Vini e 19 composições organizadas do PDF na Vivi. As instruções clínicas completas da Vivi permanecem em `DIETA_VIVI.md` e no PDF original.
@@ -310,7 +310,7 @@ Cores: OCUPADO (fase foco) = `is-ocupado` + `presence-busy` (vermelho); Disponí
 
 **Plano do Vini (`VINI_MEALS`, `VINI_FOOD_GROUPS` e `VINI_OFFICIAL_MEALS`).** `VINI_MEALS` preserva a estrutura usada pelo tracker: pré-treino, café da manhã, 5 opções de almoço, 5 opções técnicas de lanche, pós-treino, 5 opções de jantar e belisco. `VINI_FOOD_GROUPS` achata esse catálogo para a interface: cada alimento aparece em um único card por momento, enquanto as porções prescritas e faixas úteis viram botões de quantidade. Banana, ovos e produtos inteiros usam unidades; pão usa fatias; whey usa medidas; líquidos usam ml; os demais alimentos mensuráveis usam gramas. Os macros são escalados pela razão entre a quantidade registrada e a quantidade de referência. `VINI_OFFICIAL_MEALS` é a projeção fiel para consulta: reúne Pro Force e Natural Whey como alternativas dentro da mesma refeição do `IMG_3071.PNG`, resultando nas 18 composições completas mostradas nos prints. Itens “à vontade” são registráveis, mas não entram na soma nutricional.
 
-**Estatísticas dos planos.** O dia mostra kcal/macros somados a partir dos alimentos e quantidades marcados, quantidade de alimentos, cobertura dos 4 momentos principais e hidratação. Quando há treino, o hero separa kcal ingeridas, gasto ativo estimado e kcal líquidas. `vini-exercise.js` é compartilhado e usa `(MET − 1) × peso × horas`, com a pesagem mais recente do usuário. Nos gráficos da página e do PDF, a série de calorias usa `netKcal`; proteína, carboidrato e gordura usam o consumo ingerido. Registros antigos sem `netKcal` preservam as calorias ingeridas como fallback. Semana, ciclo, histórico, tooltips e PDF usam as metas e o catálogo escolhidos pelo perfil ativo.
+**Estatísticas dos planos.** O dia mostra kcal/macros somados a partir dos alimentos e quantidades marcados, quantidade de alimentos, cobertura dos 4 momentos principais e hidratação. Quando há treino, o hero separa kcal ingeridas, gasto ativo estimado e kcal líquidas. `vini-exercise.js` é compartilhado e usa `(MET − 1) × peso × horas`, com a pesagem mais recente do usuário. Nos gráficos da página `Graphs` e do PDF, a série de calorias usa `netKcal` e aparece em vermelho; proteína, carboidrato e gordura usam o consumo ingerido. Os SVGs ocupam a largura disponível, reduzem automaticamente a quantidade de rótulos de data e não criam rolagem horizontal. Registros antigos sem `netKcal` preservam as calorias ingeridas como fallback.
 
 **Arquivos.** `kg-vini.html`, `kg-vivi.html`, `js/kg-vivi-page.js`, `js/diet-profile.js`, `js/diet-selection-profile.js`, `js/vini-diet-plan.js`, `js/vivi-diet-plan.js`, `js/vini-diet-selection.js`, `js/vivi-diet-selection.js`, `js/vini-diet-ui.js`, `js/vini-exercise.js`, `js/vini-diet-trends.js`, `js/vini-official-diet.js`, `js/vini-diet-pdf.js`, `js/weight-storage.js`, `js/diet-storage.js`, `js/tracking-cycle.js`, `DIETA_VINI.md`, `DIETA_VIVI.md`.
 
@@ -422,7 +422,7 @@ O ciclo é somente uma camada de leitura: `days`, `stretch_sessions`, `weight_lo
 - `habitos-days-v1` (days), `habitos-transactions-v1` (transactions), `habitos-config-points-v1` (config).
 - `habitos-diet-logs-v1` (diet), `habitos-weight-logs-v1` (weight), `habitos-pomodoro-sessions-v1` (sessões pomodoro), `habitos-stretch-sessions-v1` (sessões de alongamento).
 - Prefixos por usuário (concatenam o userId): `habitos-pomodoro-cfg-`, `habitos-presence-`, `habitos-weight-height-` (altura, default 1,63 m), `habitos-weight-seeded-` (flag de seed).
-- Estado de UI/sessão: `habitos-auth-uid` (cache do UID logado), `habitos-presence-active-user` (usuário ativo no Status), `habitos-kg-section` (aba Peso/Dieta da Vivi) e `habitos-kg-section-vinicius` (aba do Vini). Há ainda a chave legada `habitos-vini-vic`.
+- Estado de UI/sessão: `habitos-auth-uid` (cache do UID logado), `habitos-presence-active-user` (usuário ativo no Status), `habitos-kg-section` (página Peso/Dieta/Stats/Graphs da Vivi) e `habitos-kg-section-vinicius` (página equivalente do Vini). Há ainda a chave legada `habitos-vini-vic`.
 
 ## Regras do Firestore
 

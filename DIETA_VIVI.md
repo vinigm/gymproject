@@ -161,3 +161,4 @@ A primeira página contém uma tabela histórica de avaliação corporal com dat
 - O histórico anterior da Vivi não é apagado.
 - Os documentos continuam na coleção `diet_logs`, separados por usuário e data.
 - O gráfico de calorias e o relatório PDF mostram kcal líquidas, descontando o gasto dos treinos registrados; os gráficos de macros mostram o consumo ingerido.
+- O Kg Vivi usa as páginas internas `Peso`, `Dieta`, `Stats` e `Graphs`. O histórico alimentar não é listado, mas permanece salvo e alimenta os cálculos; Stats reúne semana e ciclo, enquanto Graphs reúne os quatro gráficos sem rolagem horizontal.

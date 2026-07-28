@@ -1,7 +1,7 @@
 // Implementação compartilhada das páginas "Kg Vivi" e "Kg Vini".
 // O usuário vem de data-kg-user no <body>; na ausência, mantém Vivi como padrão.
-// São duas seções: Peso (registro + gráfico + IMC) e Dieta
-// (tracker estruturado, histórico, gráficos e plano oficial por pessoa).
+// São quatro seções: Peso, Dieta, Stats e Graphs. O tracker alimentar,
+// estatísticas e gráficos são compartilhados entre Vini e Vivi.
 
 import { setupAuthGate, renderAuthFooter } from "./auth.js";
 import { mountNavMenu } from "./nav-menu.js";
@@ -103,7 +103,7 @@ const GOAL_META = [
 const WD = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"];
 
 const stateData = {
-  section: "peso",       // "peso" | "dieta"
+  section: "peso",       // "peso" | "dieta" | "stats" | "graphs"
   entries: [],
   height: IS_VINI ? null : DEFAULT_HEIGHT_M,
   dietFoods: {},         // mapa { "refeição.alimento": quantidade } do dia atual
@@ -148,6 +148,8 @@ function render() {
       <div class="seg stats-user-seg kg-seg" id="kg-section-seg">
         <button data-section="peso"  class="seg-btn">⚖️ Peso</button>
         <button data-section="dieta" class="seg-btn">🍽️ Dieta</button>
+        <button data-section="stats" class="seg-btn">📊 Stats</button>
+        <button data-section="graphs" class="seg-btn">📈 Graphs</button>
       </div>
     </div>
     <div id="kg-cycle-scope"></div>
@@ -173,9 +175,11 @@ function render() {
 }
 
 function selectSection(section) {
-  if (section === "peso" && stateData.trackingScope === TRACKING_SCOPE.OFFICIAL_DIET) {
+  if (!["peso", "dieta", "stats", "graphs"].includes(section)) section = "peso";
+  if (section !== "dieta" && stateData.trackingScope === TRACKING_SCOPE.OFFICIAL_DIET) {
     stateData.trackingScope = TRACKING_SCOPE.CYCLE;
-    stateData.section = "peso";
+    stateData.section = section;
+    try { localStorage.setItem(SECTION_KEY, section); } catch {}
     render();
     return;
   }
@@ -184,8 +188,8 @@ function selectSection(section) {
   document.querySelectorAll("#kg-section-seg .seg-btn").forEach((b) => {
     b.classList.toggle("is-on", b.dataset.section === section);
   });
-  if (section === "dieta") renderDiet();
-  else renderWeight();
+  if (section === "peso") renderWeight();
+  else renderDietSection(section);
 }
 
 // ─── Seção PESO ───────────────────────────────────────────────────────
@@ -414,12 +418,16 @@ async function onSaveWeight() {
 // ─── Seção DIETA ──────────────────────────────────────────────────────
 function foodId(mealKey, foodKey) { return `${mealKey}.${foodKey}`; }
 
-function renderDiet() {
+function renderDietSection(section = "dieta") {
   const el = document.getElementById("kg-section");
   if (!el) return;
 
   if (stateData.trackingScope === TRACKING_SCOPE.OFFICIAL_DIET) renderViniOfficialDiet(el);
-  else renderViniDietTracker(el, { scope: stateData.trackingScope });
+  else renderViniDietTracker(el, {
+    scope: stateData.trackingScope,
+    view: section,
+    onOpenDate: () => selectSection("dieta"),
+  });
   return;
 
   el.innerHTML = `
@@ -723,7 +731,12 @@ document.addEventListener("DOMContentLoaded", () => {
     onAuthorized: async (user) => {
       try {
         renderAuthFooter(user);
-        try { const s = localStorage.getItem(SECTION_KEY); if (s === "peso" || s === "dieta") stateData.section = s; } catch {}
+        try {
+          const savedSection = localStorage.getItem(SECTION_KEY);
+          if (["peso", "dieta", "stats", "graphs"].includes(savedSection)) {
+            stateData.section = savedSection;
+          }
+        } catch {}
         stateData.height = loadHeight(USER, IS_VINI ? null : DEFAULT_HEIGHT_M);
         stateData.entries = await getWeightEntries(USER);
         await seedIfEmpty();

@@ -48,7 +48,9 @@ const tracker = {
   weightEntries: [],
   selectedDate: todayISO(),
   scope: "cycle",
+  view: "diet",
   root: null,
+  onOpenDate: null,
   persistQueue: Promise.resolve(),
   saveSequence: 0,
   saveStatus: "",
@@ -224,22 +226,37 @@ function persistCurrentDay() {
   return queuePersist(tracker.selectedDate, payload);
 }
 
-function selectDate(iso) {
+function selectDate(iso, { render = true } = {}) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(String(iso || ""))) return;
   tracker.selectedDate = iso > todayISO() ? todayISO() : iso;
   tracker.saveStatus = "";
   tracker.customFoodsOpen = false;
   tracker.beveragesOpen = false;
+  if (render) renderTracker();
+}
+
+function openDateInDiet(iso) {
+  selectDate(iso, { render: false });
+  if (tracker.view !== "diet" && typeof tracker.onOpenDate === "function") {
+    tracker.onOpenDate(tracker.selectedDate);
+    return;
+  }
   renderTracker();
 }
 
-export function renderViniDietTracker(root, { scope = "cycle" } = {}) {
+export function renderViniDietTracker(root, {
+  scope = "cycle",
+  view = "diet",
+  onOpenDate = null,
+} = {}) {
   if (tracker.scope !== scope) {
     tracker.customFoodsOpen = false;
     tracker.beveragesOpen = false;
   }
   tracker.root = root;
   tracker.scope = scope;
+  tracker.view = ["diet", "stats", "graphs"].includes(view) ? view : "diet";
+  tracker.onOpenDate = onOpenDate;
   renderTracker();
 }
 
@@ -255,20 +272,26 @@ function renderTracker() {
   const day = currentDay();
   const summary = calculateViniDietDay(day, { useSnapshot: true });
   const isToday = tracker.selectedDate === todayISO();
-  tracker.root.innerHTML = `
-    ${dateNavigatorHTML(isToday)}
-    ${mealPresetsHTML(day)}
-    ${exerciseTrackerHTML(day, summary)}
-    ${dailySummaryHTML(summary)}
-    ${customFoodsHTML(day, summary)}
-    ${beveragesHTML(day, summary)}
-    ${additionalMealHTML(day)}
-    ${hydrationHTML(day, summary)}
-    ${weeklyHTML()}
-    ${cycleStatsHTML()}
-    ${historyHTML()}
-    ${viniDietTrendsHTML(recordsInScope(), { viewportWidth: Math.max(320, tracker.root.clientWidth - 48) })}
-    ${saveControlsHTML()}`;
+  if (tracker.view === "stats") {
+    tracker.root.innerHTML = `
+      ${weeklyHTML()}
+      ${cycleStatsHTML()}`;
+  } else if (tracker.view === "graphs") {
+    tracker.root.innerHTML = viniDietTrendsHTML(recordsInScope(), {
+      viewportWidth: Math.max(320, tracker.root.clientWidth - 48),
+    });
+  } else {
+    tracker.root.innerHTML = `
+      ${dateNavigatorHTML(isToday)}
+      ${mealPresetsHTML(day)}
+      ${exerciseTrackerHTML(day, summary)}
+      ${dailySummaryHTML(summary)}
+      ${customFoodsHTML(day, summary)}
+      ${beveragesHTML(day, summary)}
+      ${additionalMealHTML(day)}
+      ${hydrationHTML(day, summary)}
+      ${saveControlsHTML()}`;
+  }
 
   bindTracker();
   updateSaveStatus();
@@ -831,20 +854,6 @@ function streakStats(dates) {
   return { best };
 }
 
-function historyHTML() {
-  const records = recordsInScope().slice().reverse();
-  return `
-    <section class="block">
-      <div class="block-head"><h2>Histórico alimentar</h2><span class="muted" style="font-size:11px">toque para editar</span></div>
-      ${records.length ? `<div class="vini-history-list">${records.slice(0, 30).map((entry) => `
-        <button class="vini-history-row${entry.date === tracker.selectedDate ? " is-selected" : ""}" data-open-date="${entry.date}">
-          <span class="vini-history-date"><strong>${weekdayShort(entry.date)} ${fmtDateBR(entry.date)}</strong><small>${entry.summary.mainMealsLogged}/${entry.summary.requiredMeals} momentos · ${entry.summary.itemsChecked} alimentos</small></span>
-          <span class="vini-history-nutri"><strong>${formatNumber(entry.summary.consumed.kcal)} kcal</strong><small>P ${formatMacro(entry.summary.consumed.p)} · C ${formatMacro(entry.summary.consumed.c)} · G ${formatMacro(entry.summary.consumed.f)}</small></span>
-          <span class="vini-history-score"><strong>${entry.summary.itemsChecked}</strong><small>itens</small></span>
-        </button>`).join("")}</div>` : `<p class="muted" style="padding:8px">Nenhum registro neste escopo.</p>`}
-    </section>`;
-}
-
 function bindTracker() {
   tracker.root.querySelector("[data-save-diet]")?.addEventListener("click", persistCurrentDay);
   tracker.root.querySelector("[data-toggle-custom-foods]")?.addEventListener("click", () => {
@@ -947,12 +956,12 @@ function bindTracker() {
   tracker.root.querySelector("#vini-diet-date")?.addEventListener("change", (event) => selectDate(event.target.value));
   tracker.root.querySelector("[data-date-today]")?.addEventListener("click", () => selectDate(todayISO()));
   tracker.root.querySelectorAll("[data-open-date]").forEach((button) => {
-    button.addEventListener("click", () => selectDate(button.dataset.openDate));
+    button.addEventListener("click", () => openDateInDiet(button.dataset.openDate));
   });
   tracker.trendTooltipCleanup = bindViniTrendTooltips(tracker.root, {
     records: recordsInScope(),
     onOpenDate: (date) => {
-      selectDate(date);
+      openDateInDiet(date);
       window.requestAnimationFrame(() => tracker.root?.scrollIntoView({ behavior: "smooth", block: "start" }));
     },
   });

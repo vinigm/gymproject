@@ -104,8 +104,7 @@ function chartHTML(records, metric, goals, viewportWidth) {
   const values = records.map((entry) => entry.consumed[metric.key]);
   const lastRecord = records[records.length - 1];
   const maxY = niceCeiling(Math.max(goal, ...values, 1) * 1.1);
-  const elapsedDays = Math.max(1, (dateEpoch(lastRecord.date) - dateEpoch(records[0].date)) / 86400000);
-  const W = Math.max(viewportWidth, Math.min(1200, 64 + elapsedDays * 34));
+  const W = Math.max(320, Math.min(900, Number(viewportWidth) || 360));
   const H = 210;
   const padL = 42;
   const padR = 14;
@@ -148,8 +147,14 @@ function chartHTML(records, metric, goals, viewportWidth) {
       </circle>
       <circle cx="${point.x.toFixed(1)}" cy="${point.y.toFixed(1)}" r="3.4" class="vini-trend-dot" aria-hidden="true"></circle>`;
   }).join("");
-  const xLabels = points.map((point) => `
-    <text x="${point.x.toFixed(1)}" y="${H - 10}" class="vini-trend-xlabel" text-anchor="middle">${formatDate(point.entry.date)}</text>`).join("");
+  const maxLabels = W < 420 ? 4 : W < 640 ? 6 : 8;
+  const labelStep = Math.max(1, Math.ceil((points.length - 1) / Math.max(1, maxLabels - 1)));
+  const xLabels = points.map((point, index) => {
+    const showLabel = index === 0 || index === points.length - 1 || index % labelStep === 0;
+    return showLabel
+      ? `<text x="${point.x.toFixed(1)}" y="${H - 10}" class="vini-trend-xlabel" text-anchor="middle">${formatDate(point.entry.date)}</text>`
+      : "";
+  }).join("");
   const latest = values[values.length - 1] || 0;
 
   return `
@@ -159,7 +164,7 @@ function chartHTML(records, metric, goals, viewportWidth) {
         <span><i></i> meta estimada ${formatNumber(goal)} ${metric.unit}</span>
       </header>
       <div class="vini-trend-scroll">
-        <svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" class="vini-trend-chart" style="width:${W}px" role="img"
+        <svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" class="vini-trend-chart" role="img"
              aria-label="Consumo de ${metric.label.toLowerCase()} ao longo do tempo; linha de referência em ${formatNumber(goal)} ${metric.unit}">
           ${grid}
           <line x1="${padL}" y1="${goalY}" x2="${W - padR}" y2="${goalY}" class="vini-trend-goal" />

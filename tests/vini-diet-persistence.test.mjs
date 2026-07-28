@@ -51,16 +51,20 @@ assert.match(ui, /data-additional-nutrition="\$\{field\.key\}"/);
 assert.match(ui, /data-additional-meal-reset/);
 assert.match(ui, /day\.additionalNutrition\[metric\]/);
 assert.match(ui, /day\.additionalMeal = String/);
-assert.ok(ui.indexOf("${hydrationHTML(day, summary)}") < ui.indexOf("${weeklyHTML()}"));
-assert.ok(ui.indexOf("${weeklyHTML()}") < ui.indexOf("${saveControlsHTML()}"));
-assert.ok(ui.indexOf("${cycleStatsHTML()}") < ui.indexOf("${saveControlsHTML()}"));
-assert.ok(ui.indexOf("${historyHTML()}") < ui.indexOf("${saveControlsHTML()}"));
-assert.ok(ui.indexOf("${viniDietTrendsHTML(recordsInScope(), { viewportWidth: Math.max(320, tracker.root.clientWidth - 48) })}") < ui.indexOf("${saveControlsHTML()}"));
-assert.ok(ui.indexOf("${historyHTML()}") < ui.indexOf("${viniDietTrendsHTML("));
+assert.ok(ui.indexOf("${hydrationHTML(day, summary)}") < ui.indexOf("${saveControlsHTML()}"));
+assert.match(ui, /tracker\.view === "stats"/);
+assert.match(ui, /tracker\.view === "graphs"/);
+assert.ok(ui.indexOf("${weeklyHTML()}") < ui.indexOf("${cycleStatsHTML()}"));
+assert.doesNotMatch(ui, /function historyHTML\(/);
+assert.doesNotMatch(ui, /\$\{historyHTML\(\)\}/);
+assert.match(ui, /onOpenDate = null/);
+assert.match(ui, /tracker\.onOpenDate\(tracker\.selectedDate\)/);
 assert.match(ui, /bindViniTrendTooltips\(tracker\.root/);
 assert.match(ui, /onOpenDate:\s*\(date\)/);
 assert.match(trends, /suppressFocusOpen/);
 assert.match(trends, /if \(!suppressFocusOpen && !active\?\.pinned\) show\(point\)/);
+assert.match(css, /\.vini-trend-card\.is-kcal \{ --trend-color: #f87171; \}/);
+assert.match(css, /\.vini-trend-scroll \{ overflow-x: hidden;/);
 
 // A mutação precisa chegar ao cache síncrono antes de entrar na fila remota.
 const mutation = ui.match(/function mutateCurrentDay\(mutator\) \{([\s\S]*?)\n\}/)?.[1] || "";

@@ -49,9 +49,20 @@ assert.match(html, /meta estimada 200 g/);
 assert.match(html, /meta estimada 68 g/);
 assert.match(html, /15\/07/);
 assert.match(html, /18\/07/);
-assert.match(html, /width="500"/);
+assert.equal((html.match(/width="100%"/g) || []).length, 4);
+assert.match(html, /viewBox="0 0 500 210"/);
+assert.doesNotMatch(html, /style="width:\d+px"/);
 assert.match(html, /data-export-diet-pdf/);
 assert.doesNotMatch(html, /NaN|Infinity/);
+
+const manyRecords = Array.from({ length: 24 }, (_, index) => ({
+  date: `2026-07-${String(index + 1).padStart(2, "0")}`,
+  summary: { consumed: { kcal: 1700 + index, p: 140, c: 190, f: 60 }, netKcal: 1500 + index },
+}));
+const compact = viniDietTrendsHTML(manyRecords, { viewportWidth: 360 });
+assert.equal((compact.match(/viewBox="0 0 360 210"/g) || []).length, 4);
+assert.ok((compact.match(/class="vini-trend-xlabel"/g) || []).length <= 16);
+assert.doesNotMatch(compact, /style="width:\d+px"/);
 
 const oneDay = viniDietTrendsHTML(records.slice(0, 1));
 assert.equal((oneDay.match(/class="vini-trend-dot"/g) || []).length, 4);

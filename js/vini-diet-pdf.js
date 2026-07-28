@@ -9,7 +9,7 @@ const COLORS = Object.freeze({
   soft: "#f5f7fb",
   white: "#ffffff",
   header: "#0f172a",
-  kcal: "#ec4899",
+  kcal: "#ef4444",
   p: "#10b981",
   c: "#3b82f6",
   f: "#eab308",

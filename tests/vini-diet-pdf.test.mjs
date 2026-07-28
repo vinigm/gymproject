@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import { createViniDietPdf } from "../js/vini-diet-pdf.js";
 
 const records = [
@@ -32,6 +33,9 @@ assert.match(pdf, /Calorias liquidas descontam os treinos registrados/);
 assert.match(pdf, /Proteina/);
 assert.match(pdf, /Carboidrato/);
 assert.match(pdf, /Gordura/);
+
+const pdfSource = await readFile(new URL("../js/vini-diet-pdf.js", import.meta.url), "utf8");
+assert.match(pdfSource, /kcal: "#ef4444"/);
 assert.match(pdf, /startxref/);
 assert.ok(pdf.endsWith("%%EOF\n"));
 assert.doesNotMatch(pdf, /NaN|Infinity|undefined/);
