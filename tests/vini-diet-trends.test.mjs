@@ -41,6 +41,9 @@ assert.equal((html.match(/data-trend-tooltip/g) || []).length, 4);
 assert.equal((html.match(/data-trend-point/g) || []).length, 12);
 assert.equal((html.match(/aria-expanded="false"/g) || []).length, 12);
 assert.match(html, /meta estimada 2\.000 kcal/);
+assert.match(html, /Calorias líquidas/);
+assert.match(html, /15\/07 · 811 kcal/);
+assert.match(html, /ingeridas menos o gasto dos treinos registrados/);
 assert.match(html, /meta estimada 150 g/);
 assert.match(html, /meta estimada 200 g/);
 assert.match(html, /meta estimada 68 g/);
@@ -78,6 +81,14 @@ assert.match(details, /Água registrada/);
 assert.match(details, /Musculação · Média · 60 min/);
 assert.match(details, /Ver registro do dia/);
 
+const kcalDetails = viniTrendDetailHTML(records[0], "kcal");
+assert.match(kcalDetails, /Calorias líquidas · 811 kcal/);
+assert.match(kcalDetails, /<small>Calorias líquidas<\/small><b>811 kcal<\/b>/);
+assert.match(kcalDetails, /Kcal líquidas do dia: 811 kcal/);
+assert.doesNotMatch(kcalDetails, /Calorias líquidas · 1\.131 kcal/);
+
+// Registros anteriores ao campo netKcal usam as calorias ingeridas como
+// fallback para não desaparecerem do histórico.
 const legacyDetails = viniTrendDetailHTML(records[1], "kcal");
 assert.match(legacyDetails, /2\.050 kcal/);
 assert.match(legacyDetails, /Detalhes dos alimentos indisponíveis/);

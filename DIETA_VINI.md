@@ -379,6 +379,7 @@ Estas diretrizes orientam a implementação atual:
 - **21/07/2026:** a predefinição `Lanche - Pasta de amendoim + whey` passou de 30 g para 15 g de Amendopower. Com 2 fatias de pão e 3 medidas de whey, o atalho agora totaliza aproximadamente 394 kcal, 42,5 g de proteína, 30,3 g de carboidrato e 10,7 g de gordura.
 - **22/07/2026:** adicionado o campo diário `Kcal adicionais` abaixo de Bebidas para registrar uma estimativa livre de balas, beliscos e outros itens fora do catálogo. O valor entra nas calorias ingeridas, kcal líquidas, médias, histórico, gráficos e PDF, sem atribuir proteína, carboidrato ou gordura inexistentes. O detalhe dos gráficos identifica essa parcela separadamente.
 - **26/07/2026:** o bloco passou a se chamar `Refeições adicionais` e ganhou descrição livre, proteína, carboidrato e gordura além das kcal. Cada valor manual entra apenas no respectivo total diário e, por consequência, nas médias, histórico, gráficos e PDF. Ao abrir um ponto dos gráficos, a descrição e os quatro valores extras aparecem separadamente. Registros antigos com apenas `additionalKcal` são migrados na leitura.
+- **28/07/2026:** a série de calorias dos gráficos e do relatório PDF passou a usar `netKcal` — calorias ingeridas menos o gasto ativo dos treinos registrados. Proteína, carboidrato e gordura continuam mostrando o consumo ingerido. Registros antigos sem `netKcal` usam as calorias ingeridas como fallback.
 
 ## 15. Implementação no tracker
 
@@ -395,7 +396,7 @@ Estas diretrizes orientam a implementação atual:
 - O snapshot impede que uma futura revisão dos valores de referência altere retroativamente kcal e macros já registrados.
 - Café da manhã, almoço, lanche da tarde e jantar compõem a cobertura de momentos principais; não existe mais o conceito de “refeição completa”. Pré-treino, pós-treino e belisco continuam contextuais.
 - A hidratação usa 2,5 L como base; em dias de treino, a meta mínima exibida passa a 3 L, mantendo a orientação de até 3,5 L.
-- O resumo diário exibe `kcal líquidas = kcal ingeridas − kcal ativas estimadas do treino`. As séries históricas de alimentação continuam mostrando kcal ingeridas, sem misturar consumo com exercício.
+- O resumo diário e a série histórica de calorias exibem `kcal líquidas = kcal ingeridas − kcal ativas estimadas do treino`. As séries de proteína, carboidrato e gordura continuam mostrando o consumo ingerido.
 - As estatísticas incluem totais e médias semanais de kcal/macros, quantidade de alimentos, frequência por momento, hidratação, sequência, marcos de dias, alimentos mais marcados e histórico editável.
 - No final da Dieta, quatro gráficos de linha acompanham kcal, proteína, carboidrato e gordura por data, respeitando `Ciclo atual` e `Histórico completo`. Cada gráfico inclui uma linha horizontal de referência e pontos interativos que detalham a composição do dia sem alterar os dados salvos.
 - As referências atuais do tracker são **2.000 kcal, 150 g de proteína, 200 g de carboidrato e 68 g de gordura**. Os três thresholds de macros foram informados pelo usuário em 18/07/2026; as 2.000 kcal permanecem provisórias enquanto não houver uma meta clínica específica.

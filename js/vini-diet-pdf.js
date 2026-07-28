@@ -95,13 +95,21 @@ function circle(commands, x, y, radius, fill, stroke = fill) {
   ].join(" "));
 }
 
+function netKcalForRecord(entry) {
+  const netKcal = entry?.summary?.netKcal;
+  if (netKcal !== undefined && netKcal !== null && Number.isFinite(Number(netKcal))) {
+    return Number(netKcal);
+  }
+  return Number(entry?.summary?.consumed?.kcal) || 0;
+}
+
 function normalizeRecords(records) {
   return (Array.isArray(records) ? records : [])
     .filter((entry) => /^\d{4}-\d{2}-\d{2}$/.test(String(entry?.date || "")))
     .map((entry) => ({
       date: entry.date,
       consumed: {
-        kcal: Math.max(0, Number(entry.summary?.consumed?.kcal) || 0),
+        kcal: netKcalForRecord(entry),
         p: Math.max(0, Number(entry.summary?.consumed?.p) || 0),
         c: Math.max(0, Number(entry.summary?.consumed?.c) || 0),
         f: Math.max(0, Number(entry.summary?.consumed?.f) || 0),
@@ -216,7 +224,7 @@ function pageContents(records, options) {
   drawWeeklyAverages(first, options.weekly, goals);
   drawChart(first, records, VINI_TREND_METRICS[0], goals, 36, 249, 770, 195);
   drawChart(first, records, VINI_TREND_METRICS[1], goals, 36, 34, 770, 195);
-  drawText(first, "Graficos baseados somente nos alimentos registrados no tracker.", 36, 16, 7, { color: COLORS.muted });
+  drawText(first, "Calorias liquidas descontam os treinos registrados; macros mostram o consumo ingerido.", 36, 16, 7, { color: COLORS.muted });
   drawText(first, "1/2", PAGE.width - 36, 16, 7, { color: COLORS.muted, align: "right" });
 
   const second = [];

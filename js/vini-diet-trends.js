@@ -8,7 +8,7 @@ import {
 } from "./diet-profile.js";
 
 export const VINI_TREND_METRICS = Object.freeze([
-  Object.freeze({ key: "kcal", label: "Calorias", short: "kcal", unit: "kcal", cls: "is-kcal" }),
+  Object.freeze({ key: "kcal", label: "Calorias líquidas", short: "kcal", unit: "kcal", cls: "is-kcal" }),
   Object.freeze({ key: "p", label: "Proteína", short: "P", unit: "g", cls: "is-protein" }),
   Object.freeze({ key: "c", label: "Carboidrato", short: "C", unit: "g", cls: "is-carbs" }),
   Object.freeze({ key: "f", label: "Gordura", short: "G", unit: "g", cls: "is-fat" }),
@@ -75,6 +75,14 @@ function niceCeiling(value) {
   return step * magnitude;
 }
 
+function netKcalForRecord(entry) {
+  const netKcal = entry?.summary?.netKcal;
+  if (netKcal !== undefined && netKcal !== null && Number.isFinite(Number(netKcal))) {
+    return Number(netKcal);
+  }
+  return Number(entry?.summary?.consumed?.kcal) || 0;
+}
+
 function normalizedRecords(records) {
   return (Array.isArray(records) ? records : [])
     .filter((entry) => /^\d{4}-\d{2}-\d{2}$/.test(String(entry?.date || "")))
@@ -82,7 +90,7 @@ function normalizedRecords(records) {
       date: entry.date,
       source: entry,
       consumed: {
-        kcal: Math.max(0, Number(entry.summary?.consumed?.kcal) || 0),
+        kcal: netKcalForRecord(entry),
         p: Math.max(0, Number(entry.summary?.consumed?.p) || 0),
         c: Math.max(0, Number(entry.summary?.consumed?.c) || 0),
         f: Math.max(0, Number(entry.summary?.consumed?.f) || 0),
@@ -240,7 +248,8 @@ function exerciseDetailHTML(record) {
 export function viniTrendDetailHTML(record, metricKey = "kcal") {
   const metric = VINI_TREND_METRICS.find((entry) => entry.key === metricKey) || VINI_TREND_METRICS[0];
   const consumed = record?.summary?.consumed || { kcal: 0, p: 0, c: 0, f: 0 };
-  const metricValue = Number(consumed[metric.key]) || 0;
+  const netKcal = netKcalForRecord(record);
+  const metricValue = metric.key === "kcal" ? netKcal : Number(consumed[metric.key]) || 0;
   const additionalSource = record?.summary?.additionalNutrition
     || record?.day?.additionalNutrition
     || {};
@@ -263,7 +272,7 @@ export function viniTrendDetailHTML(record, metricKey = "kcal") {
       <button type="button" data-trend-close aria-label="Fechar detalhes">×</button>
     </div>
     <div class="vini-trend-tooltip-totals" aria-label="Totais nutricionais do dia">
-      <span><small>Calorias</small><b>${formatNumber(consumed.kcal)} kcal</b></span>
+      <span><small>Calorias líquidas</small><b>${formatNumber(netKcal)} kcal</b></span>
       <span><small>Proteína</small><b>${formatNumber(consumed.p, 1)} g</b></span>
       <span><small>Carboidrato</small><b>${formatNumber(consumed.c, 1)} g</b></span>
       <span><small>Gordura</small><b>${formatNumber(consumed.f, 1)} g</b></span>
@@ -436,7 +445,7 @@ export function viniDietTrendsHTML(records, {
           ${clean.length ? `<button type="button" class="ghost-btn vini-export-pdf-btn" data-export-diet-pdf>Exportar PDF</button>` : ""}
         </div>
       </div>
-      <p class="vini-trends-note">Cada gráfico mostra o consumo registrado por data. A linha tracejada é uma referência estimada do tracker, pois o plano oficial não informa metas clínicas de kcal e macros.</p>
+      <p class="vini-trends-note">O gráfico de calorias mostra as kcal líquidas — ingeridas menos o gasto dos treinos registrados. Os gráficos de macros mostram o consumo ingerido. A linha tracejada é uma referência estimada do tracker.</p>
       ${clean.length ? `<div class="vini-trends-list">${VINI_TREND_METRICS.map((metric) => chartHTML(clean, metric, goals, chartWidth)).join("")}</div>` : `
         <div class="stat-card"><p class="muted" style="margin:0">Registre alimentos para acompanhar kcal e macros ao longo do tempo.</p></div>`}
     </section>`;

@@ -160,3 +160,4 @@ A primeira página contém uma tabela histórica de avaliação corporal com dat
 - Produtos e receitas sem rótulo completo usam estimativas identificadas como tais.
 - O histórico anterior da Vivi não é apagado.
 - Os documentos continuam na coleção `diet_logs`, separados por usuário e data.
+- O gráfico de calorias e o relatório PDF mostram kcal líquidas, descontando o gasto dos treinos registrados; os gráficos de macros mostram o consumo ingerido.
