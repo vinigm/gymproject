@@ -11,28 +11,38 @@ const records = [
 const bytes = createViniDietPdf(records, {
   scopeLabel: "Ciclo atual",
   generatedAt: new Date("2026-07-17T12:00:00-03:00"),
-  weekly: {
-    start: "2026-07-13",
-    end: "2026-07-19",
-    days: 3,
-    averages: { kcal: 1940, p: 154.7, c: 200.7, f: 58.3 },
-  },
+  calendarMonth: "2026-07",
+  weightEntries: [
+    { date: "2026-07-13", weight: 91.4 },
+    { date: "2026-07-16", weight: 90.8 },
+  ],
+  trainingDays: [
+    { date: "2026-07-13", gymGroups: ["peito", "triceps"] },
+    { date: "2026-07-16", gymGroups: ["perna"] },
+  ],
 });
 const pdf = new TextDecoder().decode(bytes);
 
 assert.ok(bytes.length > 5000);
 assert.ok(pdf.startsWith("%PDF-1.4"));
-assert.equal((pdf.match(/\/Type \/Page\b/g) || []).length, 2);
+assert.equal((pdf.match(/\/Type \/Page\b/g) || []).length, 1);
 assert.match(pdf, /Relatorio nutricional - Kg Vini/);
-assert.match(pdf, /Media diaria da semana/);
+assert.match(pdf, /Evolucao do peso/);
+assert.match(pdf, /Ultimo: 90,8 kg/);
+assert.match(pdf, /Medias do ciclo/);
+assert.match(pdf, /Kcal liquidas/);
+assert.match(pdf, /\(1\.640 kcal\)/);
 assert.match(pdf, /Calorias/);
-assert.match(pdf, /Calorias liquidas/);
 assert.match(pdf, /Ultimo: 1\.750 kcal/);
 assert.doesNotMatch(pdf, /Ultimo: 2\.050 kcal/);
-assert.match(pdf, /Calorias liquidas descontam os treinos registrados/);
 assert.match(pdf, /Proteina/);
 assert.match(pdf, /Carboidrato/);
 assert.match(pdf, /Gordura/);
+assert.match(pdf, /Calendario de musculacao - Julho de 2026/);
+assert.match(pdf, /2 treinos/);
+assert.match(pdf, /\(Pe\)/);
+assert.match(pdf, /\(Tr\)/);
+assert.match(pdf, /\(Pn\)/);
 
 const pdfSource = await readFile(new URL("../js/vini-diet-pdf.js", import.meta.url), "utf8");
 assert.match(pdfSource, /kcal: "#ef4444"/);

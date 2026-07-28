@@ -3,7 +3,11 @@ import {
   getViniDietPlanMap,
   setViniDietPlanDay,
 } from "./diet-storage.js";
-import { filterDateMapForTrackingScope } from "./tracking-cycle.js";
+import { getRange } from "./storage.js";
+import {
+  filterDateMapForTrackingScope,
+  filterRecordsForTrackingScope,
+} from "./tracking-cycle.js";
 import { downloadViniDietPdf } from "./vini-diet-pdf.js";
 import { getWeightEntries } from "./weight-storage.js";
 import {
@@ -895,24 +899,33 @@ function bindTracker() {
     day.additionalMeal = "";
     day.additionalNutrition = { kcal: 0, p: 0, c: 0, f: 0 };
   }));
-  tracker.root.querySelector("[data-export-diet-pdf]")?.addEventListener("click", (event) => {
+  tracker.root.querySelector("[data-export-diet-pdf]")?.addEventListener("click", async (event) => {
     const button = event.currentTarget;
     const records = recordsInScope();
     if (!records.length) return;
-    const start = mondayISO(tracker.selectedDate);
-    const end = addDaysISO(start, 6);
-    const weekly = aggregateRecords(weekRecords(start, records));
     const originalLabel = button.textContent;
     button.disabled = true;
     button.textContent = "Gerando…";
     try {
+      const calendarMonth = todayISO().slice(0, 7);
+      const monthDays = await getRange(USER, `${calendarMonth}-01`, todayISO()).catch(() => []);
+      const trainingDays = filterRecordsForTrackingScope(monthDays, USER, tracker.scope)
+        .filter((day) => (day.exercises || []).includes("academia"))
+        .map((day) => ({ date: day.date, gymGroups: day.gym_groups || [] }));
+      const weightEntries = filterRecordsForTrackingScope(
+        tracker.weightEntries,
+        USER,
+        tracker.scope,
+      );
       downloadViniDietPdf(records, {
-        scopeLabel: tracker.scope === "history" ? "Histórico completo" : "Ciclo atual",
+        scopeLabel: tracker.scope === "all" ? "Histórico completo" : "Ciclo atual",
         generatedAt: new Date(),
         fileDate: todayISO(),
         reportTitle: DIET_PROFILE.reportTitle,
         reportSlug: DIET_PROFILE.reportSlug,
-        weekly: { start, end, days: weekly.days, averages: weekly.averages },
+        weightEntries,
+        trainingDays,
+        calendarMonth,
       });
       button.textContent = "PDF gerado ✓";
     } catch (error) {

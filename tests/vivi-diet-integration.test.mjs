@@ -23,9 +23,13 @@ const pdfText = new TextDecoder().decode(pdf.createViniDietPdf([{
   summary: { consumed: { kcal: 1200, p: 80, c: 140, f: 40 } },
 }], {
   reportTitle: profile.DIET_PROFILE.reportTitle,
-  weekly: { start: "2026-07-27", end: "2026-08-02", days: 1, averages: { kcal: 1200, p: 80, c: 140, f: 40 } },
+  calendarMonth: "2026-07",
+  weightEntries: [{ date: "2026-07-27", weight: 63.2 }],
+  trainingDays: [{ date: "2026-07-27", gymGroups: ["perna"] }],
 }));
 assert.match(pdfText, /Relatorio nutricional - Kg Vivi/);
+assert.match(pdfText, /Evolucao do peso/);
+assert.match(pdfText, /Calendario de musculacao/);
 
 const page = await readFile(new URL("../js/kg-vivi-page.js", import.meta.url), "utf8");
 const storage = await readFile(new URL("../js/diet-storage.js", import.meta.url), "utf8");
