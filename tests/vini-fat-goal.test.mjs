@@ -42,6 +42,8 @@ assert.equal(Math.round(progress.fatToLoseKg * 10) / 10, 12.2);
 assert.equal(Math.round(progress.maintenanceKcal), 2558);
 assert.equal(Math.round(progress.averageDeficitKcal), 558);
 assert.ok(progress.remainingKcal < progress.totalGoalKcal);
+assert.equal(progress.estimatedFatLostKg, progress.achievedDeficitKcal / 7700);
+assert.ok(progress.estimatedFatLostKg > 0);
 assert.ok(progress.progressPct > 1);
 assert.match(progress.projectionDate, /^2026-\d{2}-\d{2}$/);
 

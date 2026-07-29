@@ -160,6 +160,7 @@ export function calculateViniFatGoal({
   );
   const achievedDeficitKcal = clamp(cumulativeDeficitKcal, 0, totalGoalKcal);
   const remainingKcal = Math.max(0, totalGoalKcal - achievedDeficitKcal);
+  const estimatedFatLostKg = achievedDeficitKcal / finite(goal.kcalPerKgFat, 7700);
   const averageDeficitKcal = nutrition.days
     ? cumulativeDeficitKcal / nutrition.days
     : 0;
@@ -188,6 +189,7 @@ export function calculateViniFatGoal({
     maintenanceKcal,
     cumulativeDeficitKcal,
     achievedDeficitKcal,
+    estimatedFatLostKg,
     remainingKcal,
     remainingFatKg,
     averageDeficitKcal,

@@ -776,6 +776,10 @@ function fatGoalCountdownHTML() {
             <span class="vini-fat-goal-kicker">faltam para o equivalente energético da meta</span>
             <strong>${formatNumber(Math.round(progress.remainingKcal))} <small>kcal</small></strong>
             <p>aproximadamente <b>${formatNumber(progress.remainingFatKg, 1)} kg</b> de gordura estimada até o alvo</p>
+            <div class="vini-fat-goal-achieved">
+              <span>gordura estimada já perdida</span>
+              <strong>${formatNumber(progress.estimatedFatLostKg, 1)} kg</strong>
+            </div>
           </div>
           <div class="vini-fat-goal-target" aria-label="Meta de gordura corporal">
             <span>28%</span><i>→</i><strong>18%</strong>
