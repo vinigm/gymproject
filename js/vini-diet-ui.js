@@ -52,6 +52,7 @@ import {
 const USER = DIET_PROFILE.userId;
 const WEEKDAYS = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"];
 const FAT_GOAL_ACTIVITY_KEY = `habitos-vini-fat-goal-activity-${USER}`;
+const FAT_GOAL_TARGET_KEY = `habitos-vini-fat-goal-target-${USER}`;
 
 function storedFatGoalActivity() {
   try {
@@ -66,6 +67,21 @@ function storedFatGoalActivity() {
 
 function saveFatGoalActivity(value) {
   try { localStorage.setItem(FAT_GOAL_ACTIVITY_KEY, value); } catch {}
+}
+
+function storedFatGoalTarget() {
+  try {
+    const value = Number(localStorage.getItem(FAT_GOAL_TARGET_KEY));
+    return value >= 5 && value < VINI_FAT_GOAL.startBodyFatPct
+      ? value
+      : VINI_FAT_GOAL.targetBodyFatPct;
+  } catch {
+    return VINI_FAT_GOAL.targetBodyFatPct;
+  }
+}
+
+function saveFatGoalTarget(value) {
+  try { localStorage.setItem(FAT_GOAL_TARGET_KEY, String(value)); } catch {}
 }
 
 const tracker = {
@@ -83,6 +99,7 @@ const tracker = {
   customFoodsOpen: false,
   beveragesOpen: false,
   fatGoalActivity: storedFatGoalActivity(),
+  fatGoalTargetPct: storedFatGoalTarget(),
   trendTooltipCleanup: null,
 };
 
@@ -740,11 +757,16 @@ function fatGoalDate(iso) {
 }
 
 function fatGoalCountdownHTML() {
+  const targetBodyFatPct = tracker.fatGoalTargetPct;
   const progress = calculateViniFatGoal({
     records: recordsInScope(),
     weightEntries: tracker.weightEntries,
     activityLevel: tracker.fatGoalActivity,
     today: todayISO(),
+    goal: {
+      ...VINI_FAT_GOAL,
+      targetBodyFatPct,
+    },
   });
   if (!progress.available) {
     return `
@@ -767,7 +789,7 @@ function fatGoalCountdownHTML() {
   return `
     <section class="block vini-fat-goal-block">
       <div class="block-head">
-        <h2>🎯 Contagem regressiva para 18%</h2>
+        <h2>🎯 Contagem regressiva para ${formatNumber(targetBodyFatPct, 1)}%</h2>
         <span class="muted" style="font-size:11px">partida: 28% em 15/07</span>
       </div>
       <div class="stat-card vini-fat-goal-card">
@@ -782,9 +804,11 @@ function fatGoalCountdownHTML() {
             </div>
           </div>
           <div class="vini-fat-goal-target" aria-label="Meta de gordura corporal">
-            <span>28%</span><i>→</i><strong>18%</strong>
+            <span>28%</span><i>→</i><strong>${formatNumber(targetBodyFatPct, 1)}%</strong>
           </div>
         </div>
+
+        ${bodyCompositionHTML(progress)}
 
         <div class="vini-fat-progress-head">
           <span>${formatNumber(progress.progressPct, 1)}% do equivalente energético percorrido</span>
@@ -828,11 +852,69 @@ function fatGoalCountdownHTML() {
 
         <details class="vini-fat-method">
           <summary>Como esta conta foi feita?</summary>
-          <p>Usamos homem, 36 anos, 1,86 m e o peso mais recente na equação de Mifflin–St Jeor. A massa magra inicial é estimada a partir dos 28%; o peso-alvo supõe essa massa preservada a 18%. Cada kg de gordura restante usa a aproximação de 7.700 kcal.</p>
+          <p>Usamos homem, 36 anos, 1,86 m e o peso mais recente na equação de Mifflin–St Jeor. A massa magra inicial é estimada a partir dos 28%; o peso-alvo supõe essa massa preservada no percentual escolhido. Cada kg de gordura restante usa a aproximação de 7.700 kcal.</p>
+          <p>“Músculo” usa uma estimativa antropométrica de Lee et al. baseada em peso, altura, idade e sexo; “outros” é o restante da massa magra, como água, ossos e órgãos. Esses componentes são mantidos no objetivo e não substituem bioimpedância, DEXA ou avaliação clínica.</p>
           <p>Os treinos já estão descontados nas calorias líquidas. Dias sem alimentação registrada não entram no déficit médio. Bioimpedância, metabolismo e composição da perda oscilam: trate a data como tendência e recalibre após cada avaliação com a nutricionista.</p>
         </details>
       </div>
     </section>`;
+}
+
+function bodyCompositionHTML(progress) {
+  const today = progress.composition.today;
+  const target = progress.composition.target;
+  const component = (label, value, className) => `
+    <div class="vini-composition-part ${className}">
+      <span><i></i>${label}</span>
+      <strong>${formatNumber(value, 1)} <small>kg</small></strong>
+    </div>`;
+  const bar = (values) => {
+    const total = Math.max(1, values.fatKg + values.muscleKg + values.otherKg);
+    return `
+      <div class="vini-composition-bar" aria-hidden="true">
+        <span class="is-fat" style="width:${(values.fatKg / total) * 100}%"></span>
+        <span class="is-muscle" style="width:${(values.muscleKg / total) * 100}%"></span>
+        <span class="is-other" style="width:${(values.otherKg / total) * 100}%"></span>
+      </div>`;
+  };
+  return `
+    <div class="vini-composition-board">
+      <div class="vini-composition-row">
+        <div class="vini-composition-row-head">
+          <div><strong>Hoje</strong><span>${formatNumber(today.bodyFatPct, 1)}% de gordura estimada</span></div>
+          <b>${formatNumber(today.totalWeightKg, 1)} kg <small>no modelo</small></b>
+        </div>
+        ${bar(today)}
+        <div class="vini-composition-parts">
+          ${component("Gordura", today.fatKg, "is-fat")}
+          ${component("Músculo estimado", today.muscleKg, "is-muscle")}
+          ${component("Outros", today.otherKg, "is-other")}
+        </div>
+      </div>
+      <div class="vini-composition-arrow" aria-hidden="true">→</div>
+      <div class="vini-composition-row is-target">
+        <div class="vini-composition-row-head">
+          <label>
+            <strong>Objetivo</strong>
+            <span class="vini-composition-target-input">
+              <input type="number" inputmode="decimal" step="0.1" min="5"
+                     max="${formatNumber(VINI_FAT_GOAL.startBodyFatPct - 0.1, 1).replace(",", ".")}"
+                     value="${String(progress.targetBodyFatPct).replace(",", ".")}"
+                     data-fat-goal-target aria-label="Percentual de gordura desejado" />
+              <b>% gordura</b>
+            </span>
+          </label>
+          <b>${formatNumber(target.totalWeightKg, 1)} kg <small>estimados</small></b>
+        </div>
+        ${bar(target)}
+        <div class="vini-composition-parts">
+          ${component("Gordura", target.fatKg, "is-fat")}
+          ${component("Músculo estimado", target.muscleKg, "is-muscle")}
+          ${component("Outros", target.otherKg, "is-other")}
+        </div>
+      </div>
+      <p>Modelo de composição, não medição: músculo e outros são preservados enquanto a gordura varia.</p>
+    </div>`;
 }
 
 function weeklyHTML() {
@@ -1008,6 +1090,17 @@ function streakStats(dates) {
 }
 
 function bindTracker() {
+  tracker.root.querySelector("[data-fat-goal-target]")?.addEventListener("change", (event) => {
+    const target = Math.round(clamp(
+      Number(event.target.value) || VINI_FAT_GOAL.targetBodyFatPct,
+      5,
+      VINI_FAT_GOAL.startBodyFatPct - 0.1,
+    ) * 10) / 10;
+    tracker.fatGoalTargetPct = target;
+    saveFatGoalTarget(target);
+    renderTracker();
+    tracker.root.querySelector("[data-fat-goal-target]")?.focus({ preventScroll: true });
+  });
   tracker.root.querySelectorAll("[data-fat-goal-activity]").forEach((button) => {
     button.addEventListener("click", () => {
       const level = button.dataset.fatGoalActivity;

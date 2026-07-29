@@ -4,6 +4,7 @@ import {
   activityLevelFor,
   averageDietNutrition,
   calculateViniFatGoal,
+  estimateSkeletalMuscleKg,
   mifflinStJeorMale,
 } from "../js/vini-fat-goal.js";
 
@@ -18,6 +19,7 @@ const weights = [
 ];
 
 assert.equal(mifflinStJeorMale({ weightKg: 98 }), 1967.5);
+assert.equal(Math.round(estimateSkeletalMuscleKg({ weightKg: 100 }) * 10) / 10, 38.7);
 assert.equal(activityLevelFor("medium").factor, 1.3);
 assert.equal(activityLevelFor("invalid").id, VINI_FAT_GOAL.defaultActivityLevel);
 
@@ -46,6 +48,25 @@ assert.equal(progress.estimatedFatLostKg, progress.achievedDeficitKcal / 7700);
 assert.ok(progress.estimatedFatLostKg > 0);
 assert.ok(progress.progressPct > 1);
 assert.match(progress.projectionDate, /^2026-\d{2}-\d{2}$/);
+assert.equal(Math.round((
+  progress.composition.today.fatKg
+  + progress.composition.today.muscleKg
+  + progress.composition.today.otherKg
+) * 10) / 10, Math.round(progress.composition.today.totalWeightKg * 10) / 10);
+assert.equal(progress.composition.today.muscleKg, progress.composition.target.muscleKg);
+assert.equal(progress.composition.today.otherKg, progress.composition.target.otherKg);
+assert.equal(Math.round(progress.composition.target.bodyFatPct), 18);
+
+const customTarget = calculateViniFatGoal({
+  records,
+  weightEntries: weights,
+  activityLevel: "medium",
+  today: "2026-07-17",
+  goal: { ...VINI_FAT_GOAL, targetBodyFatPct: 20 },
+});
+assert.equal(customTarget.targetBodyFatPct, 20);
+assert.ok(customTarget.totalGoalKcal < progress.totalGoalKcal);
+assert.ok(customTarget.composition.target.fatKg > progress.composition.target.fatKg);
 
 const lowActivity = calculateViniFatGoal({
   records,

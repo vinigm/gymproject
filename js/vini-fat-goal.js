@@ -90,6 +90,30 @@ export function mifflinStJeorMale({
   return 10 * weight + 6.25 * finite(heightCm) - 5 * finite(ageYears) + 5;
 }
 
+// Lee et al. (2000), modelo antropométrico 2 para massa muscular esquelética.
+// O ajuste racial fica em zero (referência branca/hispânica) por não existir
+// essa informação no app. É uma aproximação transversal, não uma medição.
+export function estimateSkeletalMuscleKg({
+  weightKg,
+  heightCm = VINI_FAT_GOAL.heightCm,
+  ageYears = VINI_FAT_GOAL.ageYears,
+  male = true,
+  raceAdjustment = 0,
+} = {}) {
+  const weight = finite(weightKg);
+  const heightM = finite(heightCm) / 100;
+  if (!(weight > 0) || !(heightM > 0)) return 0;
+  return Math.max(
+    0,
+    0.244 * weight
+      + 7.8 * heightM
+      + 6.6 * (male ? 1 : 0)
+      - 0.098 * finite(ageYears)
+      + finite(raceAdjustment)
+      - 3.3,
+  );
+}
+
 export function activityLevelFor(id) {
   return VINI_ACTIVITY_LEVELS.find((level) => level.id === id)
     || VINI_ACTIVITY_LEVELS.find((level) => level.id === VINI_FAT_GOAL.defaultActivityLevel);
@@ -161,6 +185,15 @@ export function calculateViniFatGoal({
   const achievedDeficitKcal = clamp(cumulativeDeficitKcal, 0, totalGoalKcal);
   const remainingKcal = Math.max(0, totalGoalKcal - achievedDeficitKcal);
   const estimatedFatLostKg = achievedDeficitKcal / finite(goal.kcalPerKgFat, 7700);
+  const startFatKg = startWeightKg * startBodyFat;
+  const currentFatKg = Math.max(0, startFatKg - estimatedFatLostKg);
+  const skeletalMuscleKg = clamp(estimateSkeletalMuscleKg({
+    weightKg: startWeightKg,
+    heightCm: goal.heightCm,
+    ageYears: goal.ageYears,
+  }), 0, leanMassKg);
+  const otherLeanKg = Math.max(0, leanMassKg - skeletalMuscleKg);
+  const targetFatKg = targetWeightKg * targetBodyFat;
   const averageDeficitKcal = nutrition.days
     ? cumulativeDeficitKcal / nutrition.days
     : 0;
@@ -183,6 +216,8 @@ export function calculateViniFatGoal({
     currentWeightKg: currentWeightEntry.weight,
     leanMassKg,
     targetWeightKg,
+    startBodyFatPct: startBodyFat * 100,
+    targetBodyFatPct: targetBodyFat * 100,
     fatToLoseKg,
     totalGoalKcal,
     restingKcal,
@@ -196,5 +231,21 @@ export function calculateViniFatGoal({
     progressPct,
     projectedDays,
     projectionDate,
+    composition: {
+      today: {
+        totalWeightKg: leanMassKg + currentFatKg,
+        fatKg: currentFatKg,
+        muscleKg: skeletalMuscleKg,
+        otherKg: otherLeanKg,
+        bodyFatPct: (currentFatKg / Math.max(1, leanMassKg + currentFatKg)) * 100,
+      },
+      target: {
+        totalWeightKg: targetWeightKg,
+        fatKg: targetFatKg,
+        muscleKg: skeletalMuscleKg,
+        otherKg: otherLeanKg,
+        bodyFatPct: targetBodyFat * 100,
+      },
+    },
   };
 }
