@@ -80,6 +80,36 @@ export function averageDietNutrition(records) {
   };
 }
 
+export function simulateMonthlyDeficit({
+  averageDailyDeficitKcal = 0,
+  eventDays = 3,
+  extraKcalPerEvent = 1500,
+  daysPerMonth = 30.44,
+} = {}) {
+  const dailyDeficitKcal = finite(averageDailyDeficitKcal);
+  const normalizedEventDays = clamp(Math.round(finite(eventDays, 3)), 0, 31);
+  const normalizedExtraKcal = clamp(Math.round(finite(extraKcalPerEvent, 1500)), 0, 10000);
+  const normalizedDaysPerMonth = clamp(finite(daysPerMonth, 30.44), 1, 31);
+  const projectedMonthlyDeficitKcal = dailyDeficitKcal * normalizedDaysPerMonth;
+  const eventCostKcal = normalizedEventDays * normalizedExtraKcal;
+  const projectedBalanceKcal = projectedMonthlyDeficitKcal - eventCostKcal;
+  return {
+    averageDailyDeficitKcal: dailyDeficitKcal,
+    eventDays: normalizedEventDays,
+    extraKcalPerEvent: normalizedExtraKcal,
+    daysPerMonth: normalizedDaysPerMonth,
+    projectedMonthlyDeficitKcal,
+    eventCostKcal,
+    projectedBalanceKcal,
+    equivalentDeficitDays: dailyDeficitKcal > 0
+      ? eventCostKcal / dailyDeficitKcal
+      : null,
+    impactPct: projectedMonthlyDeficitKcal > 0
+      ? (eventCostKcal / projectedMonthlyDeficitKcal) * 100
+      : null,
+  };
+}
+
 export function mifflinStJeorMale({
   weightKg,
   heightCm = VINI_FAT_GOAL.heightCm,

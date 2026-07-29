@@ -6,6 +6,7 @@ import {
   calculateViniFatGoal,
   estimateSkeletalMuscleKg,
   mifflinStJeorMale,
+  simulateMonthlyDeficit,
 } from "../js/vini-fat-goal.js";
 
 const records = [
@@ -27,6 +28,29 @@ const averages = averageDietNutrition(records);
 assert.equal(averages.days, 3);
 assert.equal(Math.round(averages.averages.kcal), 2100);
 assert.equal(Math.round(averages.averages.p * 10) / 10, 146.7);
+
+const eventSimulation = simulateMonthlyDeficit({
+  averageDailyDeficitKcal: 500,
+  eventDays: 3,
+  extraKcalPerEvent: 1500,
+  daysPerMonth: 30,
+});
+assert.equal(eventSimulation.projectedMonthlyDeficitKcal, 15000);
+assert.equal(eventSimulation.eventCostKcal, 4500);
+assert.equal(eventSimulation.projectedBalanceKcal, 10500);
+assert.equal(eventSimulation.equivalentDeficitDays, 9);
+assert.equal(eventSimulation.impactPct, 30);
+
+const eventSurplus = simulateMonthlyDeficit({
+  averageDailyDeficitKcal: 100,
+  eventDays: 3,
+  extraKcalPerEvent: 1500,
+  daysPerMonth: 30,
+});
+assert.equal(eventSurplus.projectedBalanceKcal, -1500);
+assert.equal(simulateMonthlyDeficit({
+  averageDailyDeficitKcal: -100,
+}).equivalentDeficitDays, null);
 
 const progress = calculateViniFatGoal({
   records,

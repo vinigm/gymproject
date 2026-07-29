@@ -3586,7 +3586,11 @@ body.presence-fullscreen .presence-fs-exit { display: flex; }
 .vini-week-average-card strong { color: var(--week-color); font-size: 15px; white-space: nowrap; }
 .vini-week-average-card small { color: var(--muted); font-size: 8px; line-height: 1.25; }
 .vini-week-average-note { margin: 7px 0 0; color: var(--muted); font-size: 9px; text-align: center; }
+.vini-average-periods { display: flex; flex-direction: column; gap: 10px; }
 .vini-cycle-averages-card { border-top: 3px solid var(--kg-accent); }
+.vini-average-period-head { display: flex; margin-bottom: 9px; align-items: baseline; justify-content: space-between; gap: 12px; }
+.vini-average-period-head strong { font-size: 12px; }
+.vini-average-period-head span { color: var(--muted); font-size: 8px; text-align: right; }
 
 .vini-fat-goal-empty { display: flex; flex-direction: column; gap: 5px; border-top: 3px solid #f97316; }
 .vini-fat-goal-empty strong { font-size: 13px; }
@@ -3670,6 +3674,45 @@ body.presence-fullscreen .presence-fs-exit { display: flex; }
 .vini-fat-method { margin-top: 11px; color: var(--muted); border-top: 1px dashed var(--border); font-size: 9px; line-height: 1.55; }
 .vini-fat-method summary { padding-top: 10px; color: #fdba74; font-weight: 800; cursor: pointer; }
 .vini-fat-method p { margin: 8px 0 0; }
+.vini-damage-block .block-head > div { display: flex; min-width: 0; flex-direction: column; gap: 2px; }
+.vini-damage-card {
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 92% 0%, rgba(168,85,247,.13), transparent 34%),
+    var(--card);
+  border-top: 3px solid #a855f7;
+}
+.vini-damage-intro { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; }
+.vini-damage-intro > div:first-child { display: flex; max-width: 420px; flex-direction: column; gap: 4px; }
+.vini-damage-intro > div:first-child strong { font-size: 12px; }
+.vini-damage-intro > div:first-child span { color: var(--muted); font-size: 9px; line-height: 1.45; }
+.vini-damage-controls { display: grid; flex: none; grid-template-columns: 108px 154px; gap: 8px; }
+.vini-damage-controls label { display: flex; min-width: 0; flex-direction: column; gap: 4px; color: var(--muted); font-size: 8px; text-transform: uppercase; }
+.vini-damage-controls label > div { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 5px; }
+.vini-damage-controls input { width: 100%; min-height: 38px; padding: 7px 9px; color: var(--text); background: rgba(2,6,23,.42); border: 1px solid var(--border); border-radius: 9px; outline: none; font: inherit; font-size: 12px; font-weight: 800; text-align: right; font-variant-numeric: tabular-nums; }
+.vini-damage-controls input:focus { border-color: #a855f7; box-shadow: 0 0 0 3px rgba(168,85,247,.14); }
+.vini-damage-controls label > div b { color: var(--muted); font-size: 8px; text-transform: lowercase; }
+.vini-damage-presets { display: flex; margin-top: 9px; justify-content: flex-end; flex-wrap: wrap; gap: 5px; }
+.vini-damage-presets button { min-height: 28px; padding: 5px 9px; color: var(--muted); background: rgba(2,6,23,.36); border: 1px solid var(--border); border-radius: 999px; font-size: 8px; font-weight: 800; cursor: pointer; }
+.vini-damage-presets button.is-on { color: #f3e8ff; background: rgba(168,85,247,.17); border-color: #a855f7; }
+.vini-damage-results { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 14px; }
+.vini-damage-results > div { display: flex; min-width: 0; padding: 10px; flex-direction: column; gap: 3px; background: rgba(2,6,23,.32); border: 1px solid var(--border); border-radius: 10px; }
+.vini-damage-results span { color: var(--muted); font-size: 7px; text-transform: uppercase; }
+.vini-damage-results strong { overflow: hidden; font-size: 14px; text-overflow: ellipsis; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.vini-damage-results strong.is-good { color: var(--good); }
+.vini-damage-results strong.is-warn { color: #fbbf24; }
+.vini-damage-results strong.is-bad { color: var(--bad); }
+.vini-damage-results small { min-height: 20px; color: var(--muted); font-size: 7px; line-height: 1.35; }
+.vini-damage-impact { margin-top: 12px; padding: 10px 11px; background: rgba(168,85,247,.05); border: 1px solid rgba(168,85,247,.18); border-radius: 10px; }
+.vini-damage-impact > div:first-child { display: flex; margin-bottom: 6px; align-items: center; justify-content: space-between; gap: 10px; color: var(--muted); font-size: 8px; }
+.vini-damage-impact > div:first-child strong { color: #d8b4fe; font-size: 10px; font-variant-numeric: tabular-nums; }
+.vini-damage-impact-bar { height: 8px; overflow: hidden; background: rgba(2,6,23,.55); border-radius: 999px; }
+.vini-damage-impact-bar span { display: block; height: 100%; background: linear-gradient(90deg, #a855f7, #fb7185); border-radius: inherit; transition: width .2s ease; }
+.vini-damage-conclusion { margin: 10px 0 0; padding: 9px 11px; border: 1px solid currentColor; border-radius: 9px; font-size: 10px; font-weight: 800; line-height: 1.4; }
+.vini-damage-conclusion.is-good { color: var(--good); background: rgba(52,211,153,.06); }
+.vini-damage-conclusion.is-warn { color: #fbbf24; background: rgba(251,191,36,.06); }
+.vini-damage-conclusion.is-bad { color: var(--bad); background: rgba(251,113,133,.06); }
+.vini-damage-note { margin: 9px 0 0; color: var(--muted); font-size: 8px; line-height: 1.5; }
 .vini-deficit-calendar-block { margin-top: 2px; }
 .vini-deficit-calendar-block .block-head > div:first-child { display: flex; min-width: 0; flex-direction: column; gap: 2px; }
 .vini-deficit-month-nav { display: grid; grid-template-columns: 30px minmax(128px, auto) 30px; align-items: center; gap: 5px; }
@@ -3856,6 +3899,11 @@ body.presence-fullscreen .presence-fs-exit { display: flex; }
   .vini-fat-activity { align-items: stretch; flex-direction: column; }
   .vini-fat-activity-options { width: 100%; }
   .vini-fat-activity-options button { min-width: 0; min-height: 44px; }
+  .vini-damage-intro { align-items: stretch; flex-direction: column; }
+  .vini-damage-intro > div:first-child { max-width: none; }
+  .vini-damage-controls { width: 100%; grid-template-columns: 1fr 1.4fr; }
+  .vini-damage-presets { justify-content: flex-start; }
+  .vini-damage-results { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .vini-trend-tooltip {
     position: fixed;
     z-index: 1200;
@@ -3897,11 +3945,17 @@ body.presence-fullscreen .presence-fs-exit { display: flex; }
   .vini-exercise-grid { grid-template-columns: 1fr; }
   .vini-week-macros { grid-template-columns: 1fr; }
   .vini-week-average-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .vini-average-period-head { align-items: flex-start; flex-direction: column; gap: 3px; }
+  .vini-average-period-head span { text-align: left; }
   .vini-fat-goal-card { padding: 14px; }
   .vini-fat-progress-head { align-items: flex-start; flex-direction: column; gap: 3px; }
   .vini-fat-goal-grid { grid-template-columns: 1fr; }
   .vini-fat-equation { align-items: flex-start; flex-direction: column; }
   .vini-fat-equation i { display: none; }
+  .vini-damage-controls { grid-template-columns: 1fr; }
+  .vini-damage-controls input { min-height: 44px; }
+  .vini-damage-presets button { min-height: 36px; }
+  .vini-damage-results { grid-template-columns: 1fr; }
   .vini-deficit-calendar-block .block-head { align-items: stretch; flex-direction: column; }
   .vini-deficit-month-nav { grid-template-columns: 40px 1fr 40px; }
   .vini-deficit-month-nav button { width: 40px; height: 40px; }

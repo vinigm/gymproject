@@ -30,6 +30,7 @@ import {
   VINI_FAT_GOAL,
   averageDietNutrition,
   calculateViniFatGoal,
+  simulateMonthlyDeficit,
 } from "./vini-fat-goal.js";
 import {
   DIET_PROFILE,
@@ -53,6 +54,8 @@ const USER = DIET_PROFILE.userId;
 const WEEKDAYS = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"];
 const FAT_GOAL_ACTIVITY_KEY = `habitos-vini-fat-goal-activity-${USER}`;
 const FAT_GOAL_TARGET_KEY = `habitos-vini-fat-goal-target-${USER}`;
+const FAT_GOAL_DAMAGE_DAYS_KEY = `habitos-vini-fat-goal-damage-days-${USER}`;
+const FAT_GOAL_DAMAGE_KCAL_KEY = `habitos-vini-fat-goal-damage-kcal-${USER}`;
 
 function storedFatGoalActivity() {
   try {
@@ -84,6 +87,23 @@ function saveFatGoalTarget(value) {
   try { localStorage.setItem(FAT_GOAL_TARGET_KEY, String(value)); } catch {}
 }
 
+function storedFatGoalDamageValue(key, fallback, min, max) {
+  try {
+    const stored = localStorage.getItem(key);
+    if (stored === null) return fallback;
+    const value = Number(stored);
+    return Number.isFinite(value) && value >= min && value <= max
+      ? value
+      : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function saveFatGoalDamageValue(key, value) {
+  try { localStorage.setItem(key, String(value)); } catch {}
+}
+
 const tracker = {
   loaded: false,
   map: {},
@@ -100,6 +120,8 @@ const tracker = {
   beveragesOpen: false,
   fatGoalActivity: storedFatGoalActivity(),
   fatGoalTargetPct: storedFatGoalTarget(),
+  fatGoalDamageDays: storedFatGoalDamageValue(FAT_GOAL_DAMAGE_DAYS_KEY, 3, 0, 31),
+  fatGoalDamageKcal: storedFatGoalDamageValue(FAT_GOAL_DAMAGE_KCAL_KEY, 1500, 0, 10000),
   fatGoalCalendarMonth: todayISO().slice(0, 7),
   trendTooltipCleanup: null,
 };
@@ -319,7 +341,7 @@ function renderTracker() {
   const isToday = tracker.selectedDate === todayISO();
   if (tracker.view === "stats") {
     tracker.root.innerHTML = USER === "vinicius"
-      ? `${cycleAveragesOverviewHTML()}${fatGoalCountdownHTML()}${fatGoalDeficitCalendarHTML()}`
+      ? `${cycleAveragesOverviewHTML()}${fatGoalCountdownHTML()}${fatGoalDamageSimulatorHTML()}${fatGoalDeficitCalendarHTML()}`
       : `${weeklyHTML()}${cycleStatsHTML()}`;
   } else if (tracker.view === "graphs") {
     tracker.root.innerHTML = viniDietTrendsHTML(recordsInScope(), {
@@ -731,6 +753,26 @@ function cycleAveragesOverviewHTML() {
   const records = recordsInScope();
   const stats = averageDietNutrition(records);
   const scopeLabel = tracker.scope === "all" ? "histórico completo" : "ciclo atual";
+  const periodCards = [
+    {
+      title: "Média diária",
+      detail: "por dia alimentar registrado",
+      multiplier: 1,
+      goalMultiplier: 1,
+    },
+    {
+      title: "Média semanal estimada",
+      detail: "projeção: média diária × 7 dias",
+      multiplier: 7,
+      goalMultiplier: 7,
+    },
+    {
+      title: "Média mensal estimada",
+      detail: "projeção: média diária × 30,44 dias",
+      multiplier: 30.44,
+      goalMultiplier: 30.44,
+    },
+  ];
   return `
     <section class="block">
       <div class="block-head">
@@ -739,15 +781,22 @@ function cycleAveragesOverviewHTML() {
       </div>
       ${stats.days === 0 ? `
         <div class="stat-card"><p class="muted" style="margin:0">As médias aparecem quando houver registros alimentares neste período.</p></div>` : `
-        <div class="stat-card vini-cycle-averages-card">
-          <div class="vini-week-average-grid">
-            ${weeklyAverageCardHTML("Calorias líquidas", stats.averages.kcal, VINI_DAILY_GOALS.kcal, "kcal", "is-kcal")}
-            ${weeklyAverageCardHTML("Proteína", stats.averages.p, VINI_DAILY_GOALS.p, "g", "is-protein")}
-            ${weeklyAverageCardHTML("Carboidrato", stats.averages.c, VINI_DAILY_GOALS.c, "g", "is-carbs")}
-            ${weeklyAverageCardHTML("Gordura", stats.averages.f, VINI_DAILY_GOALS.f, "g", "is-fat")}
-          </div>
-          <p class="vini-week-average-note">Somente médias dos dias registrados. Calorias já descontam os treinos informados na dieta.</p>
-        </div>`}
+        <div class="vini-average-periods">
+          ${periodCards.map((period) => `
+            <div class="stat-card vini-cycle-averages-card">
+              <div class="vini-average-period-head">
+                <strong>${period.title}</strong>
+                <span>${period.detail}</span>
+              </div>
+              <div class="vini-week-average-grid">
+                ${weeklyAverageCardHTML("Calorias líquidas", stats.averages.kcal * period.multiplier, VINI_DAILY_GOALS.kcal * period.goalMultiplier, "kcal", "is-kcal")}
+                ${weeklyAverageCardHTML("Proteína", stats.averages.p * period.multiplier, VINI_DAILY_GOALS.p * period.goalMultiplier, "g", "is-protein")}
+                ${weeklyAverageCardHTML("Carboidrato", stats.averages.c * period.multiplier, VINI_DAILY_GOALS.c * period.goalMultiplier, "g", "is-carbs")}
+                ${weeklyAverageCardHTML("Gordura", stats.averages.f * period.multiplier, VINI_DAILY_GOALS.f * period.goalMultiplier, "g", "is-fat")}
+              </div>
+            </div>`).join("")}
+        </div>
+        <p class="vini-week-average-note">Semanal e mensal são projeções da média dos ${stats.days} dias registrados. Calorias já descontam os treinos informados na dieta.</p>`}
     </section>`;
 }
 
@@ -862,6 +911,107 @@ function fatGoalCountdownHTML() {
           <p>“Músculo” usa uma estimativa antropométrica de Lee et al. baseada em peso, altura, idade e sexo; “outros” é o restante da massa magra, como água, ossos e órgãos. Esses componentes são mantidos no objetivo e não substituem bioimpedância, DEXA ou avaliação clínica.</p>
           <p>Os treinos já estão descontados nas calorias líquidas. Dias sem alimentação registrada não entram no déficit médio. Bioimpedância, metabolismo e composição da perda oscilam: trate a data como tendência e recalibre após cada avaliação com a nutricionista.</p>
         </details>
+      </div>
+    </section>`;
+}
+
+function fatGoalDamageSimulatorHTML() {
+  const progress = currentFatGoalProgress();
+  if (!progress.available) return "";
+
+  const simulation = simulateMonthlyDeficit({
+    averageDailyDeficitKcal: progress.averageDeficitKcal,
+    eventDays: tracker.fatGoalDamageDays,
+    extraKcalPerEvent: tracker.fatGoalDamageKcal,
+  });
+  const monthlyDeficit = Math.round(simulation.projectedMonthlyDeficitKcal);
+  const eventCost = Math.round(simulation.eventCostKcal);
+  const finalBalance = Math.round(simulation.projectedBalanceKcal);
+  const stillInDeficit = finalBalance > 0;
+  const balanced = finalBalance === 0;
+  const balanceLabel = stillInDeficit
+    ? "déficit estimado"
+    : balanced
+      ? "equilíbrio estimado"
+      : "superávit estimado";
+  const balanceSign = stillInDeficit ? "−" : finalBalance < 0 ? "+" : "";
+  const impactPct = simulation.impactPct === null
+    ? 0
+    : clamp(simulation.impactPct, 0, 100);
+  const conclusion = stillInDeficit
+    ? `Mesmo com os eventos, a projeção ainda fecha o mês em déficit de ${formatNumber(finalBalance)} kcal.`
+    : balanced
+      ? "Nesta simulação, os eventos consumiriam exatamente todo o déficit mensal projetado."
+      : `Nesta simulação, o mês passaria para um superávit de ${formatNumber(Math.abs(finalBalance))} kcal.`;
+  const presetValues = [500, 1000, 1500, 2000, 3000];
+
+  return `
+    <section class="block vini-damage-block">
+      <div class="block-head">
+        <div>
+          <h2>🥂 Simulador de “estrago”</h2>
+          <span class="muted" style="font-size:9px">cenário mensal · não altera seus registros</span>
+        </div>
+      </div>
+      <div class="stat-card vini-damage-card">
+        <div class="vini-damage-intro">
+          <div>
+            <strong>Quantos eventos e quanto além do seu dia normal?</strong>
+            <span>Use apenas as kcal extras de cada evento. Sua alimentação habitual já está na projeção mensal.</span>
+          </div>
+          <div class="vini-damage-controls">
+            <label>
+              <span>Dias de evento</span>
+              <input type="number" inputmode="numeric" min="0" max="31" step="1"
+                     value="${simulation.eventDays}" data-damage-days />
+            </label>
+            <label>
+              <span>Extra por evento</span>
+              <div><input type="number" inputmode="numeric" min="0" max="10000" step="100"
+                          value="${simulation.extraKcalPerEvent}" data-damage-kcal /><b>kcal</b></div>
+            </label>
+          </div>
+        </div>
+
+        <div class="vini-damage-presets" aria-label="Atalhos de calorias extras por evento">
+          ${presetValues.map((value) => `
+            <button type="button" class="${simulation.extraKcalPerEvent === value ? "is-on" : ""}"
+                    data-damage-preset="${value}">+${formatNumber(value)}</button>`).join("")}
+        </div>
+
+        <div class="vini-damage-results">
+          <div>
+            <span>Projeção mensal antes</span>
+            <strong class="${monthlyDeficit >= 0 ? "is-good" : "is-bad"}">${monthlyDeficit >= 0 ? "−" : "+"}${formatNumber(Math.abs(monthlyDeficit))} kcal</strong>
+            <small>média atual × ${formatNumber(simulation.daysPerMonth, 2)} dias</small>
+          </div>
+          <div>
+            <span>Custo dos eventos</span>
+            <strong class="is-warn">+${formatNumber(eventCost)} kcal</strong>
+            <small>${simulation.eventDays} × ${formatNumber(simulation.extraKcalPerEvent)} kcal extras</small>
+          </div>
+          <div>
+            <span>Saldo depois</span>
+            <strong class="${stillInDeficit ? "is-good" : balanced ? "is-warn" : "is-bad"}">${balanceSign}${formatNumber(Math.abs(finalBalance))} kcal</strong>
+            <small>${balanceLabel}</small>
+          </div>
+          <div>
+            <span>Equivale a</span>
+            <strong>${simulation.equivalentDeficitDays === null ? "—" : `${formatNumber(simulation.equivalentDeficitDays, 1)} dias`}</strong>
+            <small>do seu déficit diário médio atual</small>
+          </div>
+        </div>
+
+        <div class="vini-damage-impact">
+          <div>
+            <span>Déficit mensal consumido pelos eventos</span>
+            <strong>${simulation.impactPct === null ? "sem base positiva" : `${formatNumber(simulation.impactPct, 1)}%`}</strong>
+          </div>
+          <div class="vini-damage-impact-bar"><span style="width:${pctWidth(impactPct)}%"></span></div>
+        </div>
+
+        <p class="vini-damage-conclusion ${stillInDeficit ? "is-good" : balanced ? "is-warn" : "is-bad"}">${conclusion}</p>
+        <p class="vini-damage-note">É uma conta de saldo, não uma previsão clínica: seu corpo não “zera” a queima de gordura depois de um evento, mas peso, água, apetite e gasto variam. O que importa aqui é se o saldo energético acumulado continua negativo ao longo do tempo.</p>
       </div>
     </section>`;
 }
@@ -1206,6 +1356,29 @@ function streakStats(dates) {
 }
 
 function bindTracker() {
+  tracker.root.querySelector("[data-damage-days]")?.addEventListener("change", (event) => {
+    const days = Math.round(clamp(Number(event.target.value) || 0, 0, 31));
+    tracker.fatGoalDamageDays = days;
+    saveFatGoalDamageValue(FAT_GOAL_DAMAGE_DAYS_KEY, days);
+    renderTracker();
+    tracker.root.querySelector("[data-damage-days]")?.focus({ preventScroll: true });
+  });
+  tracker.root.querySelector("[data-damage-kcal]")?.addEventListener("change", (event) => {
+    const kcal = Math.round(clamp(Number(event.target.value) || 0, 0, 10000));
+    tracker.fatGoalDamageKcal = kcal;
+    saveFatGoalDamageValue(FAT_GOAL_DAMAGE_KCAL_KEY, kcal);
+    renderTracker();
+    tracker.root.querySelector("[data-damage-kcal]")?.focus({ preventScroll: true });
+  });
+  tracker.root.querySelectorAll("[data-damage-preset]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const kcal = Number(button.dataset.damagePreset);
+      tracker.fatGoalDamageKcal = kcal;
+      saveFatGoalDamageValue(FAT_GOAL_DAMAGE_KCAL_KEY, kcal);
+      renderTracker();
+      tracker.root.querySelector(`[data-damage-preset="${kcal}"]`)?.focus({ preventScroll: true });
+    });
+  });
   tracker.root.querySelectorAll("[data-deficit-month-step]").forEach((button) => {
     button.addEventListener("click", () => {
       tracker.fatGoalCalendarMonth = shiftMonthISO(
