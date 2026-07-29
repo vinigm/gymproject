@@ -178,8 +178,16 @@ export function calculateViniFatGoal({
     ageYears: goal.ageYears,
   });
   const maintenanceKcal = restingKcal * level.factor;
-  const cumulativeDeficitKcal = goalRecords.reduce(
-    (sum, record) => sum + maintenanceKcal - netKcalForDietRecord(record),
+  const dailyDeficits = goalRecords.map((record) => {
+    const netKcal = netKcalForDietRecord(record);
+    return {
+      date: record.date,
+      netKcal,
+      deficitKcal: maintenanceKcal - netKcal,
+    };
+  });
+  const cumulativeDeficitKcal = dailyDeficits.reduce(
+    (sum, entry) => sum + entry.deficitKcal,
     0,
   );
   const achievedDeficitKcal = clamp(cumulativeDeficitKcal, 0, totalGoalKcal);
@@ -222,6 +230,7 @@ export function calculateViniFatGoal({
     totalGoalKcal,
     restingKcal,
     maintenanceKcal,
+    dailyDeficits,
     cumulativeDeficitKcal,
     achievedDeficitKcal,
     estimatedFatLostKg,

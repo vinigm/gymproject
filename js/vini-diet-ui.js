@@ -100,6 +100,7 @@ const tracker = {
   beveragesOpen: false,
   fatGoalActivity: storedFatGoalActivity(),
   fatGoalTargetPct: storedFatGoalTarget(),
+  fatGoalCalendarMonth: todayISO().slice(0, 7),
   trendTooltipCleanup: null,
 };
 
@@ -318,7 +319,7 @@ function renderTracker() {
   const isToday = tracker.selectedDate === todayISO();
   if (tracker.view === "stats") {
     tracker.root.innerHTML = USER === "vinicius"
-      ? `${cycleAveragesOverviewHTML()}${fatGoalCountdownHTML()}`
+      ? `${cycleAveragesOverviewHTML()}${fatGoalCountdownHTML()}${fatGoalDeficitCalendarHTML()}`
       : `${weeklyHTML()}${cycleStatsHTML()}`;
   } else if (tracker.view === "graphs") {
     tracker.root.innerHTML = viniDietTrendsHTML(recordsInScope(), {
@@ -756,18 +757,22 @@ function fatGoalDate(iso) {
   return `${day}/${month}/${year}`;
 }
 
-function fatGoalCountdownHTML() {
-  const targetBodyFatPct = tracker.fatGoalTargetPct;
-  const progress = calculateViniFatGoal({
+function currentFatGoalProgress() {
+  return calculateViniFatGoal({
     records: recordsInScope(),
     weightEntries: tracker.weightEntries,
     activityLevel: tracker.fatGoalActivity,
     today: todayISO(),
     goal: {
       ...VINI_FAT_GOAL,
-      targetBodyFatPct,
+      targetBodyFatPct: tracker.fatGoalTargetPct,
     },
   });
+}
+
+function fatGoalCountdownHTML() {
+  const targetBodyFatPct = tracker.fatGoalTargetPct;
+  const progress = currentFatGoalProgress();
   if (!progress.available) {
     return `
       <section class="block">
@@ -916,6 +921,116 @@ function bodyCompositionHTML(progress) {
       </div>
       <p>Modelo de composição, não medição: músculo e outros são preservados enquanto a gordura varia.</p>
     </div>`;
+}
+
+function shiftMonthISO(monthISO, amount) {
+  const [year, month] = String(monthISO).split("-").map(Number);
+  const date = new Date(year, month - 1 + amount, 1, 12);
+  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}`;
+}
+
+function deficitMonthLabel(monthISO) {
+  const [year, month] = String(monthISO).split("-").map(Number);
+  const label = new Date(year, month - 1, 1, 12).toLocaleDateString("pt-BR", {
+    month: "long",
+    year: "numeric",
+  });
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
+
+function fatGoalDeficitCalendarHTML() {
+  const progress = currentFatGoalProgress();
+  if (!progress.available) return "";
+
+  const firstRecordMonth = progress.dailyDeficits.at(0)?.date.slice(0, 7)
+    || VINI_FAT_GOAL.startDate.slice(0, 7);
+  const currentMonth = todayISO().slice(0, 7);
+  const monthISO = tracker.fatGoalCalendarMonth < firstRecordMonth
+    ? firstRecordMonth
+    : tracker.fatGoalCalendarMonth > currentMonth
+      ? currentMonth
+      : tracker.fatGoalCalendarMonth;
+  tracker.fatGoalCalendarMonth = monthISO;
+
+  const [year, month] = monthISO.split("-").map(Number);
+  const firstWeekday = new Date(year, month - 1, 1, 12).getDay();
+  const daysInMonth = new Date(year, month, 0, 12).getDate();
+  const today = todayISO();
+  const byDate = new Map(progress.dailyDeficits.map((entry) => [entry.date, entry]));
+  const monthEntries = progress.dailyDeficits.filter((entry) => entry.date.startsWith(`${monthISO}-`));
+  const monthBalance = monthEntries.reduce((sum, entry) => sum + entry.deficitKcal, 0);
+  const monthTone = monthBalance > 0 ? "is-deficit" : monthBalance < 0 ? "is-surplus" : "is-neutral";
+  const balanceLabel = monthBalance > 0 ? "Déficit acumulado" : monthBalance < 0 ? "Superávit acumulado" : "Saldo acumulado";
+  const balanceSign = monthBalance > 0 ? "−" : monthBalance < 0 ? "+" : "";
+  let cells = WEEKDAYS.map((day) => `<div class="vini-deficit-cal-head">${day}</div>`).join("");
+  cells += Array.from({ length: firstWeekday }, () => `<div class="vini-deficit-cal-cell is-empty"></div>`).join("");
+
+  for (let day = 1; day <= daysInMonth; day += 1) {
+    const date = `${monthISO}-${pad2(day)}`;
+    const entry = byDate.get(date);
+    const isFuture = date > today;
+    const isToday = date === today;
+    if (!entry) {
+      cells += `
+        <div class="vini-deficit-cal-cell${isToday ? " is-today" : ""}${isFuture ? " is-future" : ""}">
+          <span class="vini-deficit-cal-day">${day}</span>
+          <small>${isFuture ? "" : "sem registro"}</small>
+        </div>`;
+      continue;
+    }
+    const deficit = Math.round(entry.deficitKcal);
+    const tone = deficit > 0 ? "has-deficit" : deficit < 0 ? "has-surplus" : "has-balance";
+    const intensity = (0.09 + Math.min(1, Math.abs(deficit) / 1200) * 0.25).toFixed(3);
+    const sign = deficit > 0 ? "−" : deficit < 0 ? "+" : "";
+    const description = deficit > 0
+      ? `déficit estimado de ${formatNumber(deficit)} kcal`
+      : deficit < 0
+        ? `superávit estimado de ${formatNumber(Math.abs(deficit))} kcal`
+        : "equilíbrio energético estimado";
+    cells += `
+      <div class="vini-deficit-cal-cell ${tone}${isToday ? " is-today" : ""}"
+           style="--balance-alpha:${intensity}" title="${fmtDateBR(date, true)} · ${description}">
+        <span class="vini-deficit-cal-day">${day}</span>
+        <strong>${sign}${formatNumber(Math.abs(deficit))}<small>kcal</small></strong>
+        <em>${deficit > 0 ? "déficit" : deficit < 0 ? "superávit" : "equilíbrio"}</em>
+      </div>`;
+  }
+
+  return `
+    <section class="block vini-deficit-calendar-block">
+      <div class="block-head">
+        <div>
+          <h2>📅 Déficit diário</h2>
+          <span class="muted" style="font-size:9px">gasto estimado − kcal líquidas</span>
+        </div>
+        <div class="vini-deficit-month-nav">
+          <button type="button" data-deficit-month-step="-1" aria-label="Mês anterior"
+                  ${monthISO <= firstRecordMonth ? "disabled" : ""}>‹</button>
+          <strong>${deficitMonthLabel(monthISO)}</strong>
+          <button type="button" data-deficit-month-step="1" aria-label="Próximo mês"
+                  ${monthISO >= currentMonth ? "disabled" : ""}>›</button>
+        </div>
+      </div>
+      <div class="stat-card vini-deficit-calendar-card">
+        <div class="vini-deficit-calendar-summary">
+          <div class="${monthTone}">
+            <span>${balanceLabel}</span>
+            <strong>${balanceSign}${formatNumber(Math.abs(Math.round(monthBalance)))} kcal</strong>
+          </div>
+          <div>
+            <span>Dias registrados</span>
+            <strong>${monthEntries.length}</strong>
+          </div>
+          <small>Usa a mesma estimativa atual de ${formatNumber(Math.round(progress.maintenanceKcal))} kcal/dia do painel.</small>
+        </div>
+        <div class="vini-deficit-cal-grid">${cells}</div>
+        <div class="vini-deficit-cal-legend">
+          <span><i class="is-deficit"></i> déficit</span>
+          <span><i class="is-surplus"></i> superávit</span>
+          <span><i class="is-empty"></i> sem registro</span>
+        </div>
+      </div>
+    </section>`;
 }
 
 function weeklyHTML() {
@@ -1091,6 +1206,16 @@ function streakStats(dates) {
 }
 
 function bindTracker() {
+  tracker.root.querySelectorAll("[data-deficit-month-step]").forEach((button) => {
+    button.addEventListener("click", () => {
+      tracker.fatGoalCalendarMonth = shiftMonthISO(
+        tracker.fatGoalCalendarMonth,
+        Number(button.dataset.deficitMonthStep),
+      );
+      renderTracker();
+      tracker.root.querySelector(`[data-deficit-month-step="${button.dataset.deficitMonthStep}"]`)?.focus({ preventScroll: true });
+    });
+  });
   tracker.root.querySelector("[data-fat-goal-target]")?.addEventListener("change", (event) => {
     const target = Math.round(clamp(
       Number(event.target.value) || VINI_FAT_GOAL.targetBodyFatPct,

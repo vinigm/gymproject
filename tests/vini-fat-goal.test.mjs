@@ -43,6 +43,13 @@ assert.equal(Math.round(progress.targetWeightKg * 10) / 10, 87.8);
 assert.equal(Math.round(progress.fatToLoseKg * 10) / 10, 12.2);
 assert.equal(Math.round(progress.maintenanceKcal), 2558);
 assert.equal(Math.round(progress.averageDeficitKcal), 558);
+assert.equal(progress.dailyDeficits.length, 2);
+assert.deepEqual(progress.dailyDeficits.map((entry) => entry.date), ["2026-07-15", "2026-07-16"]);
+assert.equal(Math.round(progress.dailyDeficits[0].deficitKcal), 558);
+assert.equal(
+  progress.cumulativeDeficitKcal,
+  progress.dailyDeficits.reduce((sum, entry) => sum + entry.deficitKcal, 0),
+);
 assert.ok(progress.remainingKcal < progress.totalGoalKcal);
 assert.equal(progress.estimatedFatLostKg, progress.achievedDeficitKcal / 7700);
 assert.ok(progress.estimatedFatLostKg > 0);

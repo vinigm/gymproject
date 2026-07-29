@@ -3670,6 +3670,40 @@ body.presence-fullscreen .presence-fs-exit { display: flex; }
 .vini-fat-method { margin-top: 11px; color: var(--muted); border-top: 1px dashed var(--border); font-size: 9px; line-height: 1.55; }
 .vini-fat-method summary { padding-top: 10px; color: #fdba74; font-weight: 800; cursor: pointer; }
 .vini-fat-method p { margin: 8px 0 0; }
+.vini-deficit-calendar-block { margin-top: 2px; }
+.vini-deficit-calendar-block .block-head > div:first-child { display: flex; min-width: 0; flex-direction: column; gap: 2px; }
+.vini-deficit-month-nav { display: grid; grid-template-columns: 30px minmax(128px, auto) 30px; align-items: center; gap: 5px; }
+.vini-deficit-month-nav button { width: 30px; height: 30px; color: var(--text); background: var(--card-2); border: 1px solid var(--border); border-radius: 8px; font-size: 19px; cursor: pointer; }
+.vini-deficit-month-nav button:disabled { opacity: .28; cursor: default; }
+.vini-deficit-month-nav strong { font-size: 10px; text-align: center; }
+.vini-deficit-calendar-card { overflow: hidden; border-top: 3px solid var(--good); }
+.vini-deficit-calendar-summary { display: grid; grid-template-columns: minmax(150px, .8fr) minmax(110px, .5fr) minmax(220px, 1.3fr); align-items: stretch; gap: 8px; margin-bottom: 13px; }
+.vini-deficit-calendar-summary > div { display: flex; padding: 9px 11px; flex-direction: column; gap: 3px; background: var(--card-2); border: 1px solid var(--border); border-radius: 10px; }
+.vini-deficit-calendar-summary span { color: var(--muted); font-size: 8px; text-transform: uppercase; }
+.vini-deficit-calendar-summary strong { font-size: 15px; font-variant-numeric: tabular-nums; }
+.vini-deficit-calendar-summary .is-deficit strong { color: var(--good); }
+.vini-deficit-calendar-summary .is-surplus strong { color: var(--bad); }
+.vini-deficit-calendar-summary > small { display: flex; padding: 9px 11px; align-items: center; color: var(--muted); background: rgba(96,165,250,.05); border: 1px solid rgba(96,165,250,.15); border-radius: 10px; font-size: 8px; line-height: 1.45; }
+.vini-deficit-cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; }
+.vini-deficit-cal-head { padding: 3px 0; color: var(--muted); font-size: 8px; font-weight: 800; text-align: center; text-transform: uppercase; }
+.vini-deficit-cal-cell { display: flex; min-width: 0; min-height: 69px; padding: 6px; align-items: center; justify-content: center; flex-direction: column; gap: 3px; background: rgba(15,23,42,.5); border: 1px solid var(--border); border-radius: 9px; }
+.vini-deficit-cal-cell.is-empty { min-height: 0; background: transparent; border-color: transparent; }
+.vini-deficit-cal-cell.is-future { opacity: .34; }
+.vini-deficit-cal-cell.is-today { outline: 2px solid #fb923c; outline-offset: -2px; }
+.vini-deficit-cal-cell.has-deficit { background: rgba(52,211,153,var(--balance-alpha)); border-color: rgba(52,211,153,.32); }
+.vini-deficit-cal-cell.has-surplus { background: rgba(251,113,133,var(--balance-alpha)); border-color: rgba(251,113,133,.34); }
+.vini-deficit-cal-cell.has-balance { background: rgba(251,191,36,.1); border-color: rgba(251,191,36,.25); }
+.vini-deficit-cal-day { align-self: flex-start; color: var(--muted); font-size: 9px; font-weight: 800; line-height: 1; }
+.vini-deficit-cal-cell > strong { color: var(--text); font-size: clamp(9px, 1.3vw, 12px); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.vini-deficit-cal-cell > strong small { display: block; margin-top: 1px; color: var(--muted); font-size: 7px; font-weight: 500; text-align: center; }
+.vini-deficit-cal-cell > em { color: var(--muted); font-size: 6px; font-style: normal; text-transform: uppercase; }
+.vini-deficit-cal-cell > small { margin: auto 0; color: rgba(148,163,184,.55); font-size: 7px; text-align: center; }
+.vini-deficit-cal-legend { display: flex; margin-top: 10px; justify-content: center; flex-wrap: wrap; gap: 8px 14px; color: var(--muted); font-size: 8px; }
+.vini-deficit-cal-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.vini-deficit-cal-legend i { width: 8px; height: 8px; border-radius: 3px; }
+.vini-deficit-cal-legend i.is-deficit { background: var(--good); }
+.vini-deficit-cal-legend i.is-surplus { background: var(--bad); }
+.vini-deficit-cal-legend i.is-empty { background: var(--card-2); border: 1px solid var(--border); }
 .vini-week-macros { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .vini-week-macros > div { display: flex; flex-direction: column; gap: 2px; padding: 10px; background: var(--card-2); border: 1px solid var(--border); border-radius: 10px; }
 .vini-week-macros span { color: var(--muted); font-size: 9px; text-transform: uppercase; }
@@ -3868,6 +3902,17 @@ body.presence-fullscreen .presence-fs-exit { display: flex; }
   .vini-fat-goal-grid { grid-template-columns: 1fr; }
   .vini-fat-equation { align-items: flex-start; flex-direction: column; }
   .vini-fat-equation i { display: none; }
+  .vini-deficit-calendar-block .block-head { align-items: stretch; flex-direction: column; }
+  .vini-deficit-month-nav { grid-template-columns: 40px 1fr 40px; }
+  .vini-deficit-month-nav button { width: 40px; height: 40px; }
+  .vini-deficit-calendar-summary { grid-template-columns: 1fr 1fr; }
+  .vini-deficit-calendar-summary > small { grid-column: 1 / -1; }
+  .vini-deficit-cal-grid { gap: 3px; }
+  .vini-deficit-cal-cell { min-height: 61px; padding: 4px 2px; border-radius: 7px; }
+  .vini-deficit-cal-cell > strong { font-size: 9px; }
+  .vini-deficit-cal-cell > strong small { font-size: 5px; }
+  .vini-deficit-cal-cell > em { display: none; }
+  .vini-deficit-cal-cell > small { font-size: 6px; }
   .vini-history-row { grid-template-columns: minmax(0, 1fr) auto; }
   .vini-history-nutri { grid-column: 1; text-align: left; }
   .vini-history-score { grid-column: 2; grid-row: 1 / span 2; }
