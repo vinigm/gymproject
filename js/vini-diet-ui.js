@@ -26,6 +26,12 @@ import {
 } from "./diet-selection-profile.js";
 import { bindViniTrendTooltips, viniDietTrendsHTML } from "./vini-diet-trends.js";
 import {
+  VINI_ACTIVITY_LEVELS,
+  VINI_FAT_GOAL,
+  averageDietNutrition,
+  calculateViniFatGoal,
+} from "./vini-fat-goal.js";
+import {
   DIET_PROFILE,
   VINI_BEVERAGES,
   VINI_FOOD_GROUPS,
@@ -45,6 +51,22 @@ import {
 
 const USER = DIET_PROFILE.userId;
 const WEEKDAYS = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"];
+const FAT_GOAL_ACTIVITY_KEY = `habitos-vini-fat-goal-activity-${USER}`;
+
+function storedFatGoalActivity() {
+  try {
+    const value = localStorage.getItem(FAT_GOAL_ACTIVITY_KEY);
+    return VINI_ACTIVITY_LEVELS.some((level) => level.id === value)
+      ? value
+      : VINI_FAT_GOAL.defaultActivityLevel;
+  } catch {
+    return VINI_FAT_GOAL.defaultActivityLevel;
+  }
+}
+
+function saveFatGoalActivity(value) {
+  try { localStorage.setItem(FAT_GOAL_ACTIVITY_KEY, value); } catch {}
+}
 
 const tracker = {
   loaded: false,
@@ -60,6 +82,7 @@ const tracker = {
   saveStatus: "",
   customFoodsOpen: false,
   beveragesOpen: false,
+  fatGoalActivity: storedFatGoalActivity(),
   trendTooltipCleanup: null,
 };
 
@@ -277,9 +300,9 @@ function renderTracker() {
   const summary = calculateViniDietDay(day, { useSnapshot: true });
   const isToday = tracker.selectedDate === todayISO();
   if (tracker.view === "stats") {
-    tracker.root.innerHTML = `
-      ${weeklyHTML()}
-      ${cycleStatsHTML()}`;
+    tracker.root.innerHTML = USER === "vinicius"
+      ? `${cycleAveragesOverviewHTML()}${fatGoalCountdownHTML()}`
+      : `${weeklyHTML()}${cycleStatsHTML()}`;
   } else if (tracker.view === "graphs") {
     tracker.root.innerHTML = viniDietTrendsHTML(recordsInScope(), {
       viewportWidth: Math.max(320, tracker.root.clientWidth - 48),
@@ -686,6 +709,128 @@ function weekRecords(weekStart, allRecords = recordsInScope()) {
   return allRecords.filter((entry) => entry.date >= weekStart && entry.date <= end);
 }
 
+function cycleAveragesOverviewHTML() {
+  const records = recordsInScope();
+  const stats = averageDietNutrition(records);
+  const scopeLabel = tracker.scope === "all" ? "histórico completo" : "ciclo atual";
+  return `
+    <section class="block">
+      <div class="block-head">
+        <h2>📊 Médias dos registros</h2>
+        <span class="muted" style="font-size:11px">${stats.days} dias · ${scopeLabel}</span>
+      </div>
+      ${stats.days === 0 ? `
+        <div class="stat-card"><p class="muted" style="margin:0">As médias aparecem quando houver registros alimentares neste período.</p></div>` : `
+        <div class="stat-card vini-cycle-averages-card">
+          <div class="vini-week-average-grid">
+            ${weeklyAverageCardHTML("Calorias líquidas", stats.averages.kcal, VINI_DAILY_GOALS.kcal, "kcal", "is-kcal")}
+            ${weeklyAverageCardHTML("Proteína", stats.averages.p, VINI_DAILY_GOALS.p, "g", "is-protein")}
+            ${weeklyAverageCardHTML("Carboidrato", stats.averages.c, VINI_DAILY_GOALS.c, "g", "is-carbs")}
+            ${weeklyAverageCardHTML("Gordura", stats.averages.f, VINI_DAILY_GOALS.f, "g", "is-fat")}
+          </div>
+          <p class="vini-week-average-note">Somente médias dos dias registrados. Calorias já descontam os treinos informados na dieta.</p>
+        </div>`}
+    </section>`;
+}
+
+function fatGoalDate(iso) {
+  if (!iso) return "sem previsão";
+  const [year, month, day] = String(iso).split("-");
+  return `${day}/${month}/${year}`;
+}
+
+function fatGoalCountdownHTML() {
+  const progress = calculateViniFatGoal({
+    records: recordsInScope(),
+    weightEntries: tracker.weightEntries,
+    activityLevel: tracker.fatGoalActivity,
+    today: todayISO(),
+  });
+  if (!progress.available) {
+    return `
+      <section class="block">
+        <div class="block-head"><h2>🎯 Rumo aos 18%</h2><span class="muted" style="font-size:11px">estimativa</span></div>
+        <div class="stat-card vini-fat-goal-empty">
+          <strong>Falta uma pesagem para iniciar a projeção.</strong>
+          <span>Registre seu peso na aba Peso; os dados alimentares já estão prontos para o cálculo.</span>
+        </div>
+      </section>`;
+  }
+
+  const averageDeficit = Math.round(progress.averageDeficitKcal);
+  const projection = progress.projectionDate
+    ? fatGoalDate(progress.projectionDate)
+    : progress.remainingKcal <= 0
+      ? "objetivo energético atingido"
+      : "sem previsão com a média atual";
+  const deficitTone = averageDeficit > 0 ? "is-positive" : averageDeficit < 0 ? "is-negative" : "";
+  return `
+    <section class="block vini-fat-goal-block">
+      <div class="block-head">
+        <h2>🎯 Contagem regressiva para 18%</h2>
+        <span class="muted" style="font-size:11px">partida: 28% em 15/07</span>
+      </div>
+      <div class="stat-card vini-fat-goal-card">
+        <div class="vini-fat-goal-hero">
+          <div>
+            <span class="vini-fat-goal-kicker">faltam para o equivalente energético da meta</span>
+            <strong>${formatNumber(Math.round(progress.remainingKcal))} <small>kcal</small></strong>
+            <p>aproximadamente <b>${formatNumber(progress.remainingFatKg, 1)} kg</b> de gordura estimada até o alvo</p>
+          </div>
+          <div class="vini-fat-goal-target" aria-label="Meta de gordura corporal">
+            <span>28%</span><i>→</i><strong>18%</strong>
+          </div>
+        </div>
+
+        <div class="vini-fat-progress-head">
+          <span>${formatNumber(progress.progressPct, 1)}% do equivalente energético percorrido</span>
+          <strong>${formatNumber(Math.round(progress.achievedDeficitKcal))} / ${formatNumber(Math.round(progress.totalGoalKcal))} kcal</strong>
+        </div>
+        <div class="vini-fat-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100"
+             aria-valuenow="${Math.round(progress.progressPct)}">
+          <span style="width:${pctWidth(progress.progressPct)}%"></span>
+        </div>
+
+        <div class="vini-fat-goal-grid">
+          <div><span>Peso de partida</span><strong>${formatNumber(progress.startWeightKg, 1)} kg</strong><small>pesagem mais próxima de 15/07</small></div>
+          <div><span>Peso-alvo estimado</span><strong>${formatNumber(progress.targetWeightKg, 1)} kg</strong><small>mantendo ~${formatNumber(progress.leanMassKg, 1)} kg de massa magra</small></div>
+          <div class="${deficitTone}"><span>Déficit médio</span><strong>${averageDeficit > 0 ? "−" : averageDeficit < 0 ? "+" : ""}${formatNumber(Math.abs(averageDeficit))} kcal</strong><small>por dia alimentar registrado</small></div>
+          <div><span>Previsão matemática</span><strong>${projection}</strong><small>${progress.projectedDays === null ? "requer déficit médio positivo" : `cerca de ${progress.projectedDays} dias`}</small></div>
+        </div>
+
+        <div class="vini-fat-activity">
+          <div>
+            <strong>Movimento diário fora dos treinos</strong>
+            <span>Altere para ver como a estimativa de gasto responde.</span>
+          </div>
+          <div class="vini-fat-activity-options" role="group" aria-label="Nível de movimento diário">
+            ${VINI_ACTIVITY_LEVELS.map((level) => `
+              <button type="button" class="${progress.activityLevel.id === level.id ? "is-on" : ""}"
+                      data-fat-goal-activity="${level.id}" aria-pressed="${progress.activityLevel.id === level.id}">
+                <strong>${level.label}</strong><small>${level.factor.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}×</small>
+              </button>`).join("")}
+          </div>
+        </div>
+
+        <div class="vini-fat-equation">
+          <span><b>${formatNumber(Math.round(progress.restingKcal))}</b> kcal de repouso</span>
+          <i>×</i>
+          <span><b>${progress.activityLevel.factor.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</b> rotina</span>
+          <i>=</i>
+          <span><b>${formatNumber(Math.round(progress.maintenanceKcal))}</b> kcal/dia estimadas</span>
+          <i>−</i>
+          <span><b>${formatNumber(Math.round(progress.averages.kcal))}</b> kcal líquidas médias</span>
+        </div>
+
+        <details class="vini-fat-method">
+          <summary>Como esta conta foi feita?</summary>
+          <p>Usamos homem, 36 anos, 1,86 m e o peso mais recente na equação de Mifflin–St Jeor. A massa magra inicial é estimada a partir dos 28%; o peso-alvo supõe essa massa preservada a 18%. Cada kg de gordura restante usa a aproximação de 7.700 kcal.</p>
+          <p>Os treinos já estão descontados nas calorias líquidas. Dias sem alimentação registrada não entram no déficit médio. Bioimpedância, metabolismo e composição da perda oscilam: trate a data como tendência e recalibre após cada avaliação com a nutricionista.</p>
+        </details>
+      </div>
+    </section>`;
+}
+
 function weeklyHTML() {
   const start = mondayISO(tracker.selectedDate);
   const end = addDaysISO(start, 6);
@@ -859,6 +1004,16 @@ function streakStats(dates) {
 }
 
 function bindTracker() {
+  tracker.root.querySelectorAll("[data-fat-goal-activity]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const level = button.dataset.fatGoalActivity;
+      if (!VINI_ACTIVITY_LEVELS.some((entry) => entry.id === level)) return;
+      tracker.fatGoalActivity = level;
+      saveFatGoalActivity(level);
+      renderTracker();
+      tracker.root.querySelector(`[data-fat-goal-activity="${level}"]`)?.focus({ preventScroll: true });
+    });
+  });
   tracker.root.querySelector("[data-save-diet]")?.addEventListener("click", persistCurrentDay);
   tracker.root.querySelector("[data-toggle-custom-foods]")?.addEventListener("click", () => {
     tracker.customFoodsOpen = !tracker.customFoodsOpen;

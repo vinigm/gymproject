@@ -3586,6 +3586,56 @@ body.presence-fullscreen .presence-fs-exit { display: flex; }
 .vini-week-average-card strong { color: var(--week-color); font-size: 15px; white-space: nowrap; }
 .vini-week-average-card small { color: var(--muted); font-size: 8px; line-height: 1.25; }
 .vini-week-average-note { margin: 7px 0 0; color: var(--muted); font-size: 9px; text-align: center; }
+.vini-cycle-averages-card { border-top: 3px solid var(--kg-accent); }
+
+.vini-fat-goal-empty { display: flex; flex-direction: column; gap: 5px; border-top: 3px solid #f97316; }
+.vini-fat-goal-empty strong { font-size: 13px; }
+.vini-fat-goal-empty span { color: var(--muted); font-size: 11px; line-height: 1.5; }
+.vini-fat-goal-card {
+  overflow: hidden;
+  padding: 18px;
+  background:
+    radial-gradient(circle at 84% 0%, rgba(249,115,22,.16), transparent 31%),
+    linear-gradient(145deg, rgba(30,41,59,.98), rgba(15,23,42,.98));
+  border-top: 3px solid #f97316;
+}
+.vini-fat-goal-hero { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 18px; }
+.vini-fat-goal-hero > div:first-child { display: flex; min-width: 0; flex-direction: column; }
+.vini-fat-goal-kicker { color: #fb923c; font-size: 9px; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; }
+.vini-fat-goal-hero > div:first-child > strong { margin-top: 5px; color: #fff7ed; font-size: clamp(30px, 5vw, 44px); line-height: 1; letter-spacing: -.035em; font-variant-numeric: tabular-nums; }
+.vini-fat-goal-hero > div:first-child > strong small { color: #fdba74; font-size: .38em; letter-spacing: 0; }
+.vini-fat-goal-hero p { margin: 7px 0 0; color: var(--muted); font-size: 11px; }
+.vini-fat-goal-hero p b { color: var(--text); }
+.vini-fat-goal-target { display: flex; min-width: 170px; padding: 13px 16px; align-items: center; justify-content: center; gap: 10px; background: rgba(2,6,23,.42); border: 1px solid rgba(251,146,60,.3); border-radius: 14px; font-variant-numeric: tabular-nums; }
+.vini-fat-goal-target span { color: var(--muted); font-size: 18px; font-weight: 800; }
+.vini-fat-goal-target i { color: #fb923c; font-size: 18px; font-style: normal; }
+.vini-fat-goal-target strong { color: #fb923c; font-size: 26px; }
+.vini-fat-progress-head { display: flex; margin-top: 18px; justify-content: space-between; gap: 12px; color: var(--muted); font-size: 9px; }
+.vini-fat-progress-head strong { color: #fdba74; font-variant-numeric: tabular-nums; }
+.vini-fat-progress { height: 10px; overflow: hidden; margin-top: 7px; background: rgba(2,6,23,.55); border: 1px solid rgba(148,163,184,.12); border-radius: 999px; }
+.vini-fat-progress span { display: block; height: 100%; background: linear-gradient(90deg, #f97316, #fbbf24); border-radius: inherit; box-shadow: 0 0 18px rgba(249,115,22,.38); transition: width .25s ease; }
+.vini-fat-goal-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 15px; }
+.vini-fat-goal-grid > div { display: flex; min-width: 0; padding: 11px; flex-direction: column; gap: 3px; background: rgba(2,6,23,.32); border: 1px solid var(--border); border-radius: 11px; }
+.vini-fat-goal-grid span { color: var(--muted); font-size: 8px; letter-spacing: .04em; text-transform: uppercase; }
+.vini-fat-goal-grid strong { overflow: hidden; font-size: 14px; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
+.vini-fat-goal-grid small { color: var(--muted); font-size: 8px; line-height: 1.35; }
+.vini-fat-goal-grid .is-positive strong { color: var(--good); }
+.vini-fat-goal-grid .is-negative strong { color: var(--bad); }
+.vini-fat-activity { display: flex; margin-top: 14px; padding: 12px; align-items: center; justify-content: space-between; gap: 16px; background: rgba(96,165,250,.055); border: 1px solid rgba(96,165,250,.18); border-radius: 12px; }
+.vini-fat-activity > div:first-child { display: flex; min-width: 0; flex-direction: column; gap: 3px; }
+.vini-fat-activity > div:first-child strong { font-size: 11px; }
+.vini-fat-activity > div:first-child span { color: var(--muted); font-size: 9px; line-height: 1.35; }
+.vini-fat-activity-options { display: grid; flex: none; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+.vini-fat-activity-options button { display: flex; min-width: 66px; padding: 7px 9px; color: var(--muted); flex-direction: column; gap: 1px; background: rgba(2,6,23,.38); border: 1px solid var(--border); border-radius: 9px; cursor: pointer; }
+.vini-fat-activity-options button strong { font-size: 9px; }
+.vini-fat-activity-options button small { font-size: 8px; }
+.vini-fat-activity-options button.is-on { color: #fff7ed; background: rgba(249,115,22,.18); border-color: #f97316; box-shadow: inset 0 -2px 0 #f97316; }
+.vini-fat-equation { display: flex; margin-top: 10px; padding: 9px 11px; align-items: center; justify-content: center; flex-wrap: wrap; gap: 5px 8px; color: var(--muted); background: rgba(2,6,23,.22); border-radius: 10px; font-size: 8px; }
+.vini-fat-equation span b { color: var(--text); font-variant-numeric: tabular-nums; }
+.vini-fat-equation i { color: #fb923c; font-style: normal; font-weight: 900; }
+.vini-fat-method { margin-top: 11px; color: var(--muted); border-top: 1px dashed var(--border); font-size: 9px; line-height: 1.55; }
+.vini-fat-method summary { padding-top: 10px; color: #fdba74; font-weight: 800; cursor: pointer; }
+.vini-fat-method p { margin: 8px 0 0; }
 .vini-week-macros { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .vini-week-macros > div { display: flex; flex-direction: column; gap: 2px; padding: 10px; background: var(--card-2); border: 1px solid var(--border); border-radius: 10px; }
 .vini-week-macros span { color: var(--muted); font-size: 9px; text-transform: uppercase; }
@@ -3730,6 +3780,12 @@ body.presence-fullscreen .presence-fs-exit { display: flex; }
   .vini-beverage-row { grid-template-columns: auto minmax(0, 1fr); }
   .vini-beverage-stepper { grid-column: 1 / -1; grid-template-columns: 42px 1fr 42px; }
   .vini-beverage-stepper button { width: 42px; height: 42px; }
+  .vini-fat-goal-hero { grid-template-columns: 1fr; }
+  .vini-fat-goal-target { min-width: 0; }
+  .vini-fat-goal-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .vini-fat-activity { align-items: stretch; flex-direction: column; }
+  .vini-fat-activity-options { width: 100%; }
+  .vini-fat-activity-options button { min-width: 0; min-height: 44px; }
   .vini-trend-tooltip {
     position: fixed;
     z-index: 1200;
@@ -3771,6 +3827,11 @@ body.presence-fullscreen .presence-fs-exit { display: flex; }
   .vini-exercise-grid { grid-template-columns: 1fr; }
   .vini-week-macros { grid-template-columns: 1fr; }
   .vini-week-average-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .vini-fat-goal-card { padding: 14px; }
+  .vini-fat-progress-head { align-items: flex-start; flex-direction: column; gap: 3px; }
+  .vini-fat-goal-grid { grid-template-columns: 1fr; }
+  .vini-fat-equation { align-items: flex-start; flex-direction: column; }
+  .vini-fat-equation i { display: none; }
   .vini-history-row { grid-template-columns: minmax(0, 1fr) auto; }
   .vini-history-nutri { grid-column: 1; text-align: left; }
   .vini-history-score { grid-column: 2; grid-row: 1 / span 2; }
