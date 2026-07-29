@@ -808,16 +808,17 @@ function fatGoalCountdownHTML() {
           </div>
         </div>
 
-        ${bodyCompositionHTML(progress)}
-
         <div class="vini-fat-progress-head">
-          <span>${formatNumber(progress.progressPct, 1)}% do equivalente energético percorrido</span>
+          <span>Progresso do equivalente energético</span>
           <strong>${formatNumber(Math.round(progress.achievedDeficitKcal))} / ${formatNumber(Math.round(progress.totalGoalKcal))} kcal</strong>
         </div>
         <div class="vini-fat-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100"
              aria-valuenow="${Math.round(progress.progressPct)}">
           <span style="width:${pctWidth(progress.progressPct)}%"></span>
+          <strong>${formatNumber(progress.progressPct, 1)}% percorrido</strong>
         </div>
+
+        ${bodyCompositionHTML(progress)}
 
         <div class="vini-fat-goal-grid">
           <div><span>Peso de partida</span><strong>${formatNumber(progress.startWeightKg, 1)} kg</strong><small>pesagem mais próxima de 15/07</small></div>

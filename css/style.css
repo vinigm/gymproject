@@ -3645,8 +3645,9 @@ body.presence-fullscreen .presence-fs-exit { display: flex; }
 .vini-composition-board > p { grid-column: 1 / -1; margin: -1px 0 0; color: var(--muted); font-size: 8px; line-height: 1.4; text-align: center; }
 .vini-fat-progress-head { display: flex; margin-top: 18px; justify-content: space-between; gap: 12px; color: var(--muted); font-size: 9px; }
 .vini-fat-progress-head strong { color: #fdba74; font-variant-numeric: tabular-nums; }
-.vini-fat-progress { height: 10px; overflow: hidden; margin-top: 7px; background: rgba(2,6,23,.55); border: 1px solid rgba(148,163,184,.12); border-radius: 999px; }
-.vini-fat-progress span { display: block; height: 100%; background: linear-gradient(90deg, #f97316, #fbbf24); border-radius: inherit; box-shadow: 0 0 18px rgba(249,115,22,.38); transition: width .25s ease; }
+.vini-fat-progress { position: relative; display: flex; height: 24px; overflow: hidden; margin-top: 7px; align-items: center; justify-content: center; background: rgba(2,6,23,.62); border: 1px solid rgba(251,146,60,.25); border-radius: 999px; box-shadow: inset 0 1px 3px rgba(2,6,23,.5); }
+.vini-fat-progress span { position: absolute; top: 0; bottom: 0; left: 0; background: linear-gradient(90deg, #f97316, #fbbf24); border-radius: inherit; box-shadow: 0 0 18px rgba(249,115,22,.38); transition: width .25s ease; }
+.vini-fat-progress > strong { position: relative; z-index: 1; color: #fff; font-size: 9px; letter-spacing: .04em; text-shadow: 0 1px 3px rgba(2,6,23,.9); text-transform: uppercase; font-variant-numeric: tabular-nums; }
 .vini-fat-goal-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 15px; }
 .vini-fat-goal-grid > div { display: flex; min-width: 0; padding: 11px; flex-direction: column; gap: 3px; background: rgba(2,6,23,.32); border: 1px solid var(--border); border-radius: 11px; }
 .vini-fat-goal-grid span { color: var(--muted); font-size: 8px; letter-spacing: .04em; text-transform: uppercase; }
