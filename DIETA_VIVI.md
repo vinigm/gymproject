@@ -154,6 +154,7 @@ A primeira página contém uma tabela histórica de avaliação corporal com dat
 
 ## Convenções do tracker
 
+- O atalho pessoal `Café · mingau de aveia` registra 30 g de aveia, 100 ml de leite semidesnatado, 1 banana e 1 ovo cozido. O ovo cozido permanece selecionável individualmente entre 1 e 6 unidades; seus valores são recalculados por unidade. Esse atalho não altera as 19 composições da dieta oficial.
 - As metas atuais de kcal e macros da Vivi continuam sendo referências estimadas do aplicativo enquanto não houver metas clínicas explícitas no plano.
 - Alimentos apresentados como alternativas com “ou” permanecem separados no seletor.
 - Vegetais “sem necessidade de pesar” podem ser marcados, mas não entram nos macros quando não houver quantidade escolhida.

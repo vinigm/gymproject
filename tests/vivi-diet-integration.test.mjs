@@ -11,7 +11,7 @@ assert.equal(profile.IS_VIVI_DIET_PROFILE, true);
 assert.equal(profile.DIET_PROFILE.userId, "victoria");
 assert.equal(profile.DIET_PROFILE.personName, "Vivi");
 assert.equal(profile.DIET_PROFILE.reportSlug, "vivi");
-assert.equal(profile.VINI_PLAN_VERSION, "vivi-nutri-2026-02-v1");
+assert.equal(profile.VINI_PLAN_VERSION, "vivi-nutri-2026-02-v2");
 assert.equal(profile.VINI_HYDRATION.baseMl, 1600);
 assert.equal(selection.VINI_MEAL_PRESETS[0].id, "desjejum_oficial");
 const officialHTML = officialRenderer.viniOfficialDietHTML();

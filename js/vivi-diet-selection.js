@@ -37,6 +37,19 @@ export const VIVI_MEAL_PRESETS = Object.freeze([
     ]
   ),
   preset(
+    "desjejum_mingau_aveia",
+    "🥣",
+    "Café · mingau de aveia",
+    "30g aveia · 100ml leite · 1 banana · 1 ovo cozido",
+    "desjejum",
+    [
+      { foodId: "aveia", amount: 30 },
+      { foodId: "leite_semidesnatado", amount: 100 },
+      { foodId: "banana", amount: 1 },
+      { foodId: "ovo_cozido", amount: 1 },
+    ]
+  ),
+  preset(
     "lanche_manha_oficial",
     "🥛",
     "Lanche da manhã",

@@ -10,7 +10,7 @@ import {
   normalizeViniExercises,
 } from "./vini-exercise.js";
 
-export const VIVI_PLAN_VERSION = "vivi-nutri-2026-02-v1";
+export const VIVI_PLAN_VERSION = "vivi-nutri-2026-02-v2";
 
 // Mantém as referências provisórias que a página da Vivi já utilizava.
 export const VIVI_DAILY_GOALS = Object.freeze({
@@ -281,6 +281,7 @@ export const VIVI_HYDRATION = Object.freeze({
 const QUANTITY_RULES = Object.freeze({
   fruta: { unit: "g", values: [50, 80, 100, 125, 150, 180, 200, 250] },
   ovo: { unit: "un", values: [1, 2, 3, 4, 5, 6] },
+  ovo_cozido: { unit: "un", values: [1, 2, 3, 4, 5, 6] },
   pao_integral: { unit: "fatia", values: [1, 2, 3, 4, 5, 6] },
   quark_cottage: { unit: "g", values: [10, 15, 20, 30, 40, 50, 60] },
   sementes: { unit: "g", values: [5, 10, 15, 20, 25, 30] },
@@ -307,6 +308,20 @@ const QUANTITY_RULES = Object.freeze({
   iogurte_proteico: { unit: "un", values: [1, 2, 3] },
   nude_proteico: { unit: "un", values: [1, 2, 3] },
   queijo_minas_bufala: { unit: "g", values: [15, 20, 30, 40, 50, 60] },
+});
+
+// Itens pessoais acrescentados ao tracker sem alterar a consulta estática da
+// dieta oficial. O ovo cozido usa a referência por unidade do ovo do plano,
+// sem óleo; banana e aveia reaproveitam as porções já usadas na panqueca.
+const OVO_COZIDO_1 = item(
+  "ovo_cozido",
+  "Ovo cozido",
+  "1 unidade",
+  nutrition(72, 6.3, 0.4, 4.8, "generic-estimate")
+);
+
+const VIVI_TRACKER_EXTRA_FOODS = Object.freeze({
+  desjejum: Object.freeze([FOODS.banana1, FOODS.oats30, OVO_COZIDO_1]),
 });
 
 function parseLocaleNumber(value) {
@@ -350,6 +365,14 @@ function buildFoodGroups() {
         food.sourceOptions.add(option_.id);
         if (!food.variants.some((variant) => variant.portion === entry.portion)) food.variants.push(entry);
       }
+    }
+    for (const entry of VIVI_TRACKER_EXTRA_FOODS[meal.id] || []) {
+      if (!byId.has(entry.id)) {
+        byId.set(entry.id, { ...entry, variants: [], sourceOptions: new Set() });
+      }
+      const food = byId.get(entry.id);
+      food.sourceOptions.add("tracker_extra");
+      if (!food.variants.some((variant) => variant.portion === entry.portion)) food.variants.push(entry);
     }
     const foods = [...byId.values()].map((entry) => {
       if (entry.unquantified) {

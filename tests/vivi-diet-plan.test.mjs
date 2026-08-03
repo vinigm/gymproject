@@ -23,13 +23,16 @@ import {
 const group = (id) => VIVI_FOOD_GROUPS.find((entry) => entry.id === id);
 const food = (groupId, foodId) => group(groupId).foods.find((entry) => entry.id === foodId);
 
-assert.equal(VIVI_PLAN_VERSION, "vivi-nutri-2026-02-v1");
+assert.equal(VIVI_PLAN_VERSION, "vivi-nutri-2026-02-v2");
 assert.deepEqual(VIVI_DAILY_GOALS, { kcal: 2000, p: 90, c: 250, f: 65 });
 assert.deepEqual(VIVI_HYDRATION, { baseMl: 1600, trainingMinMl: 1600, trainingMaxMl: 1600 });
 assert.deepEqual(VIVI_REQUIRED_MEALS, ["desjejum", "almoco", "lanche_tarde", "jantar"]);
 assert.equal(VIVI_MEALS.length, 7);
 assert.equal(VIVI_OFFICIAL_MEALS.flatMap((meal) => meal.options).length, 19);
-assert.equal(VIVI_MEAL_PRESETS.length, 19);
+assert.equal(VIVI_MEAL_PRESETS.length, 20);
+assert.deepEqual(food("desjejum", "ovo_cozido").quantityChoices, [1, 2, 3, 4, 5, 6]);
+assert.ok(food("desjejum", "aveia").quantityChoices.includes(30));
+assert.ok(food("desjejum", "banana").quantityChoices.includes(1));
 
 for (const meal of VIVI_MEALS) {
   const foodGroup = group(meal.id);
@@ -65,6 +68,31 @@ assert.deepEqual(breakfast.foods.desjejum, [
   "leite_semidesnatado",
 ]);
 assert.equal(calculateViviDietDay(breakfast).itemsChecked, 6);
+
+let porridge = toggleViviMealPreset(emptyViviDietDay(), "desjejum_mingau_aveia");
+assert.equal(isViviMealPresetApplied(porridge, "desjejum_mingau_aveia"), true);
+assert.deepEqual(porridge.foods.desjejum, [
+  "leite_semidesnatado",
+  "banana",
+  "aveia",
+  "ovo_cozido",
+]);
+assert.deepEqual(calculateViviDietDay(porridge).consumed, {
+  kcal: 312,
+  p: 14.5,
+  c: 45.2,
+  f: 9,
+});
+
+// O ovo cozido começa em uma unidade no preset, mas continua sendo um item
+// individual e pode ser aumentado ou diminuído pelo seletor de quantidades.
+porridge = toggleViviFoodQuantity(porridge, {
+  groupId: "desjejum",
+  foodId: "ovo_cozido",
+  amount: 2,
+});
+assert.equal(porridge.amounts.desjejum.ovo_cozido, 2);
+assert.equal(isViviMealPresetApplied(porridge, "desjejum_mingau_aveia"), false);
 
 // Um segundo toque remove a refeição predefinida.
 breakfast = toggleViviMealPreset(breakfast, "desjejum_oficial");
