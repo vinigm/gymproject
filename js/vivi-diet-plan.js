@@ -10,7 +10,7 @@ import {
   normalizeViniExercises,
 } from "./vini-exercise.js";
 
-export const VIVI_PLAN_VERSION = "vivi-nutri-2026-02-v3";
+export const VIVI_PLAN_VERSION = "vivi-nutri-2026-02-v4";
 
 // Mantém as referências provisórias que a página da Vivi já utilizava.
 export const VIVI_DAILY_GOALS = Object.freeze({
@@ -419,6 +419,14 @@ const VIVI_TRACKER_ONLY_MEALS = Object.freeze([
     contextual: true,
     options: Object.freeze([]),
   }),
+  Object.freeze({
+    id: "suplemento",
+    icon: "🥤",
+    label: "Suplemento",
+    required: false,
+    contextual: true,
+    options: Object.freeze([]),
+  }),
 ]);
 
 const VIVI_TRACKER_EXTRA_FOODS = Object.freeze({
@@ -435,6 +443,7 @@ const VIVI_TRACKER_EXTRA_FOODS = Object.freeze({
   pre_treino: Object.freeze([MARIOLA_34_G, PASTA_AMENDOPOWER_15_G]),
   jantar: Object.freeze([ALCATRA_GRELHADA_100, AIPIM_COZIDO_170, AZEITE_15_G]),
   ceia: Object.freeze([MACA_FUJI_30_G, CASTANHA_CAJU_30_G]),
+  suplemento: Object.freeze([WHEY_PROBIOTICA_31]),
 });
 
 function parseLocaleNumber(value) {

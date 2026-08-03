@@ -11,7 +11,7 @@ import {
   normalizeViniExercises,
 } from "./vini-exercise.js";
 
-export const VINI_PLAN_VERSION = "vini-nutri-2026-07-v11";
+export const VINI_PLAN_VERSION = "vini-nutri-2026-07-v12";
 
 // Metas/limites diários usados nos cards, gráficos e relatório PDF. Os macros
 // foram atualizados pelo usuário em 18/07/2026; calorias permanecem como
@@ -426,6 +426,26 @@ const OVOS_COZIDOS_3 = item(
   nutrition(216, 18.9, 1.2, 14.4, "generic-estimate")
 );
 
+// Dose padrão de 31 g preparada somente com água. A água não acrescenta
+// calorias nem macros, então o cálculo usa apenas a referência do whey.
+const WHEY_AGUA_31 = item(
+  "whey",
+  "Whey Protein com água",
+  "1 dose · 2 medidas · 31 g",
+  nutrition(120, 23, 3, 1.5, "label-estimate")
+);
+
+const VINI_TRACKER_ONLY_MEALS = Object.freeze([
+  Object.freeze({
+    id: "suplemento",
+    icon: "🥤",
+    label: "Suplemento",
+    required: false,
+    contextual: true,
+    options: Object.freeze([]),
+  }),
+]);
+
 // Pão Santa Massa: o rótulo oficial informa 122 kcal, 2,9 g P, 17 g C e
 // 4,8 g G por meia unidade (40 g); uma unidade de 80 g usa o dobro.
 // Os demais itens são médias de churrasco e variam conforme corte e preparo.
@@ -464,6 +484,7 @@ const VINI_TRACKER_EXTRA_FOODS = Object.freeze({
   almoco: Object.freeze([GUISADO_120]),
   lanche_tarde: Object.freeze([PASTA_AMENDOIM_AMENDOPOWER]),
   jantar: Object.freeze([GUISADO_120, ...CHURRASCO_FOODS]),
+  suplemento: Object.freeze([WHEY_AGUA_31]),
 });
 
 function parseLocaleNumber(value) {
@@ -501,7 +522,7 @@ export function formatFoodQuantity(food, quantity) {
 // momento do dia; as porções prescritas viram valores iniciais dentro do
 // seletor de quantidade.
 function buildFoodGroups() {
-  return VINI_MEALS.map((meal) => {
+  return [...VINI_MEALS, ...VINI_TRACKER_ONLY_MEALS].map((meal) => {
     const foodsByBaseId = new Map();
     const addEntry = (entry, sourceOption) => {
       if (!foodsByBaseId.has(entry.id)) {

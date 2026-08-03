@@ -382,10 +382,11 @@ Estas diretrizes orientam a implementação atual:
 - **28/07/2026:** a série de calorias dos gráficos e do relatório PDF passou a usar `netKcal` — calorias ingeridas menos o gasto ativo dos treinos registrados. Proteína, carboidrato e gordura continuam mostrando o consumo ingerido. Registros antigos sem `netKcal` usam as calorias ingeridas como fallback.
 - **28/07/2026:** o Kg foi separado em quatro páginas internas: `Peso`, `Dieta`, `Stats` e `Graphs`. A lista visual de histórico alimentar foi retirada sem apagar registros; semana e estatísticas do ciclo foram para Stats, enquanto os quatro gráficos e a exportação PDF foram para Graphs. Os gráficos agora cabem na largura disponível sem rolagem horizontal e o gráfico de calorias usa vermelho.
 - **03/08/2026:** o azeite foi retirado dos atalhos pessoais de almoço e jantar do Vini. Ele continua disponível no menu personalizado, na consulta da dieta oficial e em todos os registros históricos existentes.
+- **03/08/2026:** adicionado o atalho avulso `Whey com água`, com uma dose de 31 g (2 medidas). A água não acrescenta kcal ou macros; o atalho pode ser marcado e removido independentemente do pós-treino.
 
 ## 15. Implementação no tracker
 
-- Catálogo versionado: `js/vini-diet-plan.js`, versão `vini-nutri-2026-07-v11`.
+- Catálogo versionado: `js/vini-diet-plan.js`, versão `vini-nutri-2026-07-v12`.
 - Estimativa de exercício: `js/vini-exercise.js`, com definições MET, normalização, alternância das intensidades e cálculo puro do gasto ativo.
 - Interface e estatísticas: `js/vini-diet-ui.js`.
 - Consulta oficial: `VINI_OFFICIAL_MEALS` preserva as composições completas dos prints; não contém checkboxes, não grava dados e consolida os screenshots duplicados.

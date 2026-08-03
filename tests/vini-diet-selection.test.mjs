@@ -48,6 +48,7 @@ const expectedPresets = {
   },
   pre_treino_padrao: { groupId: "pre_treino", foods: ["banana"], amounts: { banana: 2 } },
   pos_treino_padrao: { groupId: "pos_treino", foods: ["whey"], amounts: { whey: 2 } },
+  whey_agua: { groupId: "suplemento", foods: ["whey"], amounts: { whey: 2 } },
   jantar_padrao: { groupId: "jantar", foods: ["vegetais", "arroz", "frango"], amounts: { vegetais: 50, arroz: 150, frango: 120 } },
   jantar_guisado: { groupId: "jantar", foods: ["vegetais", "arroz", "guisado"], amounts: { vegetais: 70, arroz: 150, guisado: 120 } },
   churrasco: {

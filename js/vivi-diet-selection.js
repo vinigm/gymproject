@@ -58,6 +58,16 @@ export const VIVI_MEAL_PRESETS = Object.freeze([
     ]
   ),
   preset(
+    "whey_agua",
+    "🥤",
+    "Whey com água",
+    "1 dose · 31g",
+    "suplemento",
+    [
+      { foodId: "whey_probiotica", amount: 31 },
+    ]
+  ),
+  preset(
     "base_pre_treino",
     "🏃",
     "Pré-treino",

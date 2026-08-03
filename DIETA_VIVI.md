@@ -154,8 +154,8 @@ A primeira página contém uma tabela histórica de avaliação corporal com dat
 
 ## Convenções do tracker
 
-- A versão `vivi-nutri-2026-02-v3` substitui os atalhos anteriores por seis refeições da dieta base modelada em 03/08/2026: desjejum (18 g de whey, 30 g de aveia, 100 ml de leite e 70 g de banana), almoço e jantar (100 g de alcatra, 170 g de aipim e 15 g de azeite), lanche da tarde (120 g de banana e 31 g de whey), pré-treino (34 g de mariola e 15 g de pasta de amendoim) e ceia (30 g de maçã Fuji e 30 g de castanha-de-caju).
-- Os seis atalhos podem ser marcados e desmarcados com um segundo toque. As alternativas antigas continuam disponíveis no menu personalizado e na consulta das 19 composições da dieta oficial; nenhum registro histórico é apagado.
+- A versão `vivi-nutri-2026-02-v4` mantém as seis refeições da dieta base modelada em 03/08/2026: desjejum (18 g de whey, 30 g de aveia, 100 ml de leite e 70 g de banana), almoço e jantar (100 g de alcatra, 170 g de aipim e 15 g de azeite), lanche da tarde (120 g de banana e 31 g de whey), pré-treino (34 g de mariola e 15 g de pasta de amendoim) e ceia (30 g de maçã Fuji e 30 g de castanha-de-caju). Também acrescenta o atalho avulso `Whey com água`, com 31 g de whey e sem calorias adicionais da água.
+- Os sete atalhos podem ser marcados e desmarcados com um segundo toque. As alternativas antigas continuam disponíveis no menu personalizado e na consulta das 19 composições da dieta oficial; nenhum registro histórico é apagado.
 - As metas atuais de kcal e macros da Vivi continuam sendo referências estimadas do aplicativo enquanto não houver metas clínicas explícitas no plano.
 - Alimentos apresentados como alternativas com “ou” permanecem separados no seletor.
 - Vegetais “sem necessidade de pesar” podem ser marcados, mas não entram nos macros quando não houver quantidade escolhida.

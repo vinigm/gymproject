@@ -23,17 +23,18 @@ import {
 const group = (id) => VIVI_FOOD_GROUPS.find((entry) => entry.id === id);
 const food = (groupId, foodId) => group(groupId).foods.find((entry) => entry.id === foodId);
 
-assert.equal(VIVI_PLAN_VERSION, "vivi-nutri-2026-02-v3");
+assert.equal(VIVI_PLAN_VERSION, "vivi-nutri-2026-02-v4");
 assert.deepEqual(VIVI_DAILY_GOALS, { kcal: 2000, p: 90, c: 250, f: 65 });
 assert.deepEqual(VIVI_HYDRATION, { baseMl: 1600, trainingMinMl: 1600, trainingMaxMl: 1600 });
 assert.deepEqual(VIVI_REQUIRED_MEALS, ["desjejum", "almoco", "lanche_tarde", "jantar"]);
 assert.equal(VIVI_MEALS.length, 7);
 assert.equal(VIVI_OFFICIAL_MEALS.flatMap((meal) => meal.options).length, 19);
-assert.equal(VIVI_MEAL_PRESETS.length, 6);
+assert.equal(VIVI_MEAL_PRESETS.length, 7);
 assert.deepEqual(VIVI_MEAL_PRESETS.map((preset) => preset.id), [
   "base_desjejum",
   "base_almoco",
   "base_lanche_tarde",
+  "whey_agua",
   "base_pre_treino",
   "base_jantar",
   "base_ceia",
@@ -45,6 +46,7 @@ assert.ok(food("desjejum", "whey_probiotica").quantityChoices.includes(18));
 assert.ok(food("desjejum", "banana_prata_g").quantityChoices.includes(70));
 assert.ok(food("almoco", "aipim_cozido").quantityChoices.includes(170));
 assert.ok(food("ceia", "maca_fuji").quantityChoices.includes(30));
+assert.equal(food("suplemento", "whey_probiotica").defaultQuantity, 31);
 
 for (const meal of VIVI_MEALS) {
   const foodGroup = group(meal.id);
@@ -112,7 +114,7 @@ fruit = toggleViviFoodQuantity(fruit, {
 });
 assert.equal(fruit.foods.desjejum, undefined);
 
-// Os seis atalhos representam exatamente a nova dieta base da Vivi.
+// Os sete atalhos representam a dieta base da Vivi e a dose avulsa de whey.
 for (const presetId of VIVI_MEAL_PRESETS.map((preset) => preset.id)) {
   const day = toggleViviMealPreset(emptyViviDietDay(), presetId);
   assert.equal(isViviMealPresetApplied(day, presetId), true, presetId);
@@ -130,6 +132,12 @@ assert.deepEqual(calculateViviDietDay(toggleViviMealPreset(emptyViviDietDay(), "
   p: 24.5,
   c: 34.2,
   f: 1.6,
+});
+assert.deepEqual(calculateViviDietDay(toggleViviMealPreset(emptyViviDietDay(), "whey_agua")).consumed, {
+  kcal: 120,
+  p: 23,
+  c: 3,
+  f: 1.5,
 });
 assert.deepEqual(calculateViviDietDay(toggleViviMealPreset(emptyViviDietDay(), "base_pre_treino")).consumed, {
   kcal: 178,

@@ -126,6 +126,16 @@ export const VINI_MEAL_PRESETS = Object.freeze([
     ]
   ),
   preset(
+    "whey_agua",
+    "🥤",
+    "Whey com água",
+    "1 dose · 2 medidas · 31g",
+    "suplemento",
+    [
+      { foodId: "whey", amount: 2 },
+    ]
+  ),
+  preset(
     "jantar_padrao",
     "🌙",
     "Jantar",
