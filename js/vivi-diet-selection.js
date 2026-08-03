@@ -58,6 +58,36 @@ export const VIVI_MEAL_PRESETS = Object.freeze([
     ]
   ),
   preset(
+    "lanche_banana",
+    "🍌",
+    "Lanche · banana",
+    "1 banana",
+    "lanche_tarde",
+    [
+      { foodId: "banana", amount: 1 },
+    ]
+  ),
+  preset(
+    "lanche_maca",
+    "🍎",
+    "Lanche · maçã",
+    "1 maçã",
+    "lanche_tarde",
+    [
+      { foodId: "maca", amount: 1 },
+    ]
+  ),
+  preset(
+    "lanche_castanha",
+    "🌰",
+    "Lanche · castanha",
+    "30g castanha-de-caju",
+    "lanche_tarde",
+    [
+      { foodId: "castanha_caju", amount: 30 },
+    ]
+  ),
+  preset(
     "whey_agua",
     "🥤",
     "Whey com água",

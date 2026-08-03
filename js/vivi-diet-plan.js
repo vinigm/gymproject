@@ -10,7 +10,7 @@ import {
   normalizeViniExercises,
 } from "./vini-exercise.js";
 
-export const VIVI_PLAN_VERSION = "vivi-nutri-2026-02-v4";
+export const VIVI_PLAN_VERSION = "vivi-nutri-2026-02-v5";
 
 // Mantém as referências provisórias que a página da Vivi já utilizava.
 export const VIVI_DAILY_GOALS = Object.freeze({
@@ -302,6 +302,7 @@ const QUANTITY_RULES = Object.freeze({
   barra_proteina: { unit: "un", values: [1, 2, 3] },
   salgado_assado: { unit: "porcao", values: [1, 2, 3] },
   banana: { unit: "un", values: [1, 2, 3, 4, 5] },
+  maca: { unit: "un", values: [1, 2, 3, 4, 5] },
   aveia: { unit: "g", values: [15, 20, 30, 40, 50, 60] },
   mariola: { unit: "un", values: [1, 2, 3, 4, 5, 6] },
   castanhas: { unit: "g", values: [10, 15, 20, 25, 30, 40, 50] },
@@ -402,6 +403,14 @@ const MACA_FUJI_30_G = item(
   { trackerDefaultQuantity: 30, trackerReferenceQuantity: 30 }
 );
 
+const MACA_FUJI_1 = item(
+  "maca",
+  "Maçã Fuji média",
+  "1 unidade · aproximadamente 130 g",
+  nutrition(73, 0.4, 19.8, 0.3),
+  { trackerDefaultQuantity: 1, trackerReferenceQuantity: 1 }
+);
+
 const CASTANHA_CAJU_30_G = item(
   "castanha_caju",
   "Castanha-de-caju crua",
@@ -439,7 +448,12 @@ const VIVI_TRACKER_EXTRA_FOODS = Object.freeze({
     BANANA_PRATA_100,
   ]),
   almoco: Object.freeze([ALCATRA_GRELHADA_100, AIPIM_COZIDO_170, AZEITE_15_G]),
-  lanche_tarde: Object.freeze([WHEY_PROBIOTICA_31, BANANA_PRATA_100]),
+  lanche_tarde: Object.freeze([
+    WHEY_PROBIOTICA_31,
+    BANANA_PRATA_100,
+    MACA_FUJI_1,
+    CASTANHA_CAJU_30_G,
+  ]),
   pre_treino: Object.freeze([MARIOLA_34_G, PASTA_AMENDOPOWER_15_G]),
   jantar: Object.freeze([ALCATRA_GRELHADA_100, AIPIM_COZIDO_170, AZEITE_15_G]),
   ceia: Object.freeze([MACA_FUJI_30_G, CASTANHA_CAJU_30_G]),
