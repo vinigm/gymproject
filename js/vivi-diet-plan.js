@@ -10,7 +10,7 @@ import {
   normalizeViniExercises,
 } from "./vini-exercise.js";
 
-export const VIVI_PLAN_VERSION = "vivi-nutri-2026-02-v2";
+export const VIVI_PLAN_VERSION = "vivi-nutri-2026-02-v3";
 
 // Mantém as referências provisórias que a página da Vivi já utilizava.
 export const VIVI_DAILY_GOALS = Object.freeze({
@@ -308,6 +308,16 @@ const QUANTITY_RULES = Object.freeze({
   iogurte_proteico: { unit: "un", values: [1, 2, 3] },
   nude_proteico: { unit: "un", values: [1, 2, 3] },
   queijo_minas_bufala: { unit: "g", values: [15, 20, 30, 40, 50, 60] },
+  whey_probiotica: { unit: "g", values: [10, 15, 18, 20, 25, 30, 31, 35, 40, 45, 50, 60] },
+  aveia_floco_g: { unit: "g", values: [15, 20, 30, 40, 50, 60, 80, 100] },
+  banana_prata_g: { unit: "g", values: [50, 70, 80, 100, 120, 150, 180, 200, 250] },
+  alcatra_grelhada: { unit: "g", values: [50, 80, 100, 120, 150, 180, 200, 250] },
+  aipim_cozido: { unit: "g", values: [50, 80, 100, 130, 150, 170, 180, 200, 250] },
+  azeite_g: { unit: "g", values: [5, 10, 15, 20, 25, 30] },
+  mariola_g: { unit: "g", values: [17, 30, 34, 40, 50, 60] },
+  pasta_amendopower: { unit: "g", values: [5, 10, 15, 20, 25, 30, 40, 50] },
+  maca_fuji: { unit: "g", values: [30, 50, 80, 100, 130, 150, 180, 200] },
+  castanha_caju: { unit: "g", values: [10, 15, 20, 25, 30, 40, 50, 60] },
 });
 
 // Itens pessoais acrescentados ao tracker sem alterar a consulta estática da
@@ -320,8 +330,111 @@ const OVO_COZIDO_1 = item(
   nutrition(72, 6.3, 0.4, 4.8, "generic-estimate")
 );
 
+const WHEY_PROBIOTICA_31 = item(
+  "whey_probiotica",
+  "100% Pure Whey Protein (Probiótica)",
+  "31 g",
+  nutrition(120, 23, 3.01, 1.49, "product-estimate"),
+  { trackerDefaultQuantity: 31, trackerReferenceQuantity: 31, estimatedRecipe: true }
+);
+
+const AVEIA_FLOCOS_30 = item(
+  "aveia_floco_g",
+  "Aveia em flocos crua",
+  "30 g",
+  nutrition(118.1, 4.18, 19.99, 2.55),
+  { trackerDefaultQuantity: 30, trackerReferenceQuantity: 30 }
+);
+
+const BANANA_PRATA_100 = item(
+  "banana_prata_g",
+  "Banana-prata crua",
+  "100 g",
+  nutrition(98.25, 1.27, 25.96, 0.07),
+  { trackerDefaultQuantity: 100, trackerReferenceQuantity: 100 }
+);
+
+const ALCATRA_GRELHADA_100 = item(
+  "alcatra_grelhada",
+  "Alcatra grelhada",
+  "100 g",
+  nutrition(241.36, 31.93, 0, 11.64),
+  { trackerDefaultQuantity: 100, trackerReferenceQuantity: 100 }
+);
+
+const AIPIM_COZIDO_170 = item(
+  "aipim_cozido",
+  "Aipim (mandioca) cozido",
+  "170 g",
+  nutrition(213.11, 0.97, 51.15, 0.51),
+  { trackerDefaultQuantity: 170, trackerReferenceQuantity: 170 }
+);
+
+const AZEITE_15_G = item(
+  "azeite_g",
+  "Azeite de oliva extravirgem",
+  "15 g",
+  nutrition(132.6, 0, 0, 15),
+  { trackerDefaultQuantity: 15, trackerReferenceQuantity: 15 }
+);
+
+const MARIOLA_34_G = item(
+  "mariola_g",
+  "Mariola com açaí sem açúcar",
+  "34 g",
+  nutrition(90.7, 0, 22.68, 0, "product-estimate"),
+  { trackerDefaultQuantity: 34, trackerReferenceQuantity: 34, estimatedRecipe: true }
+);
+
+const PASTA_AMENDOPOWER_15_G = item(
+  "pasta_amendopower",
+  "Pasta de amendoim · Amendopower Cookies & Cream",
+  "15 g",
+  nutrition(87, 3.2, 3.71, 6.6, "product-estimate"),
+  { trackerDefaultQuantity: 15, trackerReferenceQuantity: 15, estimatedRecipe: true }
+);
+
+const MACA_FUJI_30_G = item(
+  "maca_fuji",
+  "Maçã Fuji crua",
+  "30 g",
+  nutrition(16.7, 0.09, 4.55, 0),
+  { trackerDefaultQuantity: 30, trackerReferenceQuantity: 30 }
+);
+
+const CASTANHA_CAJU_30_G = item(
+  "castanha_caju",
+  "Castanha-de-caju crua",
+  "30 g",
+  nutrition(165.9, 5.46, 9.06, 13.17),
+  { trackerDefaultQuantity: 30, trackerReferenceQuantity: 30 }
+);
+
+const VIVI_TRACKER_ONLY_MEALS = Object.freeze([
+  Object.freeze({
+    id: "ceia",
+    icon: "🍎",
+    label: "Ceia",
+    required: false,
+    contextual: true,
+    options: Object.freeze([]),
+  }),
+]);
+
 const VIVI_TRACKER_EXTRA_FOODS = Object.freeze({
-  desjejum: Object.freeze([FOODS.banana1, FOODS.oats30, OVO_COZIDO_1]),
+  desjejum: Object.freeze([
+    FOODS.banana1,
+    FOODS.oats30,
+    OVO_COZIDO_1,
+    WHEY_PROBIOTICA_31,
+    AVEIA_FLOCOS_30,
+    BANANA_PRATA_100,
+  ]),
+  almoco: Object.freeze([ALCATRA_GRELHADA_100, AIPIM_COZIDO_170, AZEITE_15_G]),
+  lanche_tarde: Object.freeze([WHEY_PROBIOTICA_31, BANANA_PRATA_100]),
+  pre_treino: Object.freeze([MARIOLA_34_G, PASTA_AMENDOPOWER_15_G]),
+  jantar: Object.freeze([ALCATRA_GRELHADA_100, AIPIM_COZIDO_170, AZEITE_15_G]),
+  ceia: Object.freeze([MACA_FUJI_30_G, CASTANHA_CAJU_30_G]),
 });
 
 function parseLocaleNumber(value) {
@@ -354,7 +467,7 @@ export function formatViviFoodQuantity(food, quantity) {
 }
 
 function buildFoodGroups() {
-  return VIVI_MEALS.map((meal) => {
+  return [...VIVI_MEALS, ...VIVI_TRACKER_ONLY_MEALS].map((meal) => {
     const byId = new Map();
     for (const option_ of meal.options) {
       for (const entry of option_.items) {

@@ -22,243 +22,73 @@ function preset(id, icon, label, description, groupId, items) {
 
 export const VIVI_MEAL_PRESETS = Object.freeze([
   preset(
-    "desjejum_oficial",
+    "base_desjejum",
     "🌅",
     "Desjejum",
-    "Fruta · ovo · pão · quark/cottage · sementes · leite",
+    "18g whey · 30g aveia · 100ml leite · 70g banana",
     "desjejum",
     [
-      { foodId: "fruta", amount: 125 },
-      { foodId: "ovo", amount: 1 },
-      { foodId: "pao_integral", amount: 1 },
-      { foodId: "quark_cottage", amount: 20 },
-      { foodId: "sementes", amount: 10 },
+      { foodId: "whey_probiotica", amount: 18 },
+      { foodId: "aveia_floco_g", amount: 30 },
       { foodId: "leite_semidesnatado", amount: 100 },
+      { foodId: "banana_prata_g", amount: 70 },
     ]
   ),
   preset(
-    "desjejum_mingau_aveia",
-    "🥣",
-    "Café · mingau de aveia",
-    "30g aveia · 100ml leite · 1 banana · 1 ovo cozido",
-    "desjejum",
-    [
-      { foodId: "aveia", amount: 30 },
-      { foodId: "leite_semidesnatado", amount: 100 },
-      { foodId: "banana", amount: 1 },
-      { foodId: "ovo_cozido", amount: 1 },
-    ]
-  ),
-  preset(
-    "lanche_manha_oficial",
-    "🥛",
-    "Lanche da manhã",
-    "300ml leite · 15g Panalose · 15g Body Balance",
-    "lanche_manha",
-    [
-      { foodId: "leite_semidesnatado", amount: 300 },
-      { foodId: "panalose", amount: 15 },
-      { foodId: "body_balance", amount: 15 },
-    ]
-  ),
-  preset(
-    "almoco_cereal",
+    "base_almoco",
     "☀️",
-    "Almoço · cereal",
-    "100g proteína · 100g cereal · 60g leguminosa · vegetais · azeite",
+    "Almoço",
+    "100g alcatra · 170g aipim · 15g azeite",
     "almoco",
     [
-      { foodId: "proteina_magra", amount: 100 },
-      { foodId: "carbo_cozido", amount: 100 },
-      { foodId: "leguminosa", amount: 60 },
-      { foodId: "vegetais_folhas", amount: 1 },
-      { foodId: "azeite", amount: 5 },
+      { foodId: "alcatra_grelhada", amount: 100 },
+      { foodId: "aipim_cozido", amount: 170 },
+      { foodId: "azeite_g", amount: 15 },
     ]
   ),
   preset(
-    "almoco_batata",
-    "🥔",
-    "Almoço · batata",
-    "100g proteína · 130g batata · 60g leguminosa · vegetais · azeite",
-    "almoco",
-    [
-      { foodId: "proteina_magra", amount: 100 },
-      { foodId: "batata", amount: 130 },
-      { foodId: "leguminosa", amount: 60 },
-      { foodId: "vegetais_folhas", amount: 1 },
-      { foodId: "azeite", amount: 5 },
-    ]
-  ),
-  preset(
-    "almoco_mandioca",
-    "🌿",
-    "Almoço · mandioca",
-    "100g proteína · 100g mandioca · 60g leguminosa · vegetais · azeite",
-    "almoco",
-    [
-      { foodId: "proteina_magra", amount: 100 },
-      { foodId: "mandioca", amount: 100 },
-      { foodId: "leguminosa", amount: 60 },
-      { foodId: "vegetais_folhas", amount: 1 },
-      { foodId: "azeite", amount: 5 },
-    ]
-  ),
-  preset(
-    "almoco_pronto",
-    "🥡",
-    "Almoço · refeição pronta",
-    "Opção pronta de aproximadamente 350 kcal",
-    "almoco",
-    [{ foodId: "refeicao_pronta", amount: 1 }]
-  ),
-  preset(
-    "lanche_tigela_granola",
-    "🥣",
-    "Lanche · granola",
-    "Fruta · iogurte/kefir · 30g granola",
+    "base_lanche_tarde",
+    "🥤",
+    "Lanche da tarde",
+    "120g banana · 31g whey",
     "lanche_tarde",
     [
-      { foodId: "fruta", amount: 125 },
-      { foodId: "iogurte_kefir", amount: 150 },
-      { foodId: "granola", amount: 30 },
+      { foodId: "banana_prata_g", amount: 120 },
+      { foodId: "whey_probiotica", amount: 31 },
     ]
   ),
   preset(
-    "lanche_tigela_castanhas",
-    "🥜",
-    "Lanche · castanhas",
-    "Fruta · iogurte/kefir · 15g castanhas",
-    "lanche_tarde",
-    [
-      { foodId: "fruta", amount: 125 },
-      { foodId: "iogurte_kefir", amount: 150 },
-      { foodId: "oleaginosas", amount: 15 },
-    ]
-  ),
-  preset(
-    "lanche_tigela_cereal",
-    "🥣",
-    "Lanche · cereal",
-    "Fruta · iogurte/kefir · 20g aveia/cereal",
-    "lanche_tarde",
-    [
-      { foodId: "fruta", amount: 125 },
-      { foodId: "iogurte_kefir", amount: 150 },
-      { foodId: "aveia_cereal", amount: 20 },
-    ]
-  ),
-  preset(
-    "lanche_barra",
-    "🍫",
-    "Lanche · barra",
-    "Fruta + 1 barra de proteína",
-    "lanche_tarde",
-    [
-      { foodId: "fruta", amount: 125 },
-      { foodId: "barra_proteina", amount: 1 },
-    ]
-  ),
-  preset(
-    "lanche_salgado",
-    "🥟",
-    "Lanche · salgado",
-    "Fruta + salgado assado de aproximadamente 220 kcal",
-    "lanche_tarde",
-    [
-      { foodId: "fruta", amount: 125 },
-      { foodId: "salgado_assado", amount: 1 },
-    ]
-  ),
-  preset(
-    "lanche_panqueca",
-    "🥞",
-    "Lanche · panqueca",
-    "Banana · 30g aveia · ovo · 10g sementes",
-    "lanche_tarde",
-    [
-      { foodId: "banana", amount: 1 },
-      { foodId: "aveia", amount: 30 },
-      { foodId: "ovo", amount: 1 },
-      { foodId: "sementes", amount: 10 },
-    ]
-  ),
-  preset(
-    "pre_treino_oficial",
+    "base_pre_treino",
     "🏃",
     "Pré-treino",
-    "2 mariolas + 20g de castanhas",
+    "34g mariola · 15g pasta de amendoim",
     "pre_treino",
     [
-      { foodId: "mariola", amount: 2 },
-      { foodId: "castanhas", amount: 20 },
+      { foodId: "mariola_g", amount: 34 },
+      { foodId: "pasta_amendopower", amount: 15 },
     ]
   ),
   preset(
-    "aula_iogurte",
-    "🎓",
-    "Aula · iogurte",
-    "1 iogurte com pelo menos 15g de proteína",
-    "lanche_aula",
-    [{ foodId: "iogurte_proteico", amount: 1 }]
-  ),
-  preset(
-    "aula_nude",
-    "🥤",
-    "Aula · NUDE",
-    "1 bebida proteica NUDE",
-    "lanche_aula",
-    [{ foodId: "nude_proteico", amount: 1 }]
-  ),
-  preset(
-    "aula_sanduiche",
-    "🥪",
-    "Aula · sanduíche",
-    "2 fatias · quark/cottage · 30g queijo · fruta",
-    "lanche_aula",
-    [
-      { foodId: "pao_integral", amount: 2 },
-      { foodId: "quark_cottage", amount: 20 },
-      { foodId: "queijo_minas_bufala", amount: 30 },
-      { foodId: "fruta", amount: 100 },
-    ]
-  ),
-  preset(
-    "jantar_cereal",
+    "base_jantar",
     "🌙",
-    "Jantar · cereal",
-    "100g proteína · 100g cereal · vegetais · azeite",
+    "Jantar",
+    "100g alcatra · 170g aipim · 15g azeite",
     "jantar",
     [
-      { foodId: "proteina_magra", amount: 100 },
-      { foodId: "carbo_cozido", amount: 100 },
-      { foodId: "vegetais_folhas", amount: 1 },
-      { foodId: "azeite", amount: 5 },
+      { foodId: "alcatra_grelhada", amount: 100 },
+      { foodId: "aipim_cozido", amount: 170 },
+      { foodId: "azeite_g", amount: 15 },
     ]
   ),
   preset(
-    "jantar_batata",
-    "🥔",
-    "Jantar · batata",
-    "100g proteína · 130g batata · vegetais · azeite",
-    "jantar",
+    "base_ceia",
+    "🍎",
+    "Ceia",
+    "30g maçã Fuji · 30g castanha-de-caju",
+    "ceia",
     [
-      { foodId: "proteina_magra", amount: 100 },
-      { foodId: "batata", amount: 130 },
-      { foodId: "vegetais_folhas", amount: 1 },
-      { foodId: "azeite", amount: 5 },
-    ]
-  ),
-  preset(
-    "jantar_mandioca",
-    "🌿",
-    "Jantar · mandioca",
-    "100g proteína · 100g mandioca · vegetais · azeite",
-    "jantar",
-    [
-      { foodId: "proteina_magra", amount: 100 },
-      { foodId: "mandioca", amount: 100 },
-      { foodId: "vegetais_folhas", amount: 1 },
-      { foodId: "azeite", amount: 5 },
+      { foodId: "maca_fuji", amount: 30 },
+      { foodId: "castanha_caju", amount: 30 },
     ]
   ),
 ]);
