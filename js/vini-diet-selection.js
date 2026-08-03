@@ -34,6 +34,16 @@ export const VINI_MEAL_PRESETS = Object.freeze([
     ]
   ),
   preset(
+    "cafe_ovos_cozidos",
+    "🥚",
+    "Café · ovos cozidos",
+    "3 ovos cozidos",
+    "cafe_manha",
+    [
+      { foodId: "ovos_cozidos", amount: 3 },
+    ]
+  ),
+  preset(
     "almoco_padrao",
     "☀️",
     "Almoço",

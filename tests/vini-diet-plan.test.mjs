@@ -27,7 +27,7 @@ assert.equal(empty.itemsChecked, 0);
 assert.equal(empty.beverageCount, 0);
 assert.equal(empty.mainMealsLogged, 0);
 assert.equal(empty.consumed.kcal, 0);
-assert.equal(VINI_PLAN_VERSION, "vini-nutri-2026-07-v10");
+assert.equal(VINI_PLAN_VERSION, "vini-nutri-2026-07-v11");
 assert.deepEqual(VINI_DAILY_GOALS, { kcal: 2000, p: 150, c: 200, f: 68 });
 assert.equal(VINI_FOOD_GROUPS.length, 7);
 assert.deepEqual(VINI_BEVERAGES.map((entry) => entry.id), ["cerveja", "destilado", "energetico_normal"]);
@@ -35,12 +35,19 @@ assert.equal(trackingScopeCopy(TRACKING_SCOPE.OFFICIAL_DIET).title, "Dieta Ofici
 assert.ok(food("almoco", "guisado").quantityChoices.includes(120));
 assert.ok(food("jantar", "guisado").quantityChoices.includes(120));
 assert.ok(food("almoco", "vegetais").quantityChoices.includes(70));
+assert.deepEqual(food("cafe_manha", "ovos_cozidos").quantityChoices, [1, 2, 3, 4, 5, 6]);
 assert.ok(food("jantar", "pao_alho_santa_massa").quantityChoices.includes(1));
 assert.ok(food("jantar", "carne_churrasco").quantityChoices.includes(300));
 assert.deepEqual(
   food("lanche_tarde", "pasta_amendoim_amendopower").quantityChoices,
   [15, 20, 25, 30, 35, 40, 45, 50, 60],
 );
+
+const boiledEggBreakfast = calculateViniDietDay({
+  foods: { cafe_manha: ["ovos_cozidos"] },
+  amounts: { cafe_manha: { ovos_cozidos: 3 } },
+});
+assert.deepEqual(boiledEggBreakfast.consumed, { kcal: 216, p: 18.9, c: 1.2, f: 14.4 });
 
 for (const foodGroup of VINI_FOOD_GROUPS) {
   const ids = foodGroup.foods.map((entry) => entry.id);

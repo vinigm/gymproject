@@ -11,7 +11,7 @@ import {
   normalizeViniExercises,
 } from "./vini-exercise.js";
 
-export const VINI_PLAN_VERSION = "vini-nutri-2026-07-v10";
+export const VINI_PLAN_VERSION = "vini-nutri-2026-07-v11";
 
 // Metas/limites diários usados nos cards, gráficos e relatório PDF. Os macros
 // foram atualizados pelo usuário em 18/07/2026; calorias permanecem como
@@ -365,6 +365,7 @@ const QUANTITY_RULES = Object.freeze({
   banana: { unit: "un", values: [1, 2, 3, 4, 5] },
   cafe: { unit: "ml", values: [100, 150, 200, 250, 300, 400, 500] },
   ovos: { unit: "un", values: [1, 2, 3, 4, 5, 6] },
+  ovos_cozidos: { unit: "un", values: [1, 2, 3, 4, 5, 6] },
   chia: { unit: "g", values: [5, 10, 15, 20, 25, 30] },
   pao: { unit: "fatia", values: [1, 2, 3, 4, 5, 6] },
   requeijao: { unit: "g", values: [10, 15, 20, 30, 40, 50, 60] },
@@ -416,6 +417,15 @@ const PASTA_AMENDOIM_AMENDOPOWER = item(
   nutrition(87, 3.2, 3.7, 6.6, "label-estimate")
 );
 
+// Alternativa pessoal para preenchimento rápido. Usa a mesma referência por
+// unidade dos ovos do plano, sem acrescentar óleo ou outro ingrediente.
+const OVOS_COZIDOS_3 = item(
+  "ovos_cozidos",
+  "Ovos cozidos",
+  "3 unidades · 150 g",
+  nutrition(216, 18.9, 1.2, 14.4, "generic-estimate")
+);
+
 // Pão Santa Massa: o rótulo oficial informa 122 kcal, 2,9 g P, 17 g C e
 // 4,8 g G por meia unidade (40 g); uma unidade de 80 g usa o dobro.
 // Os demais itens são médias de churrasco e variam conforme corte e preparo.
@@ -450,6 +460,7 @@ const CHURRASCO_FOODS = Object.freeze([
 ]);
 
 const VINI_TRACKER_EXTRA_FOODS = Object.freeze({
+  cafe_manha: Object.freeze([OVOS_COZIDOS_3]),
   almoco: Object.freeze([GUISADO_120]),
   lanche_tarde: Object.freeze([PASTA_AMENDOIM_AMENDOPOWER]),
   jantar: Object.freeze([GUISADO_120, ...CHURRASCO_FOODS]),

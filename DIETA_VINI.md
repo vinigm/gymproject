@@ -312,7 +312,7 @@ Estas diretrizes orientam a implementação atual:
 
 - No tracker, cada alimento é marcado individualmente e recebe sua quantidade consumida; itens de opções diferentes podem ser combinados conforme o consumo real.
 - Um alimento marcado pode ser retirado pelo próprio checkbox ou tocando novamente na quantidade ativa; escolher outra quantidade apenas atualiza a porção registrada.
-- No topo do tracker, atalhos de refeições padrão podem preencher de uma vez pré-treino, café da manhã, almoço, lanche da tarde, pós-treino e jantar. Um segundo toque remove os itens do atalho sem apagar outros alimentos já marcados no mesmo momento.
+- No topo do tracker, atalhos de refeições padrão podem preencher de uma vez pré-treino, café da manhã, almoço, lanche da tarde, pós-treino e jantar. Entre eles, `Café · ovos cozidos` registra somente 3 ovos cozidos (216 kcal, 18,9 g P, 1,2 g C e 14,4 g G). Um segundo toque remove os itens do atalho sem apagar outros alimentos já marcados no mesmo momento.
 - O atalho pessoal `Churrasco` registra 1 pão de alho Santa Massa, 300 g de carne, 70 g de salsichão e 50 g de coração de galinha. Ele não faz parte da `Dieta Oficial`.
 - O menu recolhível `Bebidas do dia` registra por contagem cerveja (lata de 350 ml), destilado (dose de 50 ml) e energético normal (lata de 250 ml), incorporando estimativas de kcal e macros ao total diário.
 - Referências por bebida: cerveja **150 kcal, 1,3 g P, 13 g C e 0 g G**; destilado **110 kcal e 0 g de P/C/G** (energia do álcool); energético normal **110 kcal, 0 g P, 27 g C e 0 g G**.
@@ -384,7 +384,7 @@ Estas diretrizes orientam a implementação atual:
 
 ## 15. Implementação no tracker
 
-- Catálogo versionado: `js/vini-diet-plan.js`, versão `vini-nutri-2026-07-v10`.
+- Catálogo versionado: `js/vini-diet-plan.js`, versão `vini-nutri-2026-07-v11`.
 - Estimativa de exercício: `js/vini-exercise.js`, com definições MET, normalização, alternância das intensidades e cálculo puro do gasto ativo.
 - Interface e estatísticas: `js/vini-diet-ui.js`.
 - Consulta oficial: `VINI_OFFICIAL_MEALS` preserva as composições completas dos prints; não contém checkboxes, não grava dados e consolida os screenshots duplicados.
