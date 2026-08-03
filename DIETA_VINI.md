@@ -381,6 +381,7 @@ Estas diretrizes orientam a implementação atual:
 - **26/07/2026:** o bloco passou a se chamar `Refeições adicionais` e ganhou descrição livre, proteína, carboidrato e gordura além das kcal. Cada valor manual entra apenas no respectivo total diário e, por consequência, nas médias, histórico, gráficos e PDF. Ao abrir um ponto dos gráficos, a descrição e os quatro valores extras aparecem separadamente. Registros antigos com apenas `additionalKcal` são migrados na leitura.
 - **28/07/2026:** a série de calorias dos gráficos e do relatório PDF passou a usar `netKcal` — calorias ingeridas menos o gasto ativo dos treinos registrados. Proteína, carboidrato e gordura continuam mostrando o consumo ingerido. Registros antigos sem `netKcal` usam as calorias ingeridas como fallback.
 - **28/07/2026:** o Kg foi separado em quatro páginas internas: `Peso`, `Dieta`, `Stats` e `Graphs`. A lista visual de histórico alimentar foi retirada sem apagar registros; semana e estatísticas do ciclo foram para Stats, enquanto os quatro gráficos e a exportação PDF foram para Graphs. Os gráficos agora cabem na largura disponível sem rolagem horizontal e o gráfico de calorias usa vermelho.
+- **03/08/2026:** o azeite foi retirado dos atalhos pessoais de almoço e jantar do Vini. Ele continua disponível no menu personalizado, na consulta da dieta oficial e em todos os registros históricos existentes.
 
 ## 15. Implementação no tracker
 

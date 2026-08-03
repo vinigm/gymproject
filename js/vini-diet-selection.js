@@ -47,13 +47,12 @@ export const VINI_MEAL_PRESETS = Object.freeze([
     "almoco_padrao",
     "☀️",
     "Almoço",
-    "150g arroz · 120g frango · 50g salada · 15ml azeite",
+    "150g arroz · 120g frango · 50g salada",
     "almoco",
     [
       { foodId: "arroz", amount: 150 },
       { foodId: "frango", amount: 120 },
       { foodId: "vegetais", amount: 50 },
-      { foodId: "azeite", amount: 15 },
     ]
   ),
   preset(
@@ -130,13 +129,12 @@ export const VINI_MEAL_PRESETS = Object.freeze([
     "jantar_padrao",
     "🌙",
     "Jantar",
-    "150g arroz · 120g frango · 50g salada · 15ml azeite",
+    "150g arroz · 120g frango · 50g salada",
     "jantar",
     [
       { foodId: "arroz", amount: 150 },
       { foodId: "frango", amount: 120 },
       { foodId: "vegetais", amount: 50 },
-      { foodId: "azeite", amount: 15 },
     ]
   ),
   preset(
