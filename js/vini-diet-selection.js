@@ -106,6 +106,17 @@ export const VINI_MEAL_PRESETS = Object.freeze([
     ]
   ),
   preset(
+    "lanche_whey_banana",
+    "🍌",
+    "Lanche · whey + banana",
+    "3 medidas whey · 1 banana",
+    "lanche_tarde",
+    [
+      { foodId: "whey", amount: 3 },
+      { foodId: "banana", amount: 1 },
+    ]
+  ),
+  preset(
     "pre_treino_padrao",
     "🏃",
     "Pré-treino",

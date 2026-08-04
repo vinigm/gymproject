@@ -384,6 +384,7 @@ Estas diretrizes orientam a implementação atual:
 - **03/08/2026:** o azeite foi retirado dos atalhos pessoais de almoço e jantar do Vini. Ele continua disponível no menu personalizado, na consulta da dieta oficial e em todos os registros históricos existentes.
 - **03/08/2026:** adicionado o atalho avulso `Whey com água`, com uma dose de 31 g (2 medidas). A água não acrescenta kcal ou macros; o atalho pode ser marcado e removido independentemente do pós-treino.
 - **04/08/2026:** a antiga kcal líquida foi substituída na interface por saldo energético total (`ingestão − gasto estimado`). Para evitar superestimar o emagrecimento, o gasto do Vini usa Mifflin–St Jeor, o fator de rotina escolhido, 90% dessa base e 70% do treino estimado. Resumo, Stats, Graphs, calendário de déficit, projeção de gordura e PDF usam a mesma conta; os snapshots e `netKcal` antigos permanecem preservados.
+- **04/08/2026:** adicionado ao Vini o atalho `Lanche · whey + banana`, com 3 medidas de whey e 1 banana. As duas porções continuam ajustáveis individualmente após aplicar o atalho.
 
 ## 15. Implementação no tracker
 
