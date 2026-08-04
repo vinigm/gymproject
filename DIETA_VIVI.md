@@ -162,5 +162,5 @@ A primeira página contém uma tabela histórica de avaliação corporal com dat
 - Produtos e receitas sem rótulo completo usam estimativas identificadas como tais.
 - O histórico anterior da Vivi não é apagado.
 - Os documentos continuam na coleção `diet_logs`, separados por usuário e data.
-- O gráfico de calorias e o relatório PDF mostram kcal líquidas, descontando o gasto dos treinos registrados; os gráficos de macros mostram o consumo ingerido.
+- O resumo, Stats, gráfico vermelho e relatório PDF mostram o saldo energético estimado (`ingestão − gasto total`). Para exigir uma margem antes de afirmar superávit, a Vivi usa Mifflin–St Jeor com 28 anos, 1,63 m, 110% do gasto de rotina e 100% do exercício estimado. Os gráficos de macros mostram o consumo ingerido; os dados históricos não são reescritos.
 - O Kg Vivi usa as páginas internas `Peso`, `Dieta`, `Stats` e `Graphs`. O histórico alimentar não é listado, mas permanece salvo e alimenta os cálculos; Stats reúne semana e ciclo, enquanto Graphs reúne os quatro gráficos sem rolagem horizontal.

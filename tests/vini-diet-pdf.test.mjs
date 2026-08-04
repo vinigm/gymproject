@@ -3,9 +3,9 @@ import { readFile } from "node:fs/promises";
 import { createViniDietPdf } from "../js/vini-diet-pdf.js";
 
 const records = [
-  { date: "2026-07-13", summary: { consumed: { kcal: 1810, p: 142, c: 190, f: 54 }, netKcal: 1510 } },
-  { date: "2026-07-14", summary: { consumed: { kcal: 1960, p: 157, c: 202, f: 58 }, netKcal: 1660 } },
-  { date: "2026-07-16", summary: { consumed: { kcal: 2050, p: 165, c: 210, f: 63 }, netKcal: 1750 } },
+  { date: "2026-07-13", summary: { consumed: { kcal: 1810, p: 142, c: 190, f: 54 }, netKcal: 1510, energyBalance: { available: true, balanceKcal: -490 } } },
+  { date: "2026-07-14", summary: { consumed: { kcal: 1960, p: 157, c: 202, f: 58 }, netKcal: 1660, energyBalance: { available: true, balanceKcal: -340 } } },
+  { date: "2026-07-16", summary: { consumed: { kcal: 2050, p: 165, c: 210, f: 63 }, netKcal: 1750, energyBalance: { available: true, balanceKcal: -250 } } },
 ];
 
 const bytes = createViniDietPdf(records, {
@@ -30,10 +30,10 @@ assert.match(pdf, /Relatorio nutricional - Kg Vini/);
 assert.match(pdf, /Evolucao do peso/);
 assert.match(pdf, /Ultimo: 90,8 kg/);
 assert.match(pdf, /Medias do ciclo/);
-assert.match(pdf, /Kcal liquidas/);
-assert.match(pdf, /\(1\.640 kcal\)/);
-assert.match(pdf, /Calorias/);
-assert.match(pdf, /Ultimo: 1\.750 kcal/);
+assert.match(pdf, /Saldo energetico/);
+assert.match(pdf, /\(-360 kcal\)/);
+assert.match(pdf, /Ultimo: -250 kcal/);
+assert.match(pdf, /Equilibrio: 0 kcal/);
 assert.doesNotMatch(pdf, /Ultimo: 2\.050 kcal/);
 assert.match(pdf, /Proteina/);
 assert.match(pdf, /Carboidrato/);

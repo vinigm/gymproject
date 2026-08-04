@@ -1,4 +1,5 @@
 import { VINI_EXERCISE_TYPES } from "./vini-exercise.js";
+import { balanceKcalForRecord } from "./energy-balance.js";
 import {
   VINI_BEVERAGES,
   VINI_DAILY_GOALS,
@@ -8,7 +9,7 @@ import {
 } from "./diet-profile.js";
 
 export const VINI_TREND_METRICS = Object.freeze([
-  Object.freeze({ key: "kcal", label: "Calorias líquidas", short: "kcal", unit: "kcal", cls: "is-kcal" }),
+  Object.freeze({ key: "kcal", label: "Saldo energético", short: "kcal", unit: "kcal", cls: "is-kcal" }),
   Object.freeze({ key: "p", label: "Proteína", short: "P", unit: "g", cls: "is-protein" }),
   Object.freeze({ key: "c", label: "Carboidrato", short: "C", unit: "g", cls: "is-carbs" }),
   Object.freeze({ key: "f", label: "Gordura", short: "G", unit: "g", cls: "is-fat" }),
@@ -75,14 +76,6 @@ function niceCeiling(value) {
   return step * magnitude;
 }
 
-function netKcalForRecord(entry) {
-  const netKcal = entry?.summary?.netKcal;
-  if (netKcal !== undefined && netKcal !== null && Number.isFinite(Number(netKcal))) {
-    return Number(netKcal);
-  }
-  return Number(entry?.summary?.consumed?.kcal) || 0;
-}
-
 function normalizedRecords(records) {
   return (Array.isArray(records) ? records : [])
     .filter((entry) => /^\d{4}-\d{2}-\d{2}$/.test(String(entry?.date || "")))
@@ -90,7 +83,7 @@ function normalizedRecords(records) {
       date: entry.date,
       source: entry,
       consumed: {
-        kcal: netKcalForRecord(entry),
+        kcal: balanceKcalForRecord(entry),
         p: Math.max(0, Number(entry.summary?.consumed?.p) || 0),
         c: Math.max(0, Number(entry.summary?.consumed?.c) || 0),
         f: Math.max(0, Number(entry.summary?.consumed?.f) || 0),
@@ -100,10 +93,15 @@ function normalizedRecords(records) {
 }
 
 function chartHTML(records, metric, goals, viewportWidth) {
-  const goal = Math.max(0, Number(goals?.[metric.key]) || 0);
+  const isBalance = metric.key === "kcal";
+  const goal = isBalance ? 0 : Math.max(0, Number(goals?.[metric.key]) || 0);
   const values = records.map((entry) => entry.consumed[metric.key]);
   const lastRecord = records[records.length - 1];
-  const maxY = niceCeiling(Math.max(goal, ...values, 1) * 1.1);
+  const maximum = isBalance
+    ? niceCeiling(Math.max(1, ...values.map((value) => Math.abs(value))) * 1.1)
+    : niceCeiling(Math.max(goal, ...values, 1) * 1.1);
+  const minY = isBalance ? -maximum : 0;
+  const maxY = maximum;
   const W = Math.max(320, Math.min(900, Number(viewportWidth) || 360));
   const H = 210;
   const padL = 42;
@@ -118,7 +116,7 @@ function chartHTML(records, metric, goals, viewportWidth) {
   const x = (entry) => padL + (records.length === 1
     ? plotW / 2
     : ((dateEpoch(entry.date) - firstEpoch) / span) * plotW);
-  const y = (value) => padT + (1 - Math.max(0, Number(value) || 0) / maxY) * plotH;
+  const y = (value) => padT + ((maxY - (Number(value) || 0)) / (maxY - minY)) * plotH;
   const points = records.map((entry) => ({
     entry,
     x: x(entry),
@@ -127,7 +125,7 @@ function chartHTML(records, metric, goals, viewportWidth) {
   const line = points.map((point, index) => (
     `${index ? "L" : "M"}${point.x.toFixed(1)} ${point.y.toFixed(1)}`
   )).join(" ");
-  const ticks = Array.from({ length: 5 }, (_, index) => maxY * (1 - index / 4));
+  const ticks = Array.from({ length: 5 }, (_, index) => maxY - ((maxY - minY) * index) / 4);
   const grid = ticks.map((tick) => {
     const tickY = y(tick).toFixed(1);
     return `
@@ -161,11 +159,11 @@ function chartHTML(records, metric, goals, viewportWidth) {
     <article class="vini-trend-card ${metric.cls}" data-trend-card="${metric.key}">
       <header class="vini-trend-head">
         <div><strong>${metric.label}</strong><small>último: ${formatNumber(latest, Number.isInteger(latest) ? 0 : 1)} ${metric.unit}</small></div>
-        <span><i></i> meta estimada ${formatNumber(goal)} ${metric.unit}</span>
+        <span><i></i> ${isBalance ? "equilíbrio" : "meta estimada"} ${formatNumber(goal)} ${metric.unit}</span>
       </header>
       <div class="vini-trend-scroll">
         <svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" class="vini-trend-chart" role="img"
-             aria-label="Consumo de ${metric.label.toLowerCase()} ao longo do tempo; linha de referência em ${formatNumber(goal)} ${metric.unit}">
+             aria-label="${metric.label} ao longo do tempo; linha de referência em ${formatNumber(goal)} ${metric.unit}">
           ${grid}
           <line x1="${padL}" y1="${goalY}" x2="${W - padR}" y2="${goalY}" class="vini-trend-goal" />
           <path d="${line}" class="vini-trend-line" />
@@ -246,15 +244,29 @@ function exerciseDetailHTML(record) {
         const intensity = type?.intensities?.[exercise.intensity];
         return `<span>${escapeHTML(type?.icon || "🏃")} ${escapeHTML(type?.label || exercise.typeId)} · ${escapeHTML(intensity?.label || exercise.intensity)} · ${formatNumber(exercise.minutes)} min <b>−${formatNumber(exercise.kcal)} kcal</b></span>`;
       }).join("")}
-      <small>Kcal líquidas do dia: ${formatNumber(record.summary?.netKcal)} kcal</small>
+      <small>Treino estimado bruto: ${formatNumber(record.summary?.exerciseKcal)} kcal</small>
+    </section>`;
+}
+
+function energyBalanceDetailHTML(record) {
+  const energy = record?.summary?.energyBalance;
+  if (!energy?.available) return "";
+  const balance = Number(energy.balanceKcal) || 0;
+  const label = balance < -1 ? "déficit" : balance > 1 ? "superávit" : "equilíbrio";
+  const sign = balance > 0 ? "+" : balance < 0 ? "−" : "";
+  return `
+    <section class="vini-trend-tooltip-exercise">
+      <strong>⚖️ Saldo energético estimado</strong>
+      <span>${formatNumber(energy.consumedKcal)} kcal ingeridas − ${formatNumber(energy.expenditureKcal)} kcal de gasto conservador</span>
+      <small>${label}: ${sign}${formatNumber(Math.abs(balance))} kcal · rotina ${formatNumber(energy.routineSafetyFactor * 100)}% · treino ${formatNumber(energy.exerciseSafetyFactor * 100)}%</small>
     </section>`;
 }
 
 export function viniTrendDetailHTML(record, metricKey = "kcal") {
   const metric = VINI_TREND_METRICS.find((entry) => entry.key === metricKey) || VINI_TREND_METRICS[0];
   const consumed = record?.summary?.consumed || { kcal: 0, p: 0, c: 0, f: 0 };
-  const netKcal = netKcalForRecord(record);
-  const metricValue = metric.key === "kcal" ? netKcal : Number(consumed[metric.key]) || 0;
+  const balanceKcal = balanceKcalForRecord(record);
+  const metricValue = metric.key === "kcal" ? balanceKcal : Number(consumed[metric.key]) || 0;
   const additionalSource = record?.summary?.additionalNutrition
     || record?.day?.additionalNutrition
     || {};
@@ -277,7 +289,7 @@ export function viniTrendDetailHTML(record, metricKey = "kcal") {
       <button type="button" data-trend-close aria-label="Fechar detalhes">×</button>
     </div>
     <div class="vini-trend-tooltip-totals" aria-label="Totais nutricionais do dia">
-      <span><small>Calorias líquidas</small><b>${formatNumber(netKcal)} kcal</b></span>
+      <span><small>Saldo energético</small><b>${balanceKcal > 0 ? "+" : ""}${formatNumber(balanceKcal)} kcal</b></span>
       <span><small>Proteína</small><b>${formatNumber(consumed.p, 1)} g</b></span>
       <span><small>Carboidrato</small><b>${formatNumber(consumed.c, 1)} g</b></span>
       <span><small>Gordura</small><b>${formatNumber(consumed.f, 1)} g</b></span>
@@ -297,6 +309,7 @@ export function viniTrendDetailHTML(record, metricKey = "kcal") {
         </section>` : ""}
       ${hydration ? `<p class="vini-trend-tooltip-water">💧 Água registrada: <b>${formatNumber(hydration)} ml</b></p>` : ""}
       ${exerciseDetailHTML(record)}
+      ${energyBalanceDetailHTML(record)}
     </div>
     <button type="button" class="vini-trend-tooltip-open" data-trend-open-date="${escapeHTML(record?.date)}">Ver registro do dia</button>`;
 }
@@ -450,7 +463,7 @@ export function viniDietTrendsHTML(records, {
           ${clean.length ? `<button type="button" class="ghost-btn vini-export-pdf-btn" data-export-diet-pdf>Exportar PDF</button>` : ""}
         </div>
       </div>
-      <p class="vini-trends-note">O gráfico de calorias mostra as kcal líquidas — ingeridas menos o gasto dos treinos registrados. Os gráficos de macros mostram o consumo ingerido. A linha tracejada é uma referência estimada do tracker.</p>
+      <p class="vini-trends-note">O gráfico vermelho mostra o saldo energético estimado: ingestão menos gasto total conservador. Abaixo de zero indica déficit; acima, superávit. Os gráficos de macros mostram o consumo ingerido.</p>
       ${clean.length ? `<div class="vini-trends-list">${VINI_TREND_METRICS.map((metric) => chartHTML(clean, metric, goals, chartWidth)).join("")}</div>` : `
         <div class="stat-card"><p class="muted" style="margin:0">Registre alimentos para acompanhar kcal e macros ao longo do tempo.</p></div>`}
     </section>`;

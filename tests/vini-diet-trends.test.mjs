@@ -24,11 +24,19 @@ const detailedDay = normalizeViniDietDay({
   exercises: { strength: { intensity: "moderate", minutes: 60 } },
 });
 const detailedSummary = calculateViniDietDay(detailedDay);
+detailedSummary.energyBalance = {
+  available: true,
+  balanceKcal: -650,
+  consumedKcal: detailedSummary.consumed.kcal,
+  expenditureKcal: detailedSummary.consumed.kcal + 650,
+  routineSafetyFactor: 0.9,
+  exerciseSafetyFactor: 0.7,
+};
 
 const records = [
   { date: "2026-07-15", day: detailedDay, summary: detailedSummary },
-  { date: "2026-07-16", summary: { consumed: { kcal: 2050, p: 164, c: 203, f: 63 } } },
-  { date: "2026-07-18", summary: { consumed: { kcal: 1940, p: 158, c: 196, f: 59 } } },
+  { date: "2026-07-16", summary: { consumed: { kcal: 2050, p: 164, c: 203, f: 63 }, energyBalance: { available: true, balanceKcal: 100, consumedKcal: 2050, expenditureKcal: 1950, routineSafetyFactor: 0.9, exerciseSafetyFactor: 0.7 } } },
+  { date: "2026-07-18", summary: { consumed: { kcal: 1940, p: 158, c: 196, f: 59 }, energyBalance: { available: true, balanceKcal: -200, consumedKcal: 1940, expenditureKcal: 2140, routineSafetyFactor: 0.9, exerciseSafetyFactor: 0.7 } } },
 ];
 
 const html = viniDietTrendsHTML(records, { viewportWidth: 500 });
@@ -40,10 +48,10 @@ assert.equal((html.match(/class="vini-trend-line"/g) || []).length, 4);
 assert.equal((html.match(/data-trend-tooltip/g) || []).length, 4);
 assert.equal((html.match(/data-trend-point/g) || []).length, 12);
 assert.equal((html.match(/aria-expanded="false"/g) || []).length, 12);
-assert.match(html, /meta estimada 2\.000 kcal/);
-assert.match(html, /Calorias líquidas/);
-assert.match(html, /15\/07 · 811 kcal/);
-assert.match(html, /ingeridas menos o gasto dos treinos registrados/);
+assert.match(html, /equilíbrio 0 kcal/);
+assert.match(html, /Saldo energético/);
+assert.match(html, /15\/07 · -650 kcal/);
+assert.match(html, /ingestão menos gasto total conservador/);
 assert.match(html, /meta estimada 150 g/);
 assert.match(html, /meta estimada 200 g/);
 assert.match(html, /meta estimada 68 g/);
@@ -93,14 +101,17 @@ assert.match(details, /Musculação · Média · 60 min/);
 assert.match(details, /Ver registro do dia/);
 
 const kcalDetails = viniTrendDetailHTML(records[0], "kcal");
-assert.match(kcalDetails, /Calorias líquidas · 811 kcal/);
-assert.match(kcalDetails, /<small>Calorias líquidas<\/small><b>811 kcal<\/b>/);
-assert.match(kcalDetails, /Kcal líquidas do dia: 811 kcal/);
-assert.doesNotMatch(kcalDetails, /Calorias líquidas · 1\.131 kcal/);
+assert.match(kcalDetails, /Saldo energético · -650 kcal/);
+assert.match(kcalDetails, /<small>Saldo energético<\/small><b>-650 kcal<\/b>/);
+assert.match(kcalDetails, /déficit: −650 kcal/);
+assert.doesNotMatch(kcalDetails, /Saldo energético · 1\.131 kcal/);
 
 // Registros anteriores ao campo netKcal usam as calorias ingeridas como
 // fallback para não desaparecerem do histórico.
-const legacyDetails = viniTrendDetailHTML(records[1], "kcal");
+const legacyDetails = viniTrendDetailHTML({
+  date: "2026-07-17",
+  summary: { consumed: { kcal: 2050, p: 164, c: 203, f: 63 } },
+}, "kcal");
 assert.match(legacyDetails, /2\.050 kcal/);
 assert.match(legacyDetails, /Detalhes dos alimentos indisponíveis/);
 

@@ -383,6 +383,7 @@ Estas diretrizes orientam a implementação atual:
 - **28/07/2026:** o Kg foi separado em quatro páginas internas: `Peso`, `Dieta`, `Stats` e `Graphs`. A lista visual de histórico alimentar foi retirada sem apagar registros; semana e estatísticas do ciclo foram para Stats, enquanto os quatro gráficos e a exportação PDF foram para Graphs. Os gráficos agora cabem na largura disponível sem rolagem horizontal e o gráfico de calorias usa vermelho.
 - **03/08/2026:** o azeite foi retirado dos atalhos pessoais de almoço e jantar do Vini. Ele continua disponível no menu personalizado, na consulta da dieta oficial e em todos os registros históricos existentes.
 - **03/08/2026:** adicionado o atalho avulso `Whey com água`, com uma dose de 31 g (2 medidas). A água não acrescenta kcal ou macros; o atalho pode ser marcado e removido independentemente do pós-treino.
+- **04/08/2026:** a antiga kcal líquida foi substituída na interface por saldo energético total (`ingestão − gasto estimado`). Para evitar superestimar o emagrecimento, o gasto do Vini usa Mifflin–St Jeor, o fator de rotina escolhido, 90% dessa base e 70% do treino estimado. Resumo, Stats, Graphs, calendário de déficit, projeção de gordura e PDF usam a mesma conta; os snapshots e `netKcal` antigos permanecem preservados.
 
 ## 15. Implementação no tracker
 
@@ -391,15 +392,15 @@ Estas diretrizes orientam a implementação atual:
 - Interface e estatísticas: `js/vini-diet-ui.js`.
 - Consulta oficial: `VINI_OFFICIAL_MEALS` preserva as composições completas dos prints; não contém checkboxes, não grava dados e consolida os screenshots duplicados.
 - Persistência: campo `plan` nos documentos existentes de `diet_logs`, sem remover o mapa legado `foods`.
-- Cada dia guarda checkboxes individuais agrupados por momento alimentar, a quantidade selecionada para cada alimento, contagens de bebidas, descrição e kcal/macros de refeições adicionais, hidratação, exercícios, peso usado no cálculo e um snapshot dos totais nutricionais, kcal do treino e kcal líquidas.
+- Cada dia guarda checkboxes individuais agrupados por momento alimentar, a quantidade selecionada para cada alimento, contagens de bebidas, descrição e kcal/macros de refeições adicionais, hidratação, exercícios, peso usado no cálculo e um snapshot dos totais nutricionais, kcal do treino e kcal líquidas legadas. O saldo total é calculado na leitura para não reescrever o histórico.
 - Os checkboxes individuais ficam em um painel recolhível, fechado por padrão. Abrir ou fechar esse painel altera somente a interface e não interfere nas marcações nem na sincronização.
 - O checkbox e a quantidade ativa funcionam como alternância: um novo toque remove o alimento; tocar em uma quantidade diferente mantém o alimento e corrige somente a porção.
 - Os atalhos de refeição padrão funcionam como alternância: o primeiro toque aplica as porções configuradas e o segundo remove somente os itens do atalho, preservando outros alimentos do dia.
-- O relatório PDF é gerado integralmente no navegador, contém duas páginas com gráficos vetoriais e usa o mesmo escopo e as mesmas metas de referência exibidas no tracker; nenhum dado é enviado a serviços externos para gerar o arquivo.
+- O relatório PDF é gerado integralmente no navegador, em uma página paisagem com gráficos vetoriais, médias, peso e calendário de musculação; nenhum dado é enviado a serviços externos para gerar o arquivo.
 - O snapshot impede que uma futura revisão dos valores de referência altere retroativamente kcal e macros já registrados.
 - Café da manhã, almoço, lanche da tarde e jantar compõem a cobertura de momentos principais; não existe mais o conceito de “refeição completa”. Pré-treino, pós-treino e belisco continuam contextuais.
 - A hidratação usa 2,5 L como base; em dias de treino, a meta mínima exibida passa a 3 L, mantendo a orientação de até 3,5 L.
-- O resumo diário e a série histórica de calorias exibem `kcal líquidas = kcal ingeridas − kcal ativas estimadas do treino`. As séries de proteína, carboidrato e gordura continuam mostrando o consumo ingerido.
+- O resumo diário e a série vermelha exibem `saldo energético = kcal ingeridas − gasto total conservador`. Valor negativo indica déficit e positivo, superávit. As séries de proteína, carboidrato e gordura continuam mostrando o consumo ingerido.
 - A página `Stats` inclui totais e médias semanais de kcal/macros, quantidade de alimentos, frequência por momento, hidratação, sequência, marcos de dias e alimentos mais marcados.
 - A página `Graphs` contém quatro gráficos de linha para kcal, proteína, carboidrato e gordura por data, respeitando `Ciclo atual` e `Histórico completo`. Eles cabem na largura da tela sem rolagem lateral; calorias usam vermelho. Cada gráfico inclui uma linha horizontal de referência e pontos interativos que detalham a composição do dia sem alterar os dados salvos.
 - O histórico alimentar não é listado visualmente, mas permanece integralmente salvo e continua sendo usado pelos cálculos, gráficos, PDF e edição pelo seletor de data da Dieta.

@@ -10,9 +10,9 @@ import {
 } from "../js/vini-fat-goal.js";
 
 const records = [
-  { date: "2026-07-14", summary: { consumed: { kcal: 2500, p: 130, c: 220, f: 80 }, netKcal: 2300 } },
-  { date: "2026-07-15", summary: { consumed: { kcal: 2200, p: 150, c: 200, f: 70 }, netKcal: 2000 } },
-  { date: "2026-07-16", summary: { consumed: { kcal: 2350, p: 160, c: 210, f: 72 }, netKcal: 2000 } },
+  { date: "2026-07-14", summary: { consumed: { kcal: 2500, p: 130, c: 220, f: 80 }, netKcal: 2300, energyBalance: { available: true, balanceKcal: 100 } } },
+  { date: "2026-07-15", summary: { consumed: { kcal: 2200, p: 150, c: 200, f: 70 }, netKcal: 2000, energyBalance: { available: true, balanceKcal: -300 } } },
+  { date: "2026-07-16", summary: { consumed: { kcal: 2350, p: 160, c: 210, f: 72 }, netKcal: 2000, energyBalance: { available: true, balanceKcal: -200 } } },
 ];
 const weights = [
   { date: "2026-07-15", weight: 100 },
@@ -26,7 +26,7 @@ assert.equal(activityLevelFor("invalid").id, VINI_FAT_GOAL.defaultActivityLevel)
 
 const averages = averageDietNutrition(records);
 assert.equal(averages.days, 3);
-assert.equal(Math.round(averages.averages.kcal), 2100);
+assert.equal(Math.round(averages.averages.kcal), -133);
 assert.equal(Math.round(averages.averages.p * 10) / 10, 146.7);
 
 const eventSimulation = simulateMonthlyDeficit({
@@ -65,11 +65,12 @@ assert.equal(progress.currentWeightKg, 98);
 assert.equal(Math.round(progress.leanMassKg), 72);
 assert.equal(Math.round(progress.targetWeightKg * 10) / 10, 87.8);
 assert.equal(Math.round(progress.fatToLoseKg * 10) / 10, 12.2);
-assert.equal(Math.round(progress.maintenanceKcal), 2558);
-assert.equal(Math.round(progress.averageDeficitKcal), 558);
+assert.equal(Math.round(progress.routineGrossKcal), 2558);
+assert.equal(Math.round(progress.maintenanceKcal), 2302);
+assert.equal(Math.round(progress.averageDeficitKcal), 231);
 assert.equal(progress.dailyDeficits.length, 2);
 assert.deepEqual(progress.dailyDeficits.map((entry) => entry.date), ["2026-07-15", "2026-07-16"]);
-assert.equal(Math.round(progress.dailyDeficits[0].deficitKcal), 558);
+assert.equal(Math.round(progress.dailyDeficits[0].deficitKcal), 265);
 assert.equal(
   progress.cumulativeDeficitKcal,
   progress.dailyDeficits.reduce((sum, entry) => sum + entry.deficitKcal, 0),
@@ -77,8 +78,8 @@ assert.equal(
 assert.ok(progress.remainingKcal < progress.totalGoalKcal);
 assert.equal(progress.estimatedFatLostKg, progress.achievedDeficitKcal / 7700);
 assert.ok(progress.estimatedFatLostKg > 0);
-assert.ok(progress.progressPct > 1);
-assert.match(progress.projectionDate, /^2026-\d{2}-\d{2}$/);
+assert.ok(progress.progressPct > 0);
+assert.match(progress.projectionDate, /^20\d{2}-\d{2}-\d{2}$/);
 assert.equal(Math.round((
   progress.composition.today.fatKg
   + progress.composition.today.muscleKg

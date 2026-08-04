@@ -1,4 +1,5 @@
 import { VINI_DAILY_GOALS } from "./diet-profile.js";
+import { balanceKcalForRecord } from "./energy-balance.js";
 import { VINI_TREND_METRICS } from "./vini-diet-trends.js";
 
 const PAGE = Object.freeze({ width: 842, height: 595 });
@@ -110,21 +111,13 @@ function circle(commands, x, y, radius, fill, stroke = fill) {
   ].join(" "));
 }
 
-function netKcalForRecord(entry) {
-  const netKcal = entry?.summary?.netKcal;
-  if (netKcal !== undefined && netKcal !== null && Number.isFinite(Number(netKcal))) {
-    return Number(netKcal);
-  }
-  return Number(entry?.summary?.consumed?.kcal) || 0;
-}
-
 function normalizeRecords(records) {
   return (Array.isArray(records) ? records : [])
     .filter((entry) => /^\d{4}-\d{2}-\d{2}$/.test(String(entry?.date || "")))
     .map((entry) => ({
       date: entry.date,
       consumed: {
-        kcal: netKcalForRecord(entry),
+        kcal: balanceKcalForRecord(entry),
         p: Math.max(0, Number(entry.summary?.consumed?.p) || 0),
         c: Math.max(0, Number(entry.summary?.consumed?.c) || 0),
         f: Math.max(0, Number(entry.summary?.consumed?.f) || 0),
@@ -193,11 +186,12 @@ function drawChart(commands, records, metric, goals, x, y, width, height) {
   fillRect(commands, x, y, width, height, COLORS.white);
   strokeRect(commands, x, y, width, height, COLORS.border, 0.9);
   const color = METRIC_COLORS[metric.key];
+  const isBalance = metric.key === "kcal";
   const latest = records.at(-1)?.consumed?.[metric.key] || 0;
-  const goal = Math.max(0, Number(goals?.[metric.key]) || 0);
+  const goal = isBalance ? 0 : Math.max(0, Number(goals?.[metric.key]) || 0);
   drawText(commands, metric.label, x + 12, y + height - 19, 11, { bold: true, color });
   drawText(commands, `Ultimo: ${number(latest, Number.isInteger(latest) ? 0 : 1)} ${metric.unit}`, x + width - 12, y + height - 18, 7.2, { color: COLORS.muted, align: "right" });
-  drawText(commands, `Meta: ${number(goal)} ${metric.unit}`, x + width - 12, y + height - 29, 6.5, { color: COLORS.goal, align: "right" });
+  drawText(commands, `${isBalance ? "Equilibrio" : "Meta"}: ${number(goal)} ${metric.unit}`, x + width - 12, y + height - 29, 6.5, { color: COLORS.goal, align: "right" });
 
   if (!records.length) {
     drawText(commands, "Sem registros neste periodo.", x + width / 2, y + height / 2, 10, { color: COLORS.muted, align: "center" });
@@ -206,17 +200,21 @@ function drawChart(commands, records, metric, goals, x, y, width, height) {
 
   const plot = { x: x + 38, y: y + 23, width: width - 50, height: height - 60 };
   const values = records.map((entry) => entry.consumed[metric.key]);
-  const maxY = niceCeiling(Math.max(goal, ...values, 1) * 1.1);
+  const maximum = isBalance
+    ? niceCeiling(Math.max(1, ...values.map((value) => Math.abs(value))) * 1.1)
+    : niceCeiling(Math.max(goal, ...values, 1) * 1.1);
+  const minY = isBalance ? -maximum : 0;
+  const maxY = maximum;
   const firstEpoch = dateEpoch(records[0].date);
   const lastEpoch = dateEpoch(records.at(-1).date);
   const span = Math.max(1, lastEpoch - firstEpoch);
   const px = (entry, index) => plot.x + (records.length === 1
     ? plot.width / 2
     : ((dateEpoch(entry.date) - firstEpoch) / span) * plot.width);
-  const py = (value) => plot.y + (Math.max(0, Number(value) || 0) / maxY) * plot.height;
+  const py = (value) => plot.y + (((Number(value) || 0) - minY) / (maxY - minY)) * plot.height;
 
   for (let index = 0; index <= 3; index += 1) {
-    const tick = (maxY * index) / 3;
+    const tick = minY + ((maxY - minY) * index) / 3;
     const tickY = py(tick);
     line(commands, plot.x, tickY, plot.x + plot.width, tickY, COLORS.border, 0.45);
     drawText(commands, number(tick), plot.x - 5, tickY - 2.2, 5.8, { color: COLORS.muted, align: "right" });
@@ -248,7 +246,7 @@ function drawCycleAverages(commands, records, goals, x, y, width, height) {
   drawText(commands, "Medias do ciclo", x, y + height - 13, 9.5, { bold: true });
   drawText(commands, `${records.length} dias`, x + width, y + height - 13, 6.8, { color: COLORS.muted, align: "right" });
   const cards = [
-    { label: "Kcal liquidas", value: `${number(averages.kcal)} kcal`, goal: `${number(goals.kcal)}`, key: "kcal" },
+    { label: "Saldo energetico", value: `${number(averages.kcal)} kcal`, goal: "0", key: "kcal" },
     { label: "Carboidrato", value: `${number(averages.c, 1)} g`, goal: `${number(goals.c)}`, key: "c" },
     { label: "Proteina", value: `${number(averages.p, 1)} g`, goal: `${number(goals.p)}`, key: "p" },
     { label: "Gordura", value: `${number(averages.f, 1)} g`, goal: `${number(goals.f)}`, key: "f" },

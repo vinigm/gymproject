@@ -2,6 +2,11 @@
 // Não substitui avaliação clínica: bioimpedância, gasto e conversão kcal/kg
 // são estimativas e devem ser recalibrados com as avaliações da nutricionista.
 
+import {
+  balanceKcalForRecord,
+  energyBalanceForRecord,
+} from "./energy-balance.js";
+
 export const VINI_FAT_GOAL = Object.freeze({
   startDate: "2026-07-15",
   startBodyFatPct: 28,
@@ -63,7 +68,7 @@ export function averageDietNutrition(records) {
   const valid = (Array.isArray(records) ? records : [])
     .filter((record) => validDate(record?.date));
   const totals = valid.reduce((sum, record) => ({
-    kcal: sum.kcal + netKcalForDietRecord(record),
+    kcal: sum.kcal + balanceKcalForRecord(record),
     p: sum.p + Math.max(0, finite(record?.summary?.consumed?.p)),
     c: sum.c + Math.max(0, finite(record?.summary?.consumed?.c)),
     f: sum.f + Math.max(0, finite(record?.summary?.consumed?.f)),
@@ -184,13 +189,12 @@ export function calculateViniFatGoal({
   const goalRecords = (Array.isArray(records) ? records : [])
     .filter((record) => validDate(record?.date) && record.date >= goal.startDate)
     .sort((a, b) => a.date.localeCompare(b.date));
-  const nutrition = averageDietNutrition(goalRecords);
 
   if (!startWeightEntry || !currentWeightEntry) {
     return {
       available: false,
       activityLevel: level,
-      records: nutrition.days,
+      records: goalRecords.length,
       reason: "weight",
     };
   }
@@ -202,18 +206,36 @@ export function calculateViniFatGoal({
   const targetWeightKg = leanMassKg / (1 - targetBodyFat);
   const fatToLoseKg = Math.max(0, startWeightKg - targetWeightKg);
   const totalGoalKcal = fatToLoseKg * finite(goal.kcalPerKgFat, 7700);
-  const restingKcal = mifflinStJeorMale({
-    weightKg: currentWeightEntry.weight,
-    heightCm: goal.heightCm,
-    ageYears: goal.ageYears,
+  const balancedRecords = goalRecords.map((record) => ({
+    ...record,
+    summary: {
+      ...record.summary,
+      energyBalance: energyBalanceForRecord(record, {
+        weightEntries: weights,
+        userId: "vinicius",
+        activityFactor: level.factor,
+      }),
+    },
+  }));
+  const nutrition = averageDietNutrition(balancedRecords);
+  const currentEnergy = energyBalanceForRecord({
+    date: currentWeightEntry.date,
+    summary: { consumed: { kcal: 0 }, exerciseKcal: 0 },
+  }, {
+    weightEntries: weights,
+    userId: "vinicius",
+    activityFactor: level.factor,
   });
-  const maintenanceKcal = restingKcal * level.factor;
-  const dailyDeficits = goalRecords.map((record) => {
-    const netKcal = netKcalForDietRecord(record);
+  const restingKcal = currentEnergy.restingKcal;
+  const maintenanceKcal = currentEnergy.routineKcal;
+  const dailyDeficits = balancedRecords.map((record) => {
+    const energy = record.summary.energyBalance;
     return {
       date: record.date,
-      netKcal,
-      deficitKcal: maintenanceKcal - netKcal,
+      netKcal: netKcalForDietRecord(record),
+      balanceKcal: energy.balanceKcal,
+      expenditureKcal: energy.expenditureKcal,
+      deficitKcal: energy.deficitKcal,
     };
   });
   const cumulativeDeficitKcal = dailyDeficits.reduce(
@@ -260,6 +282,9 @@ export function calculateViniFatGoal({
     totalGoalKcal,
     restingKcal,
     maintenanceKcal,
+    routineGrossKcal: currentEnergy.routineGrossKcal,
+    routineSafetyFactor: currentEnergy.routineSafetyFactor,
+    exerciseSafetyFactor: currentEnergy.exerciseSafetyFactor,
     dailyDeficits,
     cumulativeDeficitKcal,
     achievedDeficitKcal,

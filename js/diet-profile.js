@@ -4,6 +4,7 @@
 
 import * as vini from "./vini-diet-plan.js";
 import * as vivi from "./vivi-diet-plan.js";
+import { energyProfileFor } from "./energy-balance.js";
 
 export const IS_VIVI_DIET_PROFILE = typeof document !== "undefined"
   && document.body?.dataset?.kgUser === "victoria";
@@ -20,6 +21,7 @@ export const DIET_PROFILE = Object.freeze(IS_VIVI_DIET_PROFILE ? {
   officialFootnote: "Alternativas apresentadas com “ou” foram mantidas separadas; nenhuma composição foi removida.",
   hydrationDescription: "Meta indicada no plano: 35 ml/kg, aproximadamente 1,6 L por dia, começando com pelo menos 300 ml ao acordar.",
   hydrationSource: "Plano alimentar · páginas 3 e 5",
+  energyBalance: energyProfileFor("victoria"),
 } : {
   userId: "vinicius",
   personName: "Vini",
@@ -30,6 +32,7 @@ export const DIET_PROFILE = Object.freeze(IS_VIVI_DIET_PROFILE ? {
   officialFootnote: "Os screenshots repetidos foram consolidados; nenhuma composição foi removida.",
   hydrationDescription: "Consumo médio de 2,5 litros de água + 500 ml - 1 litro durante o treino",
   hydrationSource: "IMG_3083.PNG",
+  energyBalance: energyProfileFor("vinicius"),
 });
 
 export const VINI_BEVERAGES = active.VIVI_BEVERAGES || active.VINI_BEVERAGES;

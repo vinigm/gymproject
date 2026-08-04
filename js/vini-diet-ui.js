@@ -11,6 +11,11 @@ import {
 import { downloadViniDietPdf } from "./vini-diet-pdf.js";
 import { getWeightEntries } from "./weight-storage.js";
 import {
+  balanceKcalForRecord,
+  energyBalanceForRecord,
+  enrichEnergyBalanceRecords,
+} from "./energy-balance.js";
+import {
   VINI_EXERCISE_DURATIONS,
   VINI_EXERCISE_TYPES,
   hasViniExercise,
@@ -169,6 +174,10 @@ function formatNumber(value, digits = 0) {
 function formatMacro(value) {
   const number = Number(value || 0);
   return formatNumber(number, Number.isInteger(number) ? 0 : 1);
+}
+function formatSignedKcal(value) {
+  const number = Math.round(Number(value) || 0);
+  return `${number > 0 ? "+" : number < 0 ? "−" : ""}${formatNumber(Math.abs(number))}`;
 }
 function sumNutrition(target, value) {
   target.kcal += Number(value?.kcal) || 0;
@@ -338,6 +347,10 @@ function renderTracker() {
 
   const day = currentDay();
   const summary = calculateViniDietDay(day, { useSnapshot: true });
+  const energyBalance = energyBalanceForRecord({
+    date: tracker.selectedDate,
+    summary,
+  }, energyBalanceOptions());
   const isToday = tracker.selectedDate === todayISO();
   if (tracker.view === "stats") {
     tracker.root.innerHTML = USER === "vinicius"
@@ -352,7 +365,7 @@ function renderTracker() {
       ${dateNavigatorHTML(isToday)}
       ${mealPresetsHTML(day)}
       ${exerciseTrackerHTML(day, summary)}
-      ${dailySummaryHTML(summary)}
+      ${dailySummaryHTML(summary, energyBalance)}
       ${customFoodsHTML(day, summary)}
       ${beveragesHTML(day, summary)}
       ${additionalMealHTML(day)}
@@ -591,16 +604,21 @@ function exerciseTypeHTML(typeId, day, summary) {
     </article>`;
 }
 
-function dailySummaryHTML(summary) {
+function dailySummaryHTML(summary, energyBalance) {
   const consumed = summary.consumed;
+  const hasBalance = energyBalance?.available;
+  const balance = hasBalance ? energyBalance.balanceKcal : summary.netKcal;
+  const state = balance < -1 ? "déficit estimado" : balance > 1 ? "superávit estimado" : "equilíbrio estimado";
   return `
     <section class="block">
       <div class="block-head"><h2>Resumo do dia</h2></div>
       <div class="vini-day-summary">
         <div class="vini-kcal-hero">
-          <span class="vini-kcal-value">${formatNumber(summary.netKcal)}</span>
-          <span class="vini-kcal-unit">kcal líquidas</span>
-          <span class="vini-kcal-plan">${formatNumber(consumed.kcal)} ingeridas${summary.exerciseKcal ? ` − ${formatNumber(summary.exerciseKcal)} do treino` : " · sem treino descontado"}</span>
+          <span class="vini-kcal-value">${hasBalance ? formatSignedKcal(balance) : "—"}</span>
+          <span class="vini-kcal-unit">${hasBalance ? `saldo energético · ${state}` : "saldo energético indisponível"}</span>
+          <span class="vini-kcal-plan">${hasBalance
+            ? `${formatNumber(consumed.kcal)} ingeridas − ${formatNumber(energyBalance.expenditureKcal)} de gasto conservador${summary.exerciseKcal ? ` · treino bruto ${formatNumber(summary.exerciseKcal)} kcal` : ""}`
+            : `${formatNumber(consumed.kcal)} ingeridas · registre uma pesagem para estimar o gasto total`}</span>
         </div>
         <div class="vini-summary-macros">
           ${macroSummaryHTML("Proteína", "P", consumed.p, "vini-macro-p")}
@@ -710,13 +728,23 @@ function hydrationHTML(day, summary) {
 }
 
 function recordsInScope() {
-  return Object.entries(currentMapInScope())
+  const records = Object.entries(currentMapInScope())
     .map(([date, raw]) => {
       const day = normalizeViniDietDay(raw);
       return { date, day, summary: calculateViniDietDay(day, { useSnapshot: true }) };
     })
     .filter((entry) => entry.summary.hasData)
     .sort((a, b) => a.date.localeCompare(b.date));
+  return enrichEnergyBalanceRecords(records, energyBalanceOptions());
+}
+
+function energyBalanceOptions() {
+  return {
+    weightEntries: tracker.weightEntries,
+    userId: USER,
+    activityFactor: VINI_ACTIVITY_LEVELS.find((level) => level.id === tracker.fatGoalActivity)?.factor
+      || DIET_PROFILE.energyBalance.defaultActivityFactor,
+  };
 }
 
 function aggregateRecords(records) {
@@ -726,7 +754,10 @@ function aggregateRecords(records) {
   let hydration = 0;
   let hydrationHits = 0;
   for (const entry of records) {
-    sumNutrition(totals, entry.summary.consumed);
+    totals.kcal += balanceKcalForRecord(entry);
+    totals.p += Number(entry.summary.consumed?.p) || 0;
+    totals.c += Number(entry.summary.consumed?.c) || 0;
+    totals.f += Number(entry.summary.consumed?.f) || 0;
     foods += entry.summary.itemsChecked;
     mainMealMoments += entry.summary.mainMealsLogged;
     hydration += entry.summary.hydrationMl;
@@ -789,14 +820,14 @@ function cycleAveragesOverviewHTML() {
                 <span>${period.detail}</span>
               </div>
               <div class="vini-week-average-grid">
-                ${weeklyAverageCardHTML("Calorias líquidas", stats.averages.kcal * period.multiplier, VINI_DAILY_GOALS.kcal * period.goalMultiplier, "kcal", "is-kcal")}
+                ${weeklyAverageCardHTML("Saldo energético", stats.averages.kcal * period.multiplier, 0, "kcal", "is-kcal")}
                 ${weeklyAverageCardHTML("Proteína", stats.averages.p * period.multiplier, VINI_DAILY_GOALS.p * period.goalMultiplier, "g", "is-protein")}
                 ${weeklyAverageCardHTML("Carboidrato", stats.averages.c * period.multiplier, VINI_DAILY_GOALS.c * period.goalMultiplier, "g", "is-carbs")}
                 ${weeklyAverageCardHTML("Gordura", stats.averages.f * period.multiplier, VINI_DAILY_GOALS.f * period.goalMultiplier, "g", "is-fat")}
               </div>
             </div>`).join("")}
         </div>
-        <p class="vini-week-average-note">Semanal e mensal são projeções da média dos ${stats.days} dias registrados. Calorias já descontam os treinos informados na dieta.</p>`}
+        <p class="vini-week-average-note">Semanal e mensal projetam o saldo médio dos ${stats.days} dias registrados. Valor negativo indica déficit; positivo indica superávit. O gasto usa Mifflin–St Jeor e os coeficientes conservadores do perfil.</p>`}
     </section>`;
 }
 
@@ -899,17 +930,19 @@ function fatGoalCountdownHTML() {
           <span><b>${formatNumber(Math.round(progress.restingKcal))}</b> kcal de repouso</span>
           <i>×</i>
           <span><b>${progress.activityLevel.factor.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</b> rotina</span>
+          <i>×</i>
+          <span><b>${formatNumber(progress.routineSafetyFactor * 100)}%</b> segurança</span>
           <i>=</i>
-          <span><b>${formatNumber(Math.round(progress.maintenanceKcal))}</b> kcal/dia estimadas</span>
-          <i>−</i>
-          <span><b>${formatNumber(Math.round(progress.averages.kcal))}</b> kcal líquidas médias</span>
+          <span><b>${formatNumber(Math.round(progress.maintenanceKcal))}</b> kcal de rotina conservadoras</span>
+          <i>·</i>
+          <span><b>${formatSignedKcal(progress.averages.kcal)}</b> kcal de saldo médio</span>
         </div>
 
         <details class="vini-fat-method">
           <summary>Como esta conta foi feita?</summary>
           <p>Usamos homem, 36 anos, 1,86 m e o peso mais recente na equação de Mifflin–St Jeor. A massa magra inicial é estimada a partir dos 28%; o peso-alvo supõe essa massa preservada no percentual escolhido. Cada kg de gordura restante usa a aproximação de 7.700 kcal.</p>
           <p>“Músculo” usa uma estimativa antropométrica de Lee et al. baseada em peso, altura, idade e sexo; “outros” é o restante da massa magra, como água, ossos e órgãos. Esses componentes são mantidos no objetivo e não substituem bioimpedância, DEXA ou avaliação clínica.</p>
-          <p>Os treinos já estão descontados nas calorias líquidas. Dias sem alimentação registrada não entram no déficit médio. Bioimpedância, metabolismo e composição da perda oscilam: trate a data como tendência e recalibre após cada avaliação com a nutricionista.</p>
+          <p>O saldo é ingestão menos gasto total estimado. Para não inflar o déficit, usamos 90% do gasto de rotina e 70% das kcal estimadas dos treinos. Dias sem alimentação registrada não entram na média. Bioimpedância, metabolismo e composição da perda oscilam: trate a data como tendência e recalibre após cada avaliação com a nutricionista.</p>
         </details>
       </div>
     </section>`;
@@ -1151,7 +1184,7 @@ function fatGoalDeficitCalendarHTML() {
       <div class="block-head">
         <div>
           <h2>📅 Déficit diário</h2>
-          <span class="muted" style="font-size:9px">gasto estimado − kcal líquidas</span>
+          <span class="muted" style="font-size:9px">gasto conservador total − ingestão</span>
         </div>
         <div class="vini-deficit-month-nav">
           <button type="button" data-deficit-month-step="-1" aria-label="Mês anterior"
@@ -1204,13 +1237,13 @@ function weeklyHTML() {
         <div class="stat-card vini-week-card">
           <div class="kpi-grid">
             <div class="kpi"><div class="kpi-value">${stats.days}/7</div><div class="kpi-label">dias registrados</div></div>
-            <div class="kpi"><div class="kpi-value">${formatNumber(stats.totals.kcal)}</div><div class="kpi-label">kcal na semana</div></div>
+            <div class="kpi"><div class="kpi-value">${formatSignedKcal(stats.totals.kcal)}</div><div class="kpi-label">saldo energético semanal</div></div>
             <div class="kpi"><div class="kpi-value">${formatNumber(stats.foodsAvg, 1)}</div><div class="kpi-label">alimentos / registro</div></div>
             <div class="kpi"><div class="kpi-value">${formatNumber(stats.hydrationAvg)}</div><div class="kpi-label">ml médios / registro</div></div>
           </div>
           <h3 class="stats-subhead">Média diária da semana</h3>
           <div class="vini-week-average-grid">
-            ${weeklyAverageCardHTML("Calorias", stats.averages.kcal, VINI_DAILY_GOALS.kcal, "kcal", "is-kcal")}
+            ${weeklyAverageCardHTML("Saldo energético", stats.averages.kcal, 0, "kcal", "is-kcal")}
             ${weeklyAverageCardHTML("Proteína", stats.averages.p, VINI_DAILY_GOALS.p, "g", "is-protein")}
             ${weeklyAverageCardHTML("Carboidrato", stats.averages.c, VINI_DAILY_GOALS.c, "g", "is-carbs")}
             ${weeklyAverageCardHTML("Gordura", stats.averages.f, VINI_DAILY_GOALS.f, "g", "is-fat")}
@@ -1225,7 +1258,7 @@ function weeklyHTML() {
           ${macroDistributionHTML(stats.totals)}
           <h3 class="stats-subhead">Dia a dia</h3>
           ${weekStripHTML(start, records)}
-          ${comparison === null ? "" : `<p class="vini-week-compare">Média por dia registrado ${comparison === 0 ? "igual à" : `${Math.abs(comparison)} kcal ${comparison > 0 ? "acima da" : "abaixo da"}`} semana anterior.</p>`}
+          ${comparison === null ? "" : `<p class="vini-week-compare">Saldo médio por dia registrado ${comparison === 0 ? "igual ao da" : `${formatNumber(Math.abs(comparison))} kcal ${comparison > 0 ? "acima do" : "abaixo do"}`} saldo da semana anterior.</p>`}
         </div>`}
     </section>`;
 }
@@ -1314,7 +1347,7 @@ function cycleStatsHTML() {
       <div class="block-head"><h2>📊 Estatísticas do ciclo</h2><span class="muted" style="font-size:11px">${stats.days} dias</span></div>
       <div class="stat-card diet-stats-card">
         <div class="kpi-grid">
-          <div class="kpi"><div class="kpi-value">${formatNumber(stats.averages.kcal)}</div><div class="kpi-label">kcal médias / registro</div></div>
+          <div class="kpi"><div class="kpi-value">${formatSignedKcal(stats.averages.kcal)}</div><div class="kpi-label">saldo energético médio</div></div>
           <div class="kpi"><div class="kpi-value">${formatMacro(stats.averages.p)}g</div><div class="kpi-label">proteína média</div></div>
           <div class="kpi"><div class="kpi-value">${formatNumber(stats.foodsAvg, 1)}</div><div class="kpi-label">alimentos / registro</div></div>
           <div class="kpi"><div class="kpi-value">${formatNumber(stats.hydrationAvg)}</div><div class="kpi-label">ml médios / registro</div></div>
