@@ -10,7 +10,7 @@ import {
   normalizeViniExercises,
 } from "./vini-exercise.js";
 
-export const VIVI_PLAN_VERSION = "vivi-nutri-2026-02-v5";
+export const VIVI_PLAN_VERSION = "vivi-nutri-2026-02-v6";
 
 // Mantém as referências provisórias que a página da Vivi já utilizava.
 export const VIVI_DAILY_GOALS = Object.freeze({
@@ -287,6 +287,7 @@ const QUANTITY_RULES = Object.freeze({
   sementes: { unit: "g", values: [5, 10, 15, 20, 25, 30] },
   leite_semidesnatado: { unit: "ml", values: [100, 150, 200, 250, 300, 400, 500] },
   panalose: { unit: "g", values: [5, 10, 15, 20, 25, 30] },
+  palatinose: { unit: "g", values: [10, 15, 20, 25, 30, 35, 40, 50, 60] },
   body_balance: { unit: "g", values: [5, 10, 15, 20, 25, 30] },
   proteina_magra: { unit: "g", values: [50, 80, 100, 120, 150, 180, 200, 250] },
   carbo_cozido: { unit: "g", values: [50, 80, 100, 130, 150, 180, 200, 250] },
@@ -419,6 +420,16 @@ const CASTANHA_CAJU_30_G = item(
   { trackerDefaultQuantity: 30, trackerReferenceQuantity: 30 }
 );
 
+// Atalho pessoal solicitado separadamente da redação histórica "Panalose"
+// preservada na dieta oficial. A referência é carboidrato puro: 4 kcal/g.
+const PALATINOSE_30_G = item(
+  "palatinose",
+  "Palatinose",
+  "30 g",
+  nutrition(120, 0, 30, 0, "generic-estimate"),
+  { trackerDefaultQuantity: 30, trackerReferenceQuantity: 30 }
+);
+
 const VIVI_TRACKER_ONLY_MEALS = Object.freeze([
   Object.freeze({
     id: "ceia",
@@ -457,7 +468,7 @@ const VIVI_TRACKER_EXTRA_FOODS = Object.freeze({
   pre_treino: Object.freeze([MARIOLA_34_G, PASTA_AMENDOPOWER_15_G]),
   jantar: Object.freeze([ALCATRA_GRELHADA_100, AIPIM_COZIDO_170, AZEITE_15_G]),
   ceia: Object.freeze([MACA_FUJI_30_G, CASTANHA_CAJU_30_G]),
-  suplemento: Object.freeze([WHEY_PROBIOTICA_31]),
+  suplemento: Object.freeze([WHEY_PROBIOTICA_31, PALATINOSE_30_G]),
 });
 
 function parseLocaleNumber(value) {

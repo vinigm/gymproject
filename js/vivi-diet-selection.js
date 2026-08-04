@@ -98,6 +98,16 @@ export const VIVI_MEAL_PRESETS = Object.freeze([
     ]
   ),
   preset(
+    "palatinose_30g",
+    "⚡",
+    "Palatinose",
+    "30g",
+    "suplemento",
+    [
+      { foodId: "palatinose", amount: 30 },
+    ]
+  ),
+  preset(
     "base_pre_treino",
     "🏃",
     "Pré-treino",
