@@ -13,7 +13,7 @@ Projeto pessoal de um casal (Vinicius e Victoria) para registrar e gamificar há
 
 Camadas principais:
 
-- **Shell/boot/auth** (`index.html`, `js/app.js`, `js/auth.js`, `js/nav-menu.js`, `js/firebase-config.js`).
+- **Shell/boot/auth** (`index.html`, `habitos.html`, `js/home-page.js`, `js/app.js`, `js/auth.js`, `js/nav-menu.js`, `js/firebase-config.js`).
 - **Storage** (`js/storage.js` e os storages especializados: `presence-storage.js`, `weight-storage.js`, `diet-storage.js`, `pomodoro-storage.js`, `stretch-storage.js`).
 - **Motor de pontos** (`js/points-config.js`, `js/points-engine.js`, `js/points-utils.js`).
 - **Páginas** (`js/*-page.js` + `*.html`).
@@ -55,7 +55,8 @@ No iPhone/Android, abrir o site no navegador e usar "Adicionar à tela de iníci
 
 | Arquivo | Papel |
 | --- | --- |
-| `index.html` | Página principal: registro de hábitos do dia (chips) dos dois usuários + histórico do mês; também hospeda a casca comum (auth-gate, topbar, nav) e registra o Service Worker |
+| `index.html` | Página inicial: central de navegação com três cards (`Game`, `Tracking`, `Outros`) e todos os destinos do app |
+| `habitos.html` | Registro de hábitos do dia (chips) dos dois usuários + histórico do mês |
 | `points.html` | Página Pontos: totais por período, detalhamento por pessoa/dia e calendário diário |
 | `casal.html` | Prêmios/loja do casal (carteira conjunta, `scope` "shared") |
 | `victoria.html` | Loja pessoal da Vivi (carteira `scope` "personal-victoria") |
@@ -73,9 +74,10 @@ No iPhone/Android, abrir o site no navegador e usar "Adicionar à tela de iníci
 
 | Arquivo | Papel |
 | --- | --- |
-| `app.js` | Boot da página principal, constantes globais (`USERS`, `APP_START_DATE`), navegação de data, render dos chips de extras |
+| `home-page.js` | Boot da página inicial, data do topbar, autenticação e rodapé |
+| `app.js` | Boot do registro diário, constantes globais (`USERS`, `APP_START_DATE`), navegação de data, render dos chips de extras |
 | `auth.js` | Portão de autenticação (`setupAuthGate`), login Google, whitelist de e-mails, cache otimista de auth |
-| `nav-menu.js` | Menu de navegação compartilhado (`NAV_ITEMS`, `mountNavMenu`), item ativo e `--stack-top` |
+| `nav-menu.js` | Navegação compartilhada (`HOME_NAV_ITEM`, `NAV_GROUPS`, `mountNavMenu`), submenus, item/grupo ativo e `--stack-top` |
 | `firebase-config.js` | Inicialização condicional do Firebase; exporta `db`, `auth`, `isConfigured` e helpers do Firestore |
 | `tracker.js` | Lógica dos cards de hábitos: carga, edição, dirty-check, salvamento em lote |
 | `tracker-model.js` | Regras puras do tracker: normalização, toggle dos grupos e opções válidas de distância da corrida |
@@ -143,9 +145,9 @@ No iPhone/Android, abrir o site no navegador e usar "Adicionar à tela de iníci
 
 ### Fluxo de boot
 
-O `<body class="is-loading">` começa com a `.page` invisível (`opacity:0`/`pointer-events:none`) e um spinner via `body.is-loading::after` (style.css:634-650). Um script inline no `<head>` (index.html:14-21) roda **antes** do CSS/JS pintar: se `localStorage.getItem("habitos-auth-uid")` existir, adiciona a classe `auth-hidden` ao `<html>`, o que faz `html.auth-hidden .auth-gate { display:none }` (style.css:630-631) esconder o login na hora, eliminando o flash da tela de login ao navegar entre páginas.
+O `<body class="is-loading">` começa com a `.page` invisível (`opacity:0`/`pointer-events:none`) e um spinner via `body.is-loading::after`. Um script inline no `<head>` de cada página roda **antes** do CSS/JS pintar: se `localStorage.getItem("habitos-auth-uid")` existir, adiciona a classe `auth-hidden` ao `<html>`, escondendo o login na hora e eliminando o flash da tela de login ao navegar entre páginas.
 
-O boot real acontece no listener `DOMContentLoaded` de `app.js` (app.js:154-164). Há um guard: `if (!document.getElementById("date-input")) return;` — porque `app.js` também é importado por outras páginas só para reaproveitar `APP_START_DATE`/`USERS`; apenas a página principal (a única com o input de data) segue. Em seguida chama `mountNavMenu()` e `setupAuthGate({ onAuthorized: (user) => initApp(user) })`.
+Na home, `home-page.js` monta o menu, autentica, preenche a data e revela os três cards. No registro diário, o boot real acontece no listener `DOMContentLoaded` de `app.js`; o guard `if (!document.getElementById("date-input")) return;` garante que somente `habitos.html` siga. Em seguida chama `mountNavMenu()` e `setupAuthGate({ onAuthorized: (user) => initApp(user) })`.
 
 `initApp` (app.js:111-152) pinta a data, preenche `#storage-badge` conforme `storageMode`, chama `renderAuthFooter(user)`, registra listeners (`date-input` change, `btn-today`, `btn-save`, `beforeunload` com `hasUnsavedChanges()`), e num bloco try/finally carrega config/tracker/history/points; o `finally` remove `is-loading` do body, revelando a página.
 
@@ -179,9 +181,9 @@ Em `firebase-config.js`, o SDK 10.12.2 é importado da CDN gstatic. `firebaseCon
 
 ## Navegação
 
-O menu vem de `nav-menu.js`. `NAV_ITEMS` é um array de 13 itens `{href, icon, label, match}`: Hábitos, Pontos, Prêmios, Recordes, Placares, Stats, Alongar, Pomodoro, Status, Kg Vini, Kg Vivi, Vivi, Config.
+O menu vem de `nav-menu.js`. `HOME_NAV_ITEM` aponta para a página inicial e `NAV_GROUPS` organiza os treze destinos restantes em três grupos: **Game** (Pontos, Prêmios, Recordes, Placares, Vivi), **Tracking** (Hábitos, Stats, Kg Vini, Kg Vivi) e **Outros** (Alongar, Pomodoro, Status, Config).
 
-`mountNavMenu(containerId="nav-menu")` pega o `<nav id="nav-menu">`, adiciona a classe `nav-menu` e um `aria-label`, e renderiza os `<a class="nav-item">` (ícone + label). O item ativo é decidido por `currentFile()` (último segmento de `window.location.pathname`, com `""` virando home) comparado a `item.match.includes(file)`; o ativo ganha `is-active` e `aria-current="page"` (a home casa com `["", "index.html"]`).
+`mountNavMenu(containerId="nav-menu")` pega o `<nav id="nav-menu">`, adiciona a classe `nav-menu` e renderiza Início mais três elementos `<details>` acessíveis. Abrir um submenu fecha os demais; toque fora fecha todos; `Escape` fecha e devolve o foco ao botão do grupo. `currentFile()` compara o último segmento da URL com `item.match`, destacando tanto o destino no painel quanto o grupo correspondente. Em telas pequenas o painel usa praticamente toda a largura; no desktop fica ancorado ao item do topo.
 
 Em seguida o nav é posicionado logo abaixo da `.topbar`: `setOffsets()` mede `topbar.offsetHeight`, define `el.style.top` e expõe `--stack-top = (topbar + nav).offsetHeight` no `<html>` para outros elementos sticky (style.css:1533 usa `top: var(--stack-top, 100px)`). `setOffsets` roda no mount, no `resize` e via `setTimeout(…, 250)` para reajustar depois que fontes/layout assentam. Em páginas sem `.topbar` a variável não é setada e os stickies caem no fallback de 100px.
 
@@ -189,7 +191,7 @@ Em seguida o nav é posicionado logo abaixo da `.topbar`: `setOffsets()` mede `t
 
 ### Hábitos (registro)
 
-**O que faz.** Tela principal (`index.html`) onde Vini e Vivi marcam os hábitos do dia por chips, com aviso de alterações não salvas e salvamento em lote. Abaixo, um histórico do mês corrente.
+**O que faz.** Tela `habitos.html` onde Vini e Vivi marcam os hábitos do dia por chips, com aviso de alterações não salvas e salvamento em lote. Abaixo, um histórico do mês corrente.
 
 **Como funciona por baixo.** Dois usuários fixos: `USERS = ["vinicius", "victoria"]`. A data ativa fica em `state.date` (default `todayISO()`, clampada a `APP_START_DATE = "2026-05-18"`). O HTML tem dois `<article class="person-card" data-user="vinicius|victoria">`, cada um com `.chip-grid[data-group="..."]` de `.chip[data-value="..."]`.
 
@@ -203,7 +205,7 @@ Em seguida o nav é posicionado logo abaixo da `.topbar`: `setOffsets()` mede `t
 - **Navegação de data** — `#date-input` (min = `APP_START_DATE`) e `#btn-today` chamam `navigateToDate`, que clampa a data e, se houver pendências, dá `confirm()` (OK = salvar e mudar; Cancelar = descartar e mudar). Há `beforeunload` bloqueando fechar a aba com pendências.
 - **Chips de "Outros hábitos"** — renderizados dinamicamente por `renderExtrasChips()` a partir de `EXTRAS_META`, depois de `loadAndApplyConfig()`. Os grids no HTML vêm vazios de propósito.
 
-**Arquivos.** `index.html`, `js/tracker.js`, `js/tracker-model.js`, `js/storage.js`, `js/history.js`, `js/app.js`, `js/points-config.js`.
+**Arquivos.** `habitos.html`, `js/tracker.js`, `js/tracker-model.js`, `js/storage.js`, `js/history.js`, `js/app.js`, `js/points-config.js`.
 
 ### Pontos
 
@@ -497,7 +499,7 @@ Amarelos (`#fbbf24`/`#fcd34d`/`#fde68a`) e roxos/azuis de gradiente **não têm 
 - **Segmented control**: `.seg > .seg-btn`, ativo `.seg-btn.is-on`; underline por pessoa via `.seg-btn[data-user=...].is-on`. `.stats-user-seg` é a variante full-width. O ciclo reutiliza o padrão em `.tracking-scope-seg` dentro de `.tracking-cycle-card`.
 - **Cards de pessoa**: `.person-card` (border-top colorido por `data-user`), `.person-head`/`.person-name`, estado `.has-pending` (anel accent).
 - **Avatares**: `.avatar` + `.avatar--vini`/`.avatar--vic` + tamanhos `--md/--sm/--xs`.
-- **Estrutura de página**: `.page`, `.topbar`/`.brand`/`.topbar-date`/`.topbar-right`/`.points-badge`, `.nav-menu`/`.nav-item`/`.nav-item.is-active`, `.block`/`.block-head` (wrapper de seção). `.stats-toggle-bar` sticky usa `top: var(--stack-top)`.
+- **Estrutura de página**: `.page`, `.topbar`/`.brand`/`.topbar-date`/`.topbar-right`/`.points-badge`, `.nav-menu`/`.nav-item`/`.nav-group`/`.nav-group-panel`/`.nav-submenu-item`, `.block`/`.block-head` (wrapper de seção). A home usa `.home-hero`, `.home-destination-grid`, `.home-destination-card` e `.home-link`. `.stats-toggle-bar` sticky usa `top: var(--stack-top)`.
 - **Save/registro**: `.save-bar`/`.save-btn`/`.save-btn.is-dirty`, `.date-input` (`color-scheme:dark`), `.saved-pill`, `.sync-status[data-kind=ok|err]`.
 - **Stats/gráficos**: `.stat-card`/`.stat-row`/`.bar>i`, `.kpi`/`.kpi-row`, `.meal-split` (barra alimentar única de 0–100%), `.hg-*` (histórico grid), `.dow-chart`/`.meal-stack`, `.gym-dow-*`/`.gym-cal-*`.
 - **Calendários**: `.calendar`/`.cal-cell`, `.dcal-*` (calendário de pontos, `.has-bonus`/`.has-penalty`).
@@ -516,9 +518,9 @@ Breakpoints: `@media (max-width:359px)` compacta chips; `(max-width:420/480px)` 
 
 ### Service Worker
 
-`service-worker.js`, estratégia **network-first** com fallback offline. `CACHE = "habitos-shell-v64"`. No `install` faz `self.skipWaiting()`; no `activate` deleta todos os caches com nome diferente de `CACHE` e chama `self.clients.claim()`. No `fetch`: deixa passar direto hosts que contenham `googleapis.com`, `firebaseio.com` ou `gstatic.com`, e métodos diferentes de GET; para o resto faz `fetch(req, { cache: "no-store" })`, clona a resposta para o cache em background e, se a rede falhar, responde com `caches.match(req)`. Isso garante versão fresca quando online e evita ficar preso em versão antiga após deploy. O SW é registrado por `index.html` no evento `load`.
+`service-worker.js`, estratégia **network-first** com fallback offline. `CACHE = "habitos-shell-v65"`. No `install` faz `self.skipWaiting()`; no `activate` deleta todos os caches com nome diferente de `CACHE` e chama `self.clients.claim()`. No `fetch`: deixa passar direto hosts que contenham `googleapis.com`, `firebaseio.com` ou `gstatic.com`, e métodos diferentes de GET; para o resto faz `fetch(req, { cache: "no-store" })`, clona a resposta para o cache em background e, se a rede falhar, responde com `caches.match(req)`. Isso garante versão fresca quando online e evita ficar preso em versão antiga após deploy. O SW é registrado pelas páginas HTML no evento `load`.
 
-Para invalidar caches antigos num deploy, é preciso **incrementar manualmente o nome do cache** (`habitos-shell-v64`) — o número é a versão efetiva do shell. Em rede lenta mas presente não há timeout: o app espera a rede em vez de servir o cache.
+Para invalidar caches antigos num deploy, é preciso **incrementar manualmente o nome do cache** (`habitos-shell-v65`) — o número é a versão efetiva do shell. Em rede lenta mas presente não há timeout: o app espera a rede em vez de servir o cache.
 
 ### Wake Lock
 
@@ -535,7 +537,7 @@ Guia passo a passo, seguindo os padrões existentes:
 
 3. **Storage, se precisar de dados novos.** Crie `js/X-storage.js` replicando o esqueleto dos storages existentes: constante de nome da coleção (`COL`), `keyOf`/doc ID, ramificação `if (isConfigured) { ...Firestore... } else { ...localStorage... }`, com `serverTimestamp()` no Firebase e ISO string no fallback. Se reaproveitar `days`/`transactions`/`config`, importe de `js/storage.js`.
 
-4. **Adicionar o item no `NAV_ITEMS`.** Em `js/nav-menu.js`, inclua `{href:"X.html", icon:"…", label:"…", match:["X.html"]}` na posição desejada — o menu aparece em todas as páginas automaticamente.
+4. **Adicionar o item no grupo adequado de `NAV_GROUPS`.** Em `js/nav-menu.js`, inclua `{href:"X.html", icon:"…", label:"…", description:"…", match:["X.html"]}` em Game, Tracking ou Outros. Inclua também o link no card correspondente de `index.html` para manter a home e o topo equivalentes.
 
 5. **Estilos no `css/style.css`.** Reutilize os componentes existentes (`.block`, `.chip`, `.seg`, `.person-card` etc.) e as variáveis de `:root`. Se criar componentes próprios, use um prefixo de classe dedicado (como `.pom-*`, `.along-*`, `.kg-*`) e respeite o tema dark.
 

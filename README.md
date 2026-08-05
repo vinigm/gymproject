@@ -133,7 +133,8 @@ No Android (Chrome), basta o "Adicionar à tela inicial" do menu.
 
 ```
 GymProject/
-├── index.html              # shell do app (tela perfil + 3 views)
+├── index.html              # página inicial com as áreas do app
+├── habitos.html            # registro diário dos dois usuários
 ├── manifest.webmanifest    # PWA manifest
 ├── service-worker.js       # cache offline
 ├── css/
@@ -143,7 +144,9 @@ GymProject/
 └── js/
     ├── firebase-config.js  # ← preencher com suas chaves
     ├── storage.js          # camada Firestore / localStorage
-    ├── app.js              # controle de views e perfil
+    ├── home-page.js        # boot da página inicial
+    ├── nav-menu.js         # navegação agrupada compartilhada
+    ├── app.js              # boot e controle do registro diário
     ├── tracker.js          # registro do dia
     ├── tracker-model.js    # regras puras das seleções e detalhes
     ├── water-options.js    # opções, conversão e pontos de hidratação
@@ -172,7 +175,7 @@ ID do documento: `${userId}_${YYYY-MM-DD}` (ex.: `vinicius_2026-05-18`).
 
 ## 6. Adicionar/remover categorias depois
 
-- **Exercícios**: edite os botões em `index.html` (bloco `data-group="exercises"`)
+- **Exercícios**: edite os botões em `habitos.html` (bloco `data-group="exercises"`)
   e os labels em `EX_LABELS` dentro de `js/stats.js` e `js/calendar.js`.
 - **Quantidades de água ou refeições**: idem, basta acrescentar mais `.chip`
   dentro do `chip-grid` correspondente.
@@ -187,5 +190,5 @@ simplesmente aparecem nos dias futuros.
 O SVG cobre 99% dos casos. Se quiser ícones PNG nítidos pra splash screen do
 iOS, gere a partir do `icons/icon.svg` em <https://realfavicongenerator.net/>
 ou outro gerador, e salve como `icons/icon-180.png`, `icons/icon-192.png` e
-`icons/icon-512.png`. O `index.html` e `manifest.webmanifest` já apontam pra
+`icons/icon-512.png`. As páginas HTML e o `manifest.webmanifest` já apontam pra
 esses caminhos.

@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Hábitos" />
+  <title>Registro diário · Hábitos</title>
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" type="image/svg+xml" href="./icons/icon.svg" />
+  <link rel="stylesheet" href="./css/style.css" />
+  <script>
+    // Esconde a tela de login imediatamente se já tem sessão cacheada (evita flash).
+    try {
+      if (localStorage.getItem("habitos-auth-uid")) {
+        document.documentElement.classList.add("auth-hidden");
+      }
+    } catch (e) {}
+  </script>
+</head>
+<body class="is-loading">
+  <!-- Tela de login (sobreposta a tudo até autenticar) -->
+  <div id="auth-gate" class="auth-gate">
+    <div class="auth-card">
+      <h1 class="auth-title">Hábitos</h1>
+      <p class="auth-sub">login pra continuar</p>
+      <p id="auth-loading" class="auth-loading">verificando…</p>
+      <button id="btn-google-login" class="auth-btn" hidden>
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+        </svg>
+        Entrar com Google
+      </button>
+      <div id="auth-error" class="auth-error" hidden></div>
+    </div>
+  </div>
+
+  <header class="topbar">
+    <h1 class="brand">Hábitos</h1>
+    <div class="topbar-right">
+      <div id="topbar-date" class="topbar-date"></div>
+      <a href="./points.html" class="ghost-btn topbar-link points-badge" aria-label="Pontuação e prêmios">
+        <span id="topbar-points">···</span> 🏆
+      </a>
+    </div>
+  </header>
+
+  <nav id="nav-menu"></nav>
+
+  <main class="page">
+    <!-- ====== REGISTRO ====== -->
+    <section class="block">
+      <div class="block-head block-head--registro">
+        <div class="registro-title">
+          <h2 id="registro-title">Registro de hoje</h2>
+          <div class="registro-controls">
+            <input type="date" id="date-input" class="date-input" />
+            <button id="btn-today" class="ghost-btn" hidden>hoje</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <!-- VINICIUS -->
+        <article class="person-card" data-user="vinicius">
+          <header class="person-head">
+            <span class="avatar avatar--vini avatar--md">V</span>
+            <span class="person-name">Vinicius</span>
+          </header>
+
+          <h3 class="mini-title">Exercícios</h3>
+          <div class="exercise-stack">
+            <div class="chip-grid chip-grid--1" data-group="exercises">
+              <button class="chip" data-value="academia">Academia</button>
+            </div>
+            <div class="gym-detail">
+              <h3 class="mini-title">Grupos musculares</h3>
+              <div class="chip-grid chip-grid--2" data-group="gym_groups">
+                <button class="chip" data-value="costa">Costa</button>
+                <button class="chip" data-value="triceps">Tríceps</button>
+                <button class="chip" data-value="peito">Peito</button>
+                <button class="chip" data-value="biceps">Bíceps</button>
+                <button class="chip" data-value="perna">Perna</button>
+                <button class="chip" data-value="ombro">Ombro</button>
+                <button class="chip" data-value="lombar">Lombar</button>
+                <button class="chip" data-value="abdominal">Abdominal</button>
+              </div>
+            </div>
+            <div class="chip-grid chip-grid--2" data-group="exercises">
+              <button class="chip" data-value="corrida">Corrida</button>
+              <button class="chip" data-value="jiujitsu">Jiu Jitsu</button>
+            </div>
+            <div class="run-detail">
+              <h3 class="mini-title">Quanto você correu?</h3>
+              <div class="chip-grid chip-grid--3" data-group="run_km">
+                <button class="chip" data-value="2.5">2,5 km</button>
+                <button class="chip" data-value="3">3 km</button>
+                <button class="chip" data-value="4">4 km</button>
+                <button class="chip" data-value="5">5 km</button>
+                <button class="chip" data-value="6">6 km</button>
+                <button class="chip" data-value="7">7 km</button>
+                <button class="chip" data-value="8">8 km</button>
+                <button class="chip" data-value="9">9 km</button>
+                <button class="chip" data-value="10">10 km</button>
+              </div>
+            </div>
+            <div class="jiu-detail">
+              <h3 class="mini-title">Qual treino de Jiu?</h3>
+              <div class="chip-grid chip-grid--5" data-group="jiu_session">
+                <button class="chip" data-value="6h30">6h30</button>
+                <button class="chip" data-value="12h">12h</button>
+                <button class="chip" data-value="16h30">16h30</button>
+                <button class="chip" data-value="19h30">19h30</button>
+                <button class="chip" data-value="Sab11">Sab11</button>
+              </div>
+              <div class="jiu-spar">
+                <h3 class="mini-title">Tempo de luta (min)</h3>
+                <div class="chip-grid chip-grid--5" data-group="jiu_spar_min">
+                  <button class="chip" data-value="15">15</button>
+                  <button class="chip" data-value="20">20</button>
+                  <button class="chip" data-value="25">25</button>
+                  <button class="chip" data-value="30">30</button>
+                  <button class="chip" data-value="35">35</button>
+                  <button class="chip" data-value="40">40</button>
+                  <button class="chip" data-value="45">45</button>
+                  <button class="chip" data-value="50">50</button>
+                  <button class="chip" data-value="60">60</button>
+                </div>
+              </div>
+            </div>
+            <div class="chip-grid chip-grid--1" data-group="exercises">
+              <button class="chip" data-value="alongamento">Alongamento</button>
+            </div>
+            <div class="stretch-detail">
+              <h3 class="mini-title">Tempo de alongamento</h3>
+              <div class="chip-grid chip-grid--3" data-group="stretch_min">
+                <button class="chip" data-value="5">5 min</button>
+                <button class="chip" data-value="10">10 min</button>
+                <button class="chip" data-value="15">15 min</button>
+              </div>
+            </div>
+          </div>
+
+          <h3 class="mini-title">Hidratação</h3>
+          <div class="chip-grid chip-grid--2" data-group="water">
+            <button class="chip" data-value="0.5L">0,5L</button>
+            <button class="chip" data-value="1L">1L</button>
+            <button class="chip" data-value="1.5L">1,5L</button>
+            <button class="chip" data-value="2L">2L</button>
+            <button class="chip" data-value="2.5L">2,5L</button>
+            <button class="chip" data-value="3L">3L</button>
+            <button class="chip" data-value="3.5L">3,5L</button>
+            <button class="chip" data-value="4L">4L</button>
+            <button class="chip" data-value="4.5L">4,5L</button>
+            <button class="chip" data-value="5L">5L</button>
+          </div>
+
+          <h3 class="mini-title">Almoço</h3>
+          <div class="chip-grid chip-grid--2" data-group="lunch">
+            <button class="chip chip--good" data-value="limpo">Limpo</button>
+            <button class="chip chip--bad" data-value="sujo">Sujo</button>
+          </div>
+
+          <h3 class="mini-title">Janta</h3>
+          <div class="chip-grid chip-grid--2" data-group="dinner">
+            <button class="chip chip--good" data-value="limpo">Limpo</button>
+            <button class="chip chip--bad" data-value="sujo">Sujo</button>
+          </div>
+
+          <h3 class="mini-title">Sobremesa</h3>
+          <div class="chip-grid chip-grid--2" data-group="dessert">
+            <button class="chip chip--good" data-value="nao">Não</button>
+            <button class="chip chip--bad" data-value="sim">Sim</button>
+          </div>
+
+          <h3 class="mini-title">Refrigerante</h3>
+          <div class="chip-grid chip-grid--2" data-group="soda">
+            <button class="chip chip--good" data-value="nao">Não</button>
+            <button class="chip chip--bad" data-value="sim">Sim</button>
+          </div>
+
+          <h3 class="mini-title">Outros hábitos</h3>
+          <div class="chip-grid chip-grid--2" data-group="extras">
+            <!-- chips renderizados via JS a partir de EXTRAS_META -->
+          </div>
+
+          <h3 class="mini-title">Cigarros fumados</h3>
+          <div class="chip-grid chip-grid--7" data-group="cigarettes">
+            <button class="chip chip--num" data-value="0">0</button>
+            <button class="chip chip--num" data-value="1">1</button>
+            <button class="chip chip--num" data-value="2">2</button>
+            <button class="chip chip--num" data-value="3">3</button>
+            <button class="chip chip--num" data-value="4">4</button>
+            <button class="chip chip--num" data-value="5">5</button>
+            <button class="chip chip--num" data-value="6">6</button>
+          </div>
+
+          <h3 class="mini-title">Chicletes de nicotina</h3>
+          <div class="chip-grid chip-grid--6" data-group="nicotine_gum">
+            <button class="chip chip--num" data-value="0">0</button>
+            <button class="chip chip--num" data-value="1">1</button>
+            <button class="chip chip--num" data-value="2">2</button>
+            <button class="chip chip--num" data-value="3">3</button>
+            <button class="chip chip--num" data-value="4">4</button>
+            <button class="chip chip--num" data-value="5">5</button>
+            <button class="chip chip--num" data-value="6">6</button>
+            <button class="chip chip--num" data-value="7">7</button>
+            <button class="chip chip--num" data-value="8">8</button>
+            <button class="chip chip--num" data-value="9">9</button>
+            <button class="chip chip--num" data-value="10">10</button>
+          </div>
+        </article>
+
+        <!-- VICTORIA -->
+        <article class="person-card" data-user="victoria">
+          <header class="person-head">
+            <span class="avatar avatar--vic avatar--md">V</span>
+            <span class="person-name">Vivi</span>
+          </header>
+
+          <h3 class="mini-title">Exercícios</h3>
+          <div class="exercise-stack">
+            <div class="chip-grid chip-grid--1" data-group="exercises">
+              <button class="chip" data-value="academia">Academia</button>
+            </div>
+            <div class="gym-detail">
+              <h3 class="mini-title">Grupos musculares</h3>
+              <div class="chip-grid chip-grid--2" data-group="gym_groups">
+                <button class="chip" data-value="costa">Costa</button>
+                <button class="chip" data-value="triceps">Tríceps</button>
+                <button class="chip" data-value="peito">Peito</button>
+                <button class="chip" data-value="biceps">Bíceps</button>
+                <button class="chip" data-value="perna">Perna</button>
+                <button class="chip" data-value="ombro">Ombro</button>
+                <button class="chip" data-value="lombar">Lombar</button>
+                <button class="chip" data-value="abdominal">Abdominal</button>
+              </div>
+            </div>
+            <div class="chip-grid chip-grid--3" data-group="exercises">
+              <button class="chip" data-value="corrida">Corrida</button>
+              <button class="chip" data-value="yoga">Yoga</button>
+              <button class="chip" data-value="pilates">Pilates</button>
+            </div>
+            <div class="run-detail">
+              <h3 class="mini-title">Quanto você correu?</h3>
+              <div class="chip-grid chip-grid--3" data-group="run_km">
+                <button class="chip" data-value="2.5">2,5 km</button>
+                <button class="chip" data-value="3">3 km</button>
+                <button class="chip" data-value="4">4 km</button>
+                <button class="chip" data-value="5">5 km</button>
+                <button class="chip" data-value="6">6 km</button>
+                <button class="chip" data-value="7">7 km</button>
+                <button class="chip" data-value="8">8 km</button>
+                <button class="chip" data-value="9">9 km</button>
+                <button class="chip" data-value="10">10 km</button>
+              </div>
+            </div>
+            <div class="chip-grid chip-grid--2" data-group="exercises">
+              <button class="chip" data-value="bicicleta">Bicicleta</button>
+              <button class="chip" data-value="alongamento">Alongamento</button>
+            </div>
+            <div class="stretch-detail">
+              <h3 class="mini-title">Tempo de alongamento</h3>
+              <div class="chip-grid chip-grid--3" data-group="stretch_min">
+                <button class="chip" data-value="5">5 min</button>
+                <button class="chip" data-value="10">10 min</button>
+                <button class="chip" data-value="15">15 min</button>
+              </div>
+            </div>
+          </div>
+
+          <h3 class="mini-title">Hidratação</h3>
+          <div class="chip-grid chip-grid--2" data-group="water">
+            <button class="chip" data-value="0.5L">0,5L</button>
+            <button class="chip" data-value="1L">1L</button>
+            <button class="chip" data-value="1.5L">1,5L</button>
+            <button class="chip" data-value="2L">2L</button>
+            <button class="chip" data-value="2.5L">2,5L</button>
+            <button class="chip" data-value="3L">3L</button>
+            <button class="chip" data-value="3.5L">3,5L</button>
+            <button class="chip" data-value="4L">4L</button>
+            <button class="chip" data-value="4.5L">4,5L</button>
+            <button class="chip" data-value="5L">5L</button>
+          </div>
+
+          <h3 class="mini-title">Almoço</h3>
+          <div class="chip-grid chip-grid--2" data-group="lunch">
+            <button class="chip chip--good" data-value="limpo">Limpo</button>
+            <button class="chip chip--bad" data-value="sujo">Sujo</button>
+          </div>
+
+          <h3 class="mini-title">Janta</h3>
+          <div class="chip-grid chip-grid--2" data-group="dinner">
+            <button class="chip chip--good" data-value="limpo">Limpo</button>
+            <button class="chip chip--bad" data-value="sujo">Sujo</button>
+          </div>
+
+          <h3 class="mini-title">Sobremesa</h3>
+          <div class="chip-grid chip-grid--2" data-group="dessert">
+            <button class="chip chip--good" data-value="nao">Não</button>
+            <button class="chip chip--bad" data-value="sim">Sim</button>
+          </div>
+
+          <h3 class="mini-title">Refrigerante</h3>
+          <div class="chip-grid chip-grid--2" data-group="soda">
+            <button class="chip chip--good" data-value="nao">Não</button>
+            <button class="chip chip--bad" data-value="sim">Sim</button>
+          </div>
+
+          <h3 class="mini-title">Outros hábitos</h3>
+          <div class="chip-grid chip-grid--2" data-group="extras">
+            <!-- chips renderizados via JS a partir de EXTRAS_META -->
+          </div>
+
+          <h3 class="mini-title">Cigarros fumados</h3>
+          <div class="chip-grid chip-grid--7" data-group="cigarettes">
+            <button class="chip chip--num" data-value="0">0</button>
+            <button class="chip chip--num" data-value="1">1</button>
+            <button class="chip chip--num" data-value="2">2</button>
+            <button class="chip chip--num" data-value="3">3</button>
+            <button class="chip chip--num" data-value="4">4</button>
+            <button class="chip chip--num" data-value="5">5</button>
+            <button class="chip chip--num" data-value="6">6</button>
+          </div>
+
+          <h3 class="mini-title">Chicletes de nicotina</h3>
+          <div class="chip-grid chip-grid--6" data-group="nicotine_gum">
+            <button class="chip chip--num" data-value="0">0</button>
+            <button class="chip chip--num" data-value="1">1</button>
+            <button class="chip chip--num" data-value="2">2</button>
+            <button class="chip chip--num" data-value="3">3</button>
+            <button class="chip chip--num" data-value="4">4</button>
+            <button class="chip chip--num" data-value="5">5</button>
+            <button class="chip chip--num" data-value="6">6</button>
+            <button class="chip chip--num" data-value="7">7</button>
+            <button class="chip chip--num" data-value="8">8</button>
+            <button class="chip chip--num" data-value="9">9</button>
+            <button class="chip chip--num" data-value="10">10</button>
+          </div>
+        </article>
+      </div>
+      <div class="save-bar">
+        <button id="btn-save" class="save-btn" disabled>Tudo salvo</button>
+        <p id="sync-status" class="sync-status"></p>
+      </div>
+    </section>
+
+    <!-- ====== HISTÓRICO (mês atual) ====== -->
+    <section class="block">
+      <div class="block-head">
+        <h2>Histórico do mês</h2>
+        <span id="history-subtitle" class="muted" style="font-size:11px"></span>
+      </div>
+      <div class="two-col">
+        <div id="history-vinicius" class="history-col"></div>
+        <div id="history-victoria" class="history-col"></div>
+      </div>
+      <div class="hg-legend muted">
+        <span><i class="hg-sw hg-on--ex"></i>exerc.</span>
+        <span><i class="hg-sw hg-on--water"></i>água</span>
+        <span><i class="hg-sw hg-on--clean"></i>limpo</span>
+        <span><i class="hg-sw hg-on--dirty"></i>sujo</span>
+        <span><i class="hg-sw hg-x">❌</i>não registrado</span>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <span id="storage-badge" class="muted"></span>
+      <span id="auth-info" class="muted"></span>
+    </footer>
+  </main>
+
+  <script type="module" src="./js/app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./service-worker.js').catch(() => {});
+      });
+    }
+  </script>
+</body>
+</html>

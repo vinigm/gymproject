@@ -24,7 +24,7 @@ for (const litres of expected) {
   assert.equal(pointsForDay({ water: key }), litres * 10);
 }
 
-const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
+const html = await readFile(new URL("../habitos.html", import.meta.url), "utf8");
 const groups = [...html.matchAll(/<div class="chip-grid chip-grid--2" data-group="water">([\s\S]*?)<\/div>/g)];
 assert.equal(groups.length, 2);
 for (const [, contents] of groups) {

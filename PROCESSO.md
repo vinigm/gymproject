@@ -223,7 +223,8 @@ expandido pro casal (`casal.html`).
 
 | Página                 | Conteúdo                                                            |
 | ---------------------- | ------------------------------------------------------------------- |
-| `index.html`           | Tracker diário (Hoje + Stats + Histórico + Calendário simples)      |
+| `index.html`           | Central inicial com cards de Game, Tracking e Outros                |
+| `habitos.html`         | Tracker diário + histórico mensal dos hábitos                       |
 | `points.html`          | Totais + Detalhamento + Calendário dinâmico                          |
 | `recordes.html`        | Banners de recordes + grid de 6 cards                                |
 | `placares.html`        | 3 placares Vini vs Vivi                                              |
@@ -280,13 +281,13 @@ Fluxo de login:
 
 ## 10. Polishing final
 
-### Menu compacto em todas as páginas
+### Menu agrupado em todas as páginas
 
 `js/nav-menu.js` exporta `mountNavMenu()`. Cada página tem
 `<nav id="nav-menu"></nav>` e chama no bootstrap. Detecta página atual via
-`window.location.pathname` e destaca o item.
-
-7 items: Hábitos · Pontos · Prêmios · Recordes · Placares · Vivi · Config.
+`window.location.pathname` e destaca o item e seu grupo. O topo mantém quatro
+entradas: Início, Game, Tracking e Outros. Os três últimos abrem submenus;
+a home replica os mesmos destinos em cards maiores.
 
 ### Spinner global em vez de "carregando..."
 
@@ -467,8 +468,9 @@ service cloud.firestore {
 ### Para adicionar uma nova página:
 1. Cria `nova.html` (copia estrutura de uma existente)
 2. Cria `js/nova-page.js` com `setupAuthGate({ onAuthorized: ... })`
-3. Adiciona item em `NAV_ITEMS` em `js/nav-menu.js`
-4. Push → aparece em todo lugar
+3. Adiciona o item ao grupo adequado de `NAV_GROUPS` em `js/nav-menu.js`
+4. Adiciona o mesmo destino ao card correspondente da home em `index.html`
+5. Push → aparece em todo lugar
 
 ### Para mover a data de início:
 - Editar `APP_START_DATE` em `js/app.js` (uma única linha)

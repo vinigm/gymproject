@@ -1110,39 +1110,55 @@ body.is-loading::after {
   position: sticky;
   top: 0;
   z-index: 4;
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 4px;
   padding: 6px 8px;
   background: rgba(11, 18, 32, 0.92);
   backdrop-filter: saturate(140%) blur(8px);
   -webkit-backdrop-filter: saturate(140%) blur(8px);
   border-bottom: 1px solid var(--border);
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
+  overflow: visible;
 }
-.nav-menu::-webkit-scrollbar { display: none; }
-.nav-item {
+.nav-item,
+.nav-group-toggle {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 2px;
-  padding: 6px 10px;
+  min-height: 47px;
+  padding: 6px 4px;
   border-radius: 10px;
   color: var(--muted);
   text-decoration: none;
   white-space: nowrap;
-  flex: 1;
-  min-width: 56px;
+  min-width: 0;
   transition: color 0.15s ease, background 0.15s ease, transform 0.08s ease;
 }
-.nav-item:active { transform: scale(0.94); }
-.nav-item:hover { color: var(--text); }
-.nav-item.is-active {
+.nav-item:active,
+.nav-group-toggle:active { transform: scale(0.96); }
+.nav-item:hover,
+.nav-group-toggle:hover { color: var(--text); }
+.nav-item.is-active,
+.nav-group.is-active > .nav-group-toggle,
+.nav-group[open] > .nav-group-toggle {
   color: var(--text);
   background: var(--card-2);
   box-shadow: inset 0 -2px 0 var(--accent);
 }
+.nav-group {
+  position: relative;
+  min-width: 0;
+}
+.nav-group-toggle {
+  position: relative;
+  list-style: none;
+  cursor: pointer;
+  user-select: none;
+}
+.nav-group-toggle::-webkit-details-marker { display: none; }
+.nav-group-toggle::marker { display: none; content: ""; }
 .nav-item-icon {
   font-size: 17px;
   line-height: 1;
@@ -1151,6 +1167,229 @@ body.is-loading::after {
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.02em;
+}
+.nav-group-chevron {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1;
+  transform: translateY(-50%);
+  transition: transform 0.15s ease;
+}
+.nav-group[open] .nav-group-chevron {
+  transform: translateY(-50%) rotate(180deg);
+}
+.nav-group-panel {
+  position: absolute;
+  top: calc(100% + 9px);
+  left: 50%;
+  z-index: 30;
+  width: 280px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: rgba(17, 28, 51, 0.98);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transform: translateX(-50%);
+}
+.nav-group:last-child .nav-group-panel {
+  right: 0;
+  left: auto;
+  transform: none;
+}
+.nav-group-panel-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px 9px;
+  color: var(--text);
+  font-size: 13px;
+}
+.nav-submenu-item {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 8px;
+  border-radius: 10px;
+  color: var(--text);
+  text-decoration: none;
+  transition: background 0.15s ease, transform 0.08s ease;
+}
+.nav-submenu-item:hover,
+.nav-submenu-item.is-active { background: rgba(110, 168, 255, 0.12); }
+.nav-submenu-item.is-active { box-shadow: inset 3px 0 0 var(--accent); }
+.nav-submenu-item:active { transform: scale(0.98); }
+.nav-submenu-icon {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: var(--card-2);
+}
+.nav-submenu-copy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.nav-submenu-copy strong { font-size: 13px; }
+.nav-submenu-copy small {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nav-submenu-arrow {
+  color: var(--muted);
+  font-size: 20px;
+}
+
+@media (max-width: 480px) {
+  .nav-menu { padding-inline: 6px; }
+  .nav-group-chevron { right: 4px; }
+  .nav-group-panel {
+    position: fixed;
+    /* O backdrop-filter do nav vira o containing block do painel no Safari;
+       100% ancora logo abaixo do próprio nav em vez de somar o topbar duas vezes. */
+    top: calc(100% + 8px);
+    right: 10px;
+    left: 10px;
+    width: auto;
+    max-height: calc(100dvh - var(--stack-top, 100px) - 20px);
+    overflow-y: auto;
+    transform: none;
+  }
+  .nav-group:last-child .nav-group-panel { right: 10px; left: 10px; }
+}
+
+/* === HOME / CENTRAL DE NAVEGAÇÃO === */
+.home-shell { max-width: 1180px; }
+.home-hero {
+  padding: 26px 4px 22px;
+}
+.home-eyebrow {
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+}
+.home-hero h2 {
+  margin: 7px 0 6px;
+  font-size: clamp(28px, 5vw, 42px);
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+}
+.home-hero p {
+  max-width: 620px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.55;
+}
+.home-destination-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+.home-destination-card {
+  --home-card-accent: var(--accent);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--home-card-accent);
+  border-radius: 18px;
+  background: linear-gradient(145deg, color-mix(in srgb, var(--home-card-accent) 9%, var(--card)), var(--card));
+  box-shadow: var(--shadow);
+}
+.home-destination-card--game { --home-card-accent: #a78bfa; }
+.home-destination-card--tracking { --home-card-accent: #34d399; }
+.home-destination-card--other { --home-card-accent: #f59e0b; }
+.home-destination-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 88px;
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.home-destination-icon {
+  display: grid;
+  flex: 0 0 46px;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border: 1px solid color-mix(in srgb, var(--home-card-accent) 35%, transparent);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--home-card-accent) 14%, transparent);
+  font-size: 23px;
+}
+.home-destination-head h3 {
+  margin: 0 0 3px;
+  font-size: 19px;
+}
+.home-destination-head p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+}
+.home-link-list { padding: 7px; }
+.home-link {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  grid-template-areas:
+    "icon title arrow"
+    "icon description arrow";
+  align-items: center;
+  column-gap: 9px;
+  min-height: 54px;
+  padding: 8px 9px;
+  border-radius: 11px;
+  color: var(--text);
+  text-decoration: none;
+  transition: background 0.15s ease, transform 0.08s ease;
+}
+.home-link:hover { background: rgba(255, 255, 255, 0.055); }
+.home-link:active { transform: scale(0.985); }
+.home-link > span {
+  grid-area: icon;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--card-2);
+  font-size: 17px;
+}
+.home-link > strong {
+  grid-area: title;
+  align-self: end;
+  font-size: 13px;
+}
+.home-link > small {
+  grid-area: description;
+  align-self: start;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.home-link > i {
+  grid-area: arrow;
+  color: var(--muted);
+  font-size: 21px;
+  font-style: normal;
+}
+.home-footer { margin-top: 28px; }
+
+@media (max-width: 820px) {
+  .home-destination-grid { grid-template-columns: 1fr; }
+  .home-destination-head { min-height: 76px; }
 }
 
 /* === PÁGINA PESSOAL DA VIC === */

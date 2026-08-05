@@ -36,7 +36,7 @@ const invalidDistance = { exercises: ["corrida"], run_km: null };
 toggleTrackerValue(invalidDistance, "run_km", "2");
 assert.equal(invalidDistance.run_km, null);
 
-const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
+const html = await readFile(new URL("../habitos.html", import.meta.url), "utf8");
 const groups = [...html.matchAll(/<div class="chip-grid chip-grid--3" data-group="run_km">([\s\S]*?)<\/div>/g)];
 assert.equal(groups.length, 2);
 for (const [, contents] of groups) {
