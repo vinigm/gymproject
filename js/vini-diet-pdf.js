@@ -372,7 +372,7 @@ function drawGymCalendar(commands, trainingDays, monthISO, x, y, width, height) 
 
 function pageContents(records, options) {
   const goals = options.goals || VINI_DAILY_GOALS;
-  const reportTitle = ascii(options.reportTitle || "Relatório nutricional - Kg Vini");
+  const reportTitle = ascii(options.reportTitle || "Relatório nutricional - Dieta Vini");
   const subtitle = `${ascii(options.scopeLabel || "Ciclo atual")} | ${records.length} dias | gerado em ${generatedDate(options.generatedAt)}`;
   const commands = [];
   const weights = normalizeWeightEntries(options.weightEntries);

@@ -28,9 +28,9 @@ export const NAV_GROUPS = Object.freeze([
   ]),
   group("tracking", "📈", "Tracking", [
     { href: "./habitos.html", icon: "✅", label: "Hábitos", description: "Registro diário", match: ["habitos.html"] },
-    { href: "./stats.html", icon: "📊", label: "Stats", description: "Visão geral", match: ["stats.html"] },
-    { href: "./kg-vini.html", icon: "⚖️", label: "Kg Vini", description: "Peso, dieta e evolução", match: ["kg-vini.html"] },
-    { href: "./kg-vivi.html", icon: "⚖️", label: "Kg Vivi", description: "Peso, dieta e evolução", match: ["kg-vivi.html"] },
+    { href: "./stats.html", icon: "📊", label: "Estatísticas", description: "Visão geral", match: ["stats.html"] },
+    { href: "./kg-vini.html", icon: "⚖️", label: "Dieta Vini", description: "Peso, dieta e evolução", match: ["kg-vini.html"] },
+    { href: "./kg-vivi.html", icon: "⚖️", label: "Dieta Vivi", description: "Peso, dieta e evolução", match: ["kg-vivi.html"] },
   ]),
   group("other", "🧰", "Outros", [
     { href: "./alongamento.html", icon: "🧘", label: "Alongar", description: "Sessão guiada", match: ["alongamento.html"] },

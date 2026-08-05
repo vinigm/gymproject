@@ -55,19 +55,19 @@ No iPhone/Android, abrir o site no navegador e usar "Adicionar à tela de iníci
 
 | Arquivo | Papel |
 | --- | --- |
-| `index.html` | Página inicial: central de navegação com três cards (`Game`, `Tracking`, `Outros`) e todos os destinos do app |
+| `index.html` | Página inicial: central de navegação com três cards (`Tracking`, `Game`, `Outros`) e todos os destinos do app |
 | `habitos.html` | Registro de hábitos do dia (chips) dos dois usuários + histórico do mês |
 | `points.html` | Página Pontos: totais por período, detalhamento por pessoa/dia e calendário diário |
 | `casal.html` | Prêmios/loja do casal (carteira conjunta, `scope` "shared") |
 | `victoria.html` | Loja pessoal da Vivi (carteira `scope` "personal-victoria") |
 | `placares.html` | Comparação Vini x Vivi por dias/semanas/meses |
 | `recordes.html` | Melhor dia/semana/mês de cada um + banner do recordista geral |
-| `stats.html` | Estatísticas por pessoa (gráficos, sequências, resumos) |
+| `stats.html` | Página Estatísticas por pessoa (gráficos, sequências, resumos) |
 | `alongamento.html` | Ferramenta de alongamento guiado (timer com auto-avanço) |
 | `pomodoro.html` | Timer Pomodoro (foco/pausas) com estatísticas por usuário |
 | `presence.html` | Status/presença (painel de foco Pomodoro para tablet, tempo real) |
-| `kg-vini.html` | Peso, dieta, estatísticas e gráficos nutricionais do Vini |
-| `kg-vivi.html` | Peso, dieta, estatísticas e gráficos nutricionais da Vivi |
+| `kg-vini.html` | Página Dieta Vini: peso, dieta, estatísticas e gráficos nutricionais |
+| `kg-vivi.html` | Página Dieta Vivi: peso, dieta, estatísticas e gráficos nutricionais |
 | `config.html` | Configuração da tabela de pontos/prêmios (persistida em `config/points`) |
 
 ### JavaScript (`js/`)
@@ -181,7 +181,7 @@ Em `firebase-config.js`, o SDK 10.12.2 é importado da CDN gstatic. `firebaseCon
 
 ## Navegação
 
-O menu vem de `nav-menu.js`. `HOME_NAV_ITEM` aponta para a página inicial e `NAV_GROUPS` organiza os treze destinos restantes em três grupos: **Game** (Pontos, Prêmios, Recordes, Placares, Vivi), **Tracking** (Hábitos, Stats, Kg Vini, Kg Vivi) e **Outros** (Alongar, Pomodoro, Status, Config).
+O menu vem de `nav-menu.js`. `HOME_NAV_ITEM` aponta para a página inicial e `NAV_GROUPS` organiza os treze destinos restantes em três grupos: **Game** (Pontos, Prêmios, Recordes, Placares, Vivi), **Tracking** (Hábitos, Estatísticas, Dieta Vini, Dieta Vivi) e **Outros** (Alongar, Pomodoro, Status, Config). Na home, os cards aparecem na ordem Tracking, Game e Outros. Cada grupo usa a mesma cor nos cards e no submenu: verde, roxo e laranja, respectivamente.
 
 `mountNavMenu(containerId="nav-menu")` pega o `<nav id="nav-menu">`, adiciona a classe `nav-menu` e renderiza Início mais três elementos `<details>` acessíveis. Abrir um submenu fecha os demais; toque fora fecha todos; `Escape` fecha e devolve o foco ao botão do grupo. `currentFile()` compara o último segmento da URL com `item.match`, destacando tanto o destino no painel quanto o grupo correspondente. Em telas pequenas o painel usa praticamente toda a largura; no desktop fica ancorado ao item do topo.
 
@@ -245,7 +245,7 @@ Em seguida o nav é posicionado logo abaixo da `.topbar`: `setOffsets()` mede `t
 
 **Arquivos.** `js/placares-page.js`, `placares.html`, `js/points-utils.js`, `js/tracking-cycle.js`.
 
-### Stats
+### Estatísticas
 
 **O que faz.** `stats.html`: estatísticas por pessoa, com toggle Vini/Vivi (`#stats-user-seg`), janela de 7/30/90 dias (`#vstat-range`) e seletor entre ciclo atual e histórico completo.
 
@@ -283,14 +283,14 @@ Cores: OCUPADO (fase foco) = `is-ocupado` + `presence-busy` (vermelho); Disponí
 
 **Arquivos.** `presence.html`, `js/presence-page.js`, `js/presence-storage.js`.
 
-### Kg Vini e Kg Vivi (peso + dieta)
+### Dieta Vini e Dieta Vivi (peso + dieta)
 
 **O que faz.** `kg-vivi.html` e `kg-vini.html`: acompanhamento individual de peso (registro, gráfico e IMC) e alimentação. O atributo `data-kg-user="victoria|vinicius"` do `<body>` define o usuário, separa os dados pelo `userId` e seleciona o plano versionado de `DIETA_VIVI.md` ou `DIETA_VINI.md`.
 
-**Como funciona por baixo.** A implementação é compartilhada por `kg-vivi-page.js`; `kg-vini-page.js` é a entrada da página do Vini. O seletor `#kg-section-seg` oferece as páginas `Peso`, `Dieta`, `Stats` e `Graphs` e usa `habitos-kg-section` para Vivi e `habitos-kg-section-vinicius` para Vini.
+**Como funciona por baixo.** A implementação é compartilhada por `kg-vivi-page.js`; `kg-vini-page.js` é a entrada da página do Vini. O seletor `#kg-section-seg` oferece as páginas `Peso`, `Dieta`, `Estatísticas` e `Graphs` e usa `habitos-kg-section` para Vivi e `habitos-kg-section-vinicius` para Vini.
 
 - **Peso** — `renderWeight()` monta hero, formulário, gráfico, IMC e últimos registros. O registro continua sem horário e separado por usuário. Gráfico, comparação e lista abrem no ciclo atual; o hero também mostra a variação desde a primeira pesagem do ciclo. `Histórico completo` recupera visualmente todas as pesagens anteriores.
-- **Tracker compartilhado** — `renderViniDietTracker()` recebe a visualização ativa. `Dieta` contém somente o registro por data, refeições predefinidas removíveis, seleção individual, treino, resumo, bebidas, refeições adicionais, hidratação e o botão final de salvar. No Kg Vini, `Stats` foi condensada em quatro médias de todos os registros do escopo e uma contagem regressiva experimental de composição corporal; no Kg Vivi, a visão semanal e as estatísticas detalhadas permanecem. `Graphs` reúne os quatro gráficos interativos e a exportação em PDF. O histórico alimentar deixou de ser renderizado, mas todos os documentos permanecem em `diet_logs` e continuam alimentando Stats, Graphs e a edição pelo seletor de data.
+- **Tracker compartilhado** — `renderViniDietTracker()` recebe a visualização ativa. `Dieta` contém somente o registro por data, refeições predefinidas removíveis, seleção individual, treino, resumo, bebidas, refeições adicionais, hidratação e o botão final de salvar. Na Dieta Vini, `Estatísticas` foi condensada em quatro médias de todos os registros do escopo e uma contagem regressiva experimental de composição corporal; na Dieta Vivi, a visão semanal e as estatísticas detalhadas permanecem. `Graphs` reúne os quatro gráficos interativos e a exportação em PDF. O histórico alimentar deixou de ser renderizado, mas todos os documentos permanecem em `diet_logs` e continuam alimentando Estatísticas, Graphs e a edição pelo seletor de data.
 - **Dieta da Vivi** — o plano `vivi-nutri-2026-02-v6` preserva as 19 composições oficiais do PDF e usa onze atalhos: as seis refeições da dieta base modelada em 03/08/2026, uma dose avulsa de whey com água, 30 g de Palatinose e três lanches da tarde independentes (1 banana, 1 maçã ou 30 g de castanha-de-caju). Os atalhos antigos foram removidos apenas da grade de marcação rápida; seus alimentos e as alternativas oficiais continuam disponíveis no menu personalizado e na consulta estática. A hidratação usa a referência prescrita de 35 ml/kg, apresentada no PDF como aproximadamente 1,6 L. O documento não fornece metas clínicas de kcal/macros; por isso as referências de 2.000 kcal, 90 g P, 250 g C e 65 g G continuam explicitamente provisórias.
 - **Dieta do Vini** — o plano `vini-nutri-2026-07-v12` mantém quatorze atalhos pessoais, incluindo o café de 3 ovos cozidos, churrasco, guisado, pasta de amendoim, o lanche de 3 medidas de whey com 1 banana e uma dose avulsa de whey com água. Os atalhos de almoço e jantar não incluem mais azeite; o alimento permanece no menu personalizado e na consulta oficial.
 - **Dieta Oficial** — existe nos dois Kg. `renderViniOfficialDiet()` usa o perfil ativo para mostrar uma consulta estática sem inputs: 18 composições dos prints no Vini e 19 composições organizadas do PDF na Vivi. As instruções clínicas completas da Vivi permanecem em `DIETA_VIVI.md` e no PDF original.
@@ -518,9 +518,9 @@ Breakpoints: `@media (max-width:359px)` compacta chips; `(max-width:420/480px)` 
 
 ### Service Worker
 
-`service-worker.js`, estratégia **network-first** com fallback offline. `CACHE = "habitos-shell-v65"`. No `install` faz `self.skipWaiting()`; no `activate` deleta todos os caches com nome diferente de `CACHE` e chama `self.clients.claim()`. No `fetch`: deixa passar direto hosts que contenham `googleapis.com`, `firebaseio.com` ou `gstatic.com`, e métodos diferentes de GET; para o resto faz `fetch(req, { cache: "no-store" })`, clona a resposta para o cache em background e, se a rede falhar, responde com `caches.match(req)`. Isso garante versão fresca quando online e evita ficar preso em versão antiga após deploy. O SW é registrado pelas páginas HTML no evento `load`.
+`service-worker.js`, estratégia **network-first** com fallback offline. `CACHE = "habitos-shell-v66"`. No `install` faz `self.skipWaiting()`; no `activate` deleta todos os caches com nome diferente de `CACHE` e chama `self.clients.claim()`. No `fetch`: deixa passar direto hosts que contenham `googleapis.com`, `firebaseio.com` ou `gstatic.com`, e métodos diferentes de GET; para o resto faz `fetch(req, { cache: "no-store" })`, clona a resposta para o cache em background e, se a rede falhar, responde com `caches.match(req)`. Isso garante versão fresca quando online e evita ficar preso em versão antiga após deploy. O SW é registrado pelas páginas HTML no evento `load`.
 
-Para invalidar caches antigos num deploy, é preciso **incrementar manualmente o nome do cache** (`habitos-shell-v65`) — o número é a versão efetiva do shell. Em rede lenta mas presente não há timeout: o app espera a rede em vez de servir o cache.
+Para invalidar caches antigos num deploy, é preciso **incrementar manualmente o nome do cache** (`habitos-shell-v66`) — o número é a versão efetiva do shell. Em rede lenta mas presente não há timeout: o app espera a rede em vez de servir o cache.
 
 ### Wake Lock
 

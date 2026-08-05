@@ -14,7 +14,7 @@ const active = IS_VIVI_DIET_PROFILE ? vivi : vini;
 export const DIET_PROFILE = Object.freeze(IS_VIVI_DIET_PROFILE ? {
   userId: "victoria",
   personName: "Vivi",
-  reportTitle: "Relatório nutricional - Kg Vivi",
+  reportTitle: "Relatório nutricional - Dieta Vivi",
   reportSlug: "vivi",
   sourceDescription: "plano alimentar em PDF",
   officialIntro: "As refeições abaixo organizam fielmente as composições, porções e alternativas do PDF da nutricionista. Esta área é somente para consulta e não altera seus registros.",
@@ -25,7 +25,7 @@ export const DIET_PROFILE = Object.freeze(IS_VIVI_DIET_PROFILE ? {
 } : {
   userId: "vinicius",
   personName: "Vini",
-  reportTitle: "Relatório nutricional - Kg Vini",
+  reportTitle: "Relatório nutricional - Dieta Vini",
   reportSlug: "vini",
   sourceDescription: "prints da nutricionista",
   officialIntro: "As refeições abaixo reproduzem as composições completas dos prints. Esta área é somente para consulta e não altera seus registros.",

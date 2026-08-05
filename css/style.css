@@ -1144,13 +1144,17 @@ body.is-loading::after {
 .nav-group.is-active > .nav-group-toggle,
 .nav-group[open] > .nav-group-toggle {
   color: var(--text);
-  background: var(--card-2);
-  box-shadow: inset 0 -2px 0 var(--accent);
+  background: color-mix(in srgb, var(--nav-group-accent, var(--accent)) 12%, var(--card-2));
+  box-shadow: inset 0 -2px 0 var(--nav-group-accent, var(--accent));
 }
 .nav-group {
+  --nav-group-accent: var(--accent);
   position: relative;
   min-width: 0;
 }
+.nav-group[data-nav-group="game"] { --nav-group-accent: #a78bfa; }
+.nav-group[data-nav-group="tracking"] { --nav-group-accent: #34d399; }
+.nav-group[data-nav-group="other"] { --nav-group-accent: #f59e0b; }
 .nav-group-toggle {
   position: relative;
   list-style: none;
@@ -1188,9 +1192,13 @@ body.is-loading::after {
   z-index: 30;
   width: 280px;
   padding: 8px;
-  border: 1px solid var(--border);
+  border: 1px solid color-mix(in srgb, var(--nav-group-accent) 38%, var(--border));
   border-radius: 14px;
-  background: rgba(17, 28, 51, 0.98);
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--nav-group-accent) 9%, rgba(17, 28, 51, 0.98)),
+    rgba(17, 28, 51, 0.98)
+  );
   box-shadow: 0 18px 48px rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -1206,7 +1214,7 @@ body.is-loading::after {
   align-items: center;
   gap: 8px;
   padding: 6px 8px 9px;
-  color: var(--text);
+  color: var(--nav-group-accent);
   font-size: 13px;
 }
 .nav-submenu-item {
@@ -1221,8 +1229,10 @@ body.is-loading::after {
   transition: background 0.15s ease, transform 0.08s ease;
 }
 .nav-submenu-item:hover,
-.nav-submenu-item.is-active { background: rgba(110, 168, 255, 0.12); }
-.nav-submenu-item.is-active { box-shadow: inset 3px 0 0 var(--accent); }
+.nav-submenu-item.is-active {
+  background: color-mix(in srgb, var(--nav-group-accent) 13%, transparent);
+}
+.nav-submenu-item.is-active { box-shadow: inset 3px 0 0 var(--nav-group-accent); }
 .nav-submenu-item:active { transform: scale(0.98); }
 .nav-submenu-icon {
   display: grid;
@@ -1230,7 +1240,7 @@ body.is-loading::after {
   width: 30px;
   height: 30px;
   border-radius: 9px;
-  background: var(--card-2);
+  background: color-mix(in srgb, var(--nav-group-accent) 10%, var(--card-2));
 }
 .nav-submenu-copy {
   display: flex;

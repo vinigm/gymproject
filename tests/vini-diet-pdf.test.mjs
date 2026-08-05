@@ -26,7 +26,7 @@ const pdf = new TextDecoder().decode(bytes);
 assert.ok(bytes.length > 5000);
 assert.ok(pdf.startsWith("%PDF-1.4"));
 assert.equal((pdf.match(/\/Type \/Page\b/g) || []).length, 1);
-assert.match(pdf, /Relatorio nutricional - Kg Vini/);
+assert.match(pdf, /Relatorio nutricional - Dieta Vini/);
 assert.match(pdf, /Evolucao do peso/);
 assert.match(pdf, /Ultimo: 90,8 kg/);
 assert.match(pdf, /Medias do ciclo/);

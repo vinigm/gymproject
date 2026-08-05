@@ -28,7 +28,7 @@ const pdfText = new TextDecoder().decode(pdf.createViniDietPdf([{
   weightEntries: [{ date: "2026-07-27", weight: 63.2 }],
   trainingDays: [{ date: "2026-07-27", gymGroups: ["perna"] }],
 }));
-assert.match(pdfText, /Relatorio nutricional - Kg Vivi/);
+assert.match(pdfText, /Relatorio nutricional - Dieta Vivi/);
 assert.match(pdfText, /Evolucao do peso/);
 assert.match(pdfText, /Calendario de musculacao/);
 

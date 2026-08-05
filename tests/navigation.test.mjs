@@ -7,7 +7,7 @@ assert.deepEqual(NAV_GROUPS.map((group) => group.label), ["Game", "Tracking", "O
 
 const expected = {
   Game: ["Pontos", "Prêmios", "Recordes", "Placares", "Vivi"],
-  Tracking: ["Hábitos", "Stats", "Kg Vini", "Kg Vivi"],
+  Tracking: ["Hábitos", "Estatísticas", "Dieta Vini", "Dieta Vivi"],
   Outros: ["Alongar", "Pomodoro", "Status", "Config"],
 };
 
@@ -26,9 +26,16 @@ const habitsHtml = await readFile(new URL("../habitos.html", import.meta.url), "
 assert.match(homeHtml, /class="home-destination-card home-destination-card--game"/);
 assert.match(homeHtml, /class="home-destination-card home-destination-card--tracking"/);
 assert.match(homeHtml, /class="home-destination-card home-destination-card--other"/);
+assert.ok(homeHtml.indexOf("home-destination-card--tracking") < homeHtml.indexOf("home-destination-card--game"));
+assert.ok(homeHtml.indexOf("home-destination-card--game") < homeHtml.indexOf("home-destination-card--other"));
 for (const item of allItems) assert.match(homeHtml, new RegExp(`href="${item.href.replace(".", "\\.")}"`));
 assert.doesNotMatch(homeHtml, /id="date-input"/);
 assert.match(habitsHtml, /id="date-input"/);
 assert.match(habitsHtml, /src="\.\/js\/app\.js"/);
+
+const styles = await readFile(new URL("../css/style.css", import.meta.url), "utf8");
+assert.match(styles, /data-nav-group="game"[^}]+#a78bfa/);
+assert.match(styles, /data-nav-group="tracking"[^}]+#34d399/);
+assert.match(styles, /data-nav-group="other"[^}]+#f59e0b/);
 
 console.log("navigation: ok");

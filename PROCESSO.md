@@ -223,7 +223,7 @@ expandido pro casal (`casal.html`).
 
 | Página                 | Conteúdo                                                            |
 | ---------------------- | ------------------------------------------------------------------- |
-| `index.html`           | Central inicial com cards de Game, Tracking e Outros                |
+| `index.html`           | Central inicial com cards de Tracking, Game e Outros                |
 | `habitos.html`         | Tracker diário + histórico mensal dos hábitos                       |
 | `points.html`          | Totais + Detalhamento + Calendário dinâmico                          |
 | `recordes.html`        | Banners de recordes + grid de 6 cards                                |
@@ -286,8 +286,9 @@ Fluxo de login:
 `js/nav-menu.js` exporta `mountNavMenu()`. Cada página tem
 `<nav id="nav-menu"></nav>` e chama no bootstrap. Detecta página atual via
 `window.location.pathname` e destaca o item e seu grupo. O topo mantém quatro
-entradas: Início, Game, Tracking e Outros. Os três últimos abrem submenus;
-a home replica os mesmos destinos em cards maiores.
+entradas: Início, Game, Tracking e Outros. Os três últimos abrem submenus
+coloridos conforme os cards; a home os apresenta na ordem Tracking, Game e
+Outros.
 
 ### Spinner global em vez de "carregando..."
 

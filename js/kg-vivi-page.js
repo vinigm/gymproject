@@ -148,7 +148,7 @@ function render() {
       <div class="seg stats-user-seg kg-seg" id="kg-section-seg">
         <button data-section="peso"  class="seg-btn">⚖️ Peso</button>
         <button data-section="dieta" class="seg-btn">🍽️ Dieta</button>
-        <button data-section="stats" class="seg-btn">📊 Stats</button>
+        <button data-section="stats" class="seg-btn">📊 Estatísticas</button>
         <button data-section="graphs" class="seg-btn">📈 Graphs</button>
       </div>
     </div>
