@@ -6,6 +6,7 @@ import {
   VIVI_MEALS,
   VIVI_OFFICIAL_MEALS,
   VIVI_PLAN_VERSION,
+  VIVI_QUICK_BUILDER_GROUP_IDS,
   VIVI_REQUIRED_MEALS,
   calculateViviDietDay,
   emptyViviDietDay,
@@ -16,6 +17,7 @@ import {
 import {
   VIVI_MEAL_PRESETS,
   isViviMealPresetApplied,
+  setViviFoodChecked,
   toggleViviFoodQuantity,
   toggleViviMealPreset,
 } from "../js/vivi-diet-selection.js";
@@ -23,7 +25,7 @@ import {
 const group = (id) => VIVI_FOOD_GROUPS.find((entry) => entry.id === id);
 const food = (groupId, foodId) => group(groupId).foods.find((entry) => entry.id === foodId);
 
-assert.equal(VIVI_PLAN_VERSION, "vivi-nutri-2026-02-v7");
+assert.equal(VIVI_PLAN_VERSION, "vivi-nutri-2026-02-v8");
 assert.deepEqual(VIVI_DAILY_GOALS, { kcal: 2000, p: 90, c: 250, f: 65 });
 assert.deepEqual(VIVI_HYDRATION, { baseMl: 1600, trainingMinMl: 1600, trainingMaxMl: 1600 });
 assert.deepEqual(VIVI_REQUIRED_MEALS, ["desjejum", "almoco", "lanche_tarde", "jantar"]);
@@ -57,6 +59,37 @@ assert.equal(food("suplemento", "whey_probiotica").defaultQuantity, 31);
 assert.equal(food("suplemento", "palatinose").defaultQuantity, 30);
 assert.equal(food("suplemento", "hipercalorico_growth").defaultQuantity, 3);
 assert.ok(food("suplemento", "hipercalorico_growth").quantityChoices.includes(5.5));
+assert.deepEqual(VIVI_QUICK_BUILDER_GROUP_IDS, [
+  "montador_carboidratos",
+  "montador_proteinas",
+  "montador_frutas",
+  "montador_suplementos",
+]);
+assert.deepEqual(group("montador_carboidratos").foods.map((entry) => entry.label), [
+  "Arroz branco cozido",
+  "Batata inglesa cozida",
+  "Purê de batata",
+  "Aipim (mandioca) cozido",
+  "Massa cozida",
+]);
+assert.deepEqual(group("montador_proteinas").foods.map((entry) => entry.label), [
+  "Alcatra grelhada",
+  "Guisado",
+  "Peito de frango grelhado",
+  "Peixe tilápia grelhado",
+]);
+assert.deepEqual(group("montador_frutas").foods.map((entry) => entry.label), [
+  "Maçã",
+  "Banana-prata",
+  "Morango",
+]);
+assert.deepEqual(group("montador_suplementos").foods.map((entry) => entry.label), [
+  "Palatinose",
+  "Whey Protein · 100% Pure Whey (Probiótica)",
+  "Hipercalórico Growth",
+  "Mix de nuts",
+]);
+assert.equal(food("montador_carboidratos", "quick_arroz").freeQuantity, true);
 
 for (const meal of VIVI_MEALS) {
   const foodGroup = group(meal.id);
@@ -123,6 +156,35 @@ fruit = toggleViviFoodQuantity(fruit, {
   amount: 150,
 });
 assert.equal(fruit.foods.desjejum, undefined);
+
+// O montador rápido aceita qualquer peso em gramas e soma mais de um item da
+// mesma categoria sem arredondar para os botões preexistentes.
+let quickMeal = setViviFoodChecked(emptyViviDietDay(), {
+  groupId: "montador_carboidratos",
+  foodId: "quick_arroz",
+  checked: true,
+  amount: 137,
+});
+quickMeal = setViviFoodChecked(quickMeal, {
+  groupId: "montador_carboidratos",
+  foodId: "quick_batata",
+  checked: true,
+  amount: 80,
+});
+assert.equal(quickMeal.amounts.montador_carboidratos.quick_arroz, 137);
+assert.equal(quickMeal.amounts.montador_carboidratos.quick_batata, 80);
+assert.deepEqual(calculateViviDietDay(quickMeal).consumed, {
+  kcal: 220,
+  p: 4.4,
+  c: 48.1,
+  f: 0.3,
+});
+quickMeal = setViviFoodChecked(quickMeal, {
+  groupId: "montador_carboidratos",
+  foodId: "quick_batata",
+  checked: false,
+});
+assert.deepEqual(quickMeal.foods.montador_carboidratos, ["quick_arroz"]);
 
 // Os atalhos representam a dieta base da Vivi e as opções avulsas.
 for (const presetId of VIVI_MEAL_PRESETS.map((preset) => preset.id)) {

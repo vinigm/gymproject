@@ -44,6 +44,7 @@ import {
   VINI_DAILY_GOALS,
   VINI_HYDRATION,
   VINI_PLAN_VERSION,
+  VINI_QUICK_BUILDER_GROUP_IDS,
   VINI_REQUIRED_MEALS,
   calculateViniDietDay,
   emptyViniDietDay,
@@ -129,6 +130,7 @@ const tracker = {
   fatGoalDamageKcal: storedFatGoalDamageValue(FAT_GOAL_DAMAGE_KCAL_KEY, 1500, 0, 10000),
   fatGoalCalendarMonth: todayISO().slice(0, 7),
   trendTooltipCleanup: null,
+  quickBuilderBlanks: {},
 };
 
 function pad2(value) { return String(value).padStart(2, "0"); }
@@ -308,6 +310,7 @@ function selectDate(iso, { render = true } = {}) {
   tracker.saveStatus = "";
   tracker.customFoodsOpen = false;
   tracker.beveragesOpen = false;
+  tracker.quickBuilderBlanks = {};
   if (render) renderTracker();
 }
 
@@ -364,6 +367,7 @@ function renderTracker() {
     tracker.root.innerHTML = `
       ${dateNavigatorHTML(isToday)}
       ${mealPresetsHTML(day)}
+      ${quickMealBuilderHTML(day)}
       ${exerciseTrackerHTML(day, summary)}
       ${dailySummaryHTML(summary, energyBalance)}
       ${customFoodsHTML(day, summary)}
@@ -491,7 +495,9 @@ function customFoodsHTML(day, summary) {
         <div id="vini-custom-foods-panel" class="vini-custom-foods-panel">
           <p class="vini-checklist-help">Marque somente cada alimento que você realmente comeu.</p>
           <div class="vini-food-groups">
-            ${VINI_FOOD_GROUPS.map((group) => foodGroupHTML(group, day)).join("")}
+            ${VINI_FOOD_GROUPS
+              .filter((group) => !VINI_QUICK_BUILDER_GROUP_IDS.includes(group.id))
+              .map((group) => foodGroupHTML(group, day)).join("")}
           </div>
           <button type="button" class="ghost-btn vini-custom-foods-close" data-close-custom-foods>Fechar lista de alimentos ↑</button>
         </div>` : ""}
@@ -519,6 +525,89 @@ function mealPresetsHTML(day) {
               </span>
               <b>${applied ? "Remover ×" : "Preencher"}</b>
             </button>`;
+        }).join("")}
+      </div>
+    </section>`;
+}
+
+function quickBuilderBlankCount(group, selectedCount) {
+  const stored = Math.max(0, Number(tracker.quickBuilderBlanks[group.id]) || 0);
+  return selectedCount || stored ? stored : 1;
+}
+
+function quickBuilderNutritionHTML(nutrition) {
+  if (!nutrition) return "Informe as gramas";
+  return `${formatNumber(nutrition.kcal)} kcal · P ${formatMacro(nutrition.p)}g · C ${formatMacro(nutrition.c)}g · G ${formatMacro(nutrition.f)}g`;
+}
+
+function quickBuilderRowHTML(group, day, { food = null, removable = false, blankIndex = -1 } = {}) {
+  const selectedIds = day.foods[group.id] || [];
+  const amount = food ? day.amounts[group.id]?.[food.id] ?? food.defaultQuantity : "";
+  const nutrition = food ? nutritionForFoodQuantity(food, amount) : null;
+  return `
+    <div class="vivi-quick-builder-row${food ? " has-food" : ""}" data-quick-builder-row>
+      <label class="vivi-quick-builder-select">
+        <span>Alimento</span>
+        <select data-quick-food-select data-group="${group.id}" data-old-food="${food?.id || ""}"
+                data-blank-index="${blankIndex}" aria-label="Escolher alimento em ${group.label}">
+          <option value="">Selecione…</option>
+          ${group.foods.map((option) => `
+            <option value="${option.id}" ${option.id === food?.id ? "selected" : ""}
+                    ${selectedIds.includes(option.id) && option.id !== food?.id ? "disabled" : ""}>${option.label}</option>`).join("")}
+        </select>
+      </label>
+      <label class="vivi-quick-builder-grams">
+        <span>Quantidade</span>
+        <span><input type="number" min="1" max="3000" step="0.1" inputmode="decimal"
+                     value="${amount}" ${food ? "" : "disabled"}
+                     data-quick-food-grams data-group="${group.id}" data-food="${food?.id || ""}"
+                     aria-label="Quantidade em gramas de ${food?.label || "alimento"}" /><b>g</b></span>
+      </label>
+      <output class="vivi-quick-builder-nutrition" data-quick-food-nutrition>${quickBuilderNutritionHTML(nutrition)}</output>
+      ${removable ? `<button type="button" class="vivi-quick-builder-remove" data-quick-remove
+                     data-group="${group.id}" data-food="${food?.id || ""}" data-blank-index="${blankIndex}"
+                     aria-label="Remover esta linha">−</button>` : ""}
+    </div>`;
+}
+
+function quickMealBuilderHTML(day) {
+  if (!VINI_QUICK_BUILDER_GROUP_IDS.length) return "";
+  const groups = VINI_QUICK_BUILDER_GROUP_IDS
+    .map((groupId) => VINI_FOOD_GROUPS.find((group) => group.id === groupId))
+    .filter(Boolean);
+  return `
+    <section class="block vivi-quick-builder-block">
+      <div class="block-head">
+        <h2>🍽️ Montador rápido</h2>
+        <span class="muted" style="font-size:11px">gramas livres</span>
+      </div>
+      <p class="vini-presets-help">Escolha o alimento e digite a quantidade. Os valores entram automaticamente nas calorias e macros do dia.</p>
+      <div class="vivi-quick-builder-groups">
+        ${groups.map((group) => {
+          const selectedFoods = (day.foods[group.id] || [])
+            .map((foodId) => foodForGroup(group, foodId))
+            .filter(Boolean);
+          const blankCount = quickBuilderBlankCount(group, selectedFoods.length);
+          const canAdd = selectedFoods.length + blankCount < group.foods.length;
+          return `
+            <article class="vivi-quick-builder-group${selectedFoods.length ? " has-food" : ""}">
+              <header>
+                <span>${group.icon}</span>
+                <div><strong>${group.label}</strong><small>${selectedFoods.length ? `${selectedFoods.length} selecionado${selectedFoods.length === 1 ? "" : "s"}` : "escolha e informe as gramas"}</small></div>
+                <button type="button" data-quick-add data-group="${group.id}" ${canAdd ? "" : "disabled"}
+                        aria-label="Adicionar outro alimento em ${group.label}">+</button>
+              </header>
+              <div class="vivi-quick-builder-rows">
+                ${selectedFoods.map((food, index) => quickBuilderRowHTML(group, day, {
+                  food,
+                  removable: index > 0,
+                })).join("")}
+                ${Array.from({ length: blankCount }, (_, index) => quickBuilderRowHTML(group, day, {
+                  removable: selectedFoods.length > 0 || blankCount > 1,
+                  blankIndex: index,
+                })).join("")}
+              </div>
+            </article>`;
         }).join("")}
       </div>
     </section>`;
@@ -1542,6 +1631,84 @@ function bindTracker() {
   tracker.root.querySelectorAll("[data-meal-preset]").forEach((button) => {
     button.addEventListener("click", () => {
       mutateCurrentDay((day) => toggleViniMealPreset(day, button.dataset.mealPreset));
+    });
+  });
+  tracker.root.querySelectorAll("[data-quick-add]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const groupId = button.dataset.group;
+      const group = VINI_FOOD_GROUPS.find((entry) => entry.id === groupId);
+      if (!group) return;
+      const selectedCount = currentDay().foods[groupId]?.length || 0;
+      tracker.quickBuilderBlanks[groupId] = quickBuilderBlankCount(group, selectedCount) + 1;
+      renderTracker();
+      const selects = tracker.root.querySelectorAll(`[data-quick-food-select][data-group="${groupId}"]`);
+      selects.item(selects.length - 1)?.focus({ preventScroll: true });
+    });
+  });
+  tracker.root.querySelectorAll("[data-quick-food-select]").forEach((select) => {
+    select.addEventListener("change", () => {
+      const groupId = select.dataset.group;
+      const oldFoodId = select.dataset.oldFood;
+      const foodId = select.value;
+      const group = VINI_FOOD_GROUPS.find((entry) => entry.id === groupId);
+      const food = foodForGroup(group, foodId);
+      if (!group || (foodId && !food)) return;
+      if (!oldFoodId) {
+        const blankCount = quickBuilderBlankCount(group, currentDay().foods[groupId]?.length || 0);
+        tracker.quickBuilderBlanks[groupId] = Math.max(0, blankCount - 1);
+      }
+      mutateCurrentDay((day) => {
+        let updated = day;
+        if (oldFoodId) updated = setViniFoodChecked(updated, { groupId, foodId: oldFoodId, checked: false });
+        if (food) {
+          updated = setViniFoodChecked(updated, {
+            groupId,
+            foodId,
+            checked: true,
+            amount: food.defaultQuantity,
+          });
+        }
+        return updated;
+      });
+    });
+  });
+  tracker.root.querySelectorAll("[data-quick-food-grams]").forEach((input) => {
+    input.addEventListener("input", () => {
+      const group = VINI_FOOD_GROUPS.find((entry) => entry.id === input.dataset.group);
+      const food = foodForGroup(group, input.dataset.food);
+      const preview = input.closest("[data-quick-builder-row]")?.querySelector("[data-quick-food-nutrition]");
+      const amount = Number(String(input.value).replace(",", "."));
+      if (preview) preview.textContent = amount > 0 && food
+        ? quickBuilderNutritionHTML(nutritionForFoodQuantity(food, amount))
+        : "Informe as gramas";
+    });
+    input.addEventListener("change", () => {
+      const amount = Number(String(input.value).replace(",", "."));
+      if (!(amount > 0)) {
+        input.value = "";
+        return;
+      }
+      mutateCurrentDay((day) => setViniFoodChecked(day, {
+        groupId: input.dataset.group,
+        foodId: input.dataset.food,
+        checked: true,
+        amount,
+      }));
+    });
+  });
+  tracker.root.querySelectorAll("[data-quick-remove]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const groupId = button.dataset.group;
+      const foodId = button.dataset.food;
+      if (foodId) {
+        mutateCurrentDay((day) => setViniFoodChecked(day, { groupId, foodId, checked: false }));
+        return;
+      }
+      const group = VINI_FOOD_GROUPS.find((entry) => entry.id === groupId);
+      if (!group) return;
+      const selectedCount = currentDay().foods[groupId]?.length || 0;
+      tracker.quickBuilderBlanks[groupId] = Math.max(0, quickBuilderBlankCount(group, selectedCount) - 1);
+      renderTracker();
     });
   });
   tracker.root.querySelectorAll("[data-exercise-intensity]").forEach((button) => {

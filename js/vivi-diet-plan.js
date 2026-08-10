@@ -10,7 +10,7 @@ import {
   normalizeViniExercises,
 } from "./vini-exercise.js";
 
-export const VIVI_PLAN_VERSION = "vivi-nutri-2026-02-v7";
+export const VIVI_PLAN_VERSION = "vivi-nutri-2026-02-v8";
 
 // Mantém as referências provisórias que a página da Vivi já utilizava.
 export const VIVI_DAILY_GOALS = Object.freeze({
@@ -441,6 +441,61 @@ const HIPERCALORICO_GROWTH = item(
   { trackerDefaultQuantity: 3, trackerReferenceQuantity: 5.5 }
 );
 
+function quickBuilderItem(id, label, nutri, {
+  defaultQuantity = 100,
+  referenceQuantity = 100,
+  quality = "reference",
+} = {}) {
+  return item(
+    id,
+    label,
+    `${referenceQuantity.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} g`,
+    nutrition(nutri.kcal, nutri.p, nutri.c, nutri.f, quality),
+    {
+      trackerDefaultQuantity: defaultQuantity,
+      trackerReferenceQuantity: referenceQuantity,
+      freeQuantity: true,
+      quickBuilder: true,
+    }
+  );
+}
+
+// Referências por peso para o montador rápido. Os alimentos genéricos usam
+// valores médios; whey e hipercalórico preservam os rótulos já cadastrados.
+const QUICK_BUILDER_FOODS = Object.freeze({
+  carbs: Object.freeze([
+    quickBuilderItem("quick_arroz", "Arroz branco cozido", { kcal: 130, p: 2.5, c: 28.2, f: 0.2 }),
+    quickBuilderItem("quick_batata", "Batata inglesa cozida", { kcal: 52, p: 1.2, c: 11.9, f: 0 }),
+    quickBuilderItem("quick_pure_batata", "Purê de batata", { kcal: 110.5, p: 1.9, c: 16.8, f: 4 }),
+    quickBuilderItem("quick_aipim", "Aipim (mandioca) cozido", { kcal: 125.4, p: 0.6, c: 30.1, f: 0.3 }),
+    quickBuilderItem("quick_massa", "Massa cozida", { kcal: 158, p: 5.8, c: 30.9, f: 0.9 }),
+  ]),
+  proteins: Object.freeze([
+    quickBuilderItem("quick_alcatra", "Alcatra grelhada", { kcal: 241.4, p: 31.9, c: 0, f: 11.6 }),
+    quickBuilderItem("quick_guisado", "Guisado", { kcal: 220, p: 26, c: 0, f: 12 }),
+    quickBuilderItem("quick_frango", "Peito de frango grelhado", { kcal: 159.2, p: 32, c: 0, f: 2.5 }),
+    quickBuilderItem("quick_tilapia", "Peixe tilápia grelhado", { kcal: 128, p: 26.2, c: 0, f: 2.7 }),
+  ]),
+  fruits: Object.freeze([
+    quickBuilderItem("quick_maca", "Maçã", { kcal: 55.5, p: 0.3, c: 15.2, f: 0.1 }),
+    quickBuilderItem("quick_banana", "Banana-prata", { kcal: 98.3, p: 1.3, c: 26, f: 0.1 }),
+    quickBuilderItem("quick_morango", "Morango", { kcal: 30.2, p: 0.9, c: 6.8, f: 0.3 }),
+  ]),
+  supplements: Object.freeze([
+    quickBuilderItem("quick_palatinose", "Palatinose", { kcal: 120, p: 0, c: 30, f: 0 }, { defaultQuantity: 30, referenceQuantity: 30, quality: "generic-estimate" }),
+    quickBuilderItem("quick_whey", "Whey Protein · 100% Pure Whey (Probiótica)", { kcal: 120, p: 23, c: 3.01, f: 1.49 }, { defaultQuantity: 31, referenceQuantity: 31, quality: "product-estimate" }),
+    quickBuilderItem("quick_hipercalorico", "Hipercalórico Growth", { kcal: 344, p: 27, c: 55, f: 1.5 }, { defaultQuantity: 54.3, referenceQuantity: 90.5, quality: "product-label" }),
+    quickBuilderItem("quick_mix_nuts", "Mix de nuts", { kcal: 90, p: 3, c: 3, f: 8 }, { defaultQuantity: 30, referenceQuantity: 15, quality: "generic-estimate" }),
+  ]),
+});
+
+export const VIVI_QUICK_BUILDER_GROUP_IDS = Object.freeze([
+  "montador_carboidratos",
+  "montador_proteinas",
+  "montador_frutas",
+  "montador_suplementos",
+]);
+
 const VIVI_TRACKER_ONLY_MEALS = Object.freeze([
   Object.freeze({
     id: "ceia",
@@ -454,6 +509,38 @@ const VIVI_TRACKER_ONLY_MEALS = Object.freeze([
     id: "suplemento",
     icon: "🥤",
     label: "Suplemento",
+    required: false,
+    contextual: true,
+    options: Object.freeze([]),
+  }),
+  Object.freeze({
+    id: "montador_carboidratos",
+    icon: "🍚",
+    label: "Carboidratos",
+    required: false,
+    contextual: true,
+    options: Object.freeze([]),
+  }),
+  Object.freeze({
+    id: "montador_proteinas",
+    icon: "🥩",
+    label: "Proteínas",
+    required: false,
+    contextual: true,
+    options: Object.freeze([]),
+  }),
+  Object.freeze({
+    id: "montador_frutas",
+    icon: "🍓",
+    label: "Frutas",
+    required: false,
+    contextual: true,
+    options: Object.freeze([]),
+  }),
+  Object.freeze({
+    id: "montador_suplementos",
+    icon: "🥤",
+    label: "Suplementos",
     required: false,
     contextual: true,
     options: Object.freeze([]),
@@ -480,6 +567,10 @@ const VIVI_TRACKER_EXTRA_FOODS = Object.freeze({
   jantar: Object.freeze([ALCATRA_GRELHADA_100, AIPIM_COZIDO_170, AZEITE_15_G]),
   ceia: Object.freeze([MACA_FUJI_30_G, CASTANHA_CAJU_30_G]),
   suplemento: Object.freeze([WHEY_PROBIOTICA_31, PALATINOSE_30_G, HIPERCALORICO_GROWTH]),
+  montador_carboidratos: QUICK_BUILDER_FOODS.carbs,
+  montador_proteinas: QUICK_BUILDER_FOODS.proteins,
+  montador_frutas: QUICK_BUILDER_FOODS.fruits,
+  montador_suplementos: QUICK_BUILDER_FOODS.supplements,
 });
 
 function parseLocaleNumber(value) {
@@ -651,6 +742,9 @@ function cleanSummary(summary) {
 export function normalizeViviFoodQuantity(food, value) {
   if (!food || food.unquantified) return 1;
   const amount = finiteNumber(value, food.defaultQuantity);
+  if (food.freeQuantity) {
+    return Math.round(Math.max(1, Math.min(3000, amount)) * 10) / 10;
+  }
   return food.quantityChoices.some((choice) => Math.abs(choice - amount) < 0.001)
     ? amount
     : food.defaultQuantity;

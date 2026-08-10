@@ -41,6 +41,7 @@ export const VINI_FOOD_GROUPS = active.VIVI_FOOD_GROUPS || active.VINI_FOOD_GROU
 export const VINI_HYDRATION = active.VIVI_HYDRATION || active.VINI_HYDRATION;
 export const VINI_OFFICIAL_MEALS = active.VIVI_OFFICIAL_MEALS || active.VINI_OFFICIAL_MEALS;
 export const VINI_PLAN_VERSION = active.VIVI_PLAN_VERSION || active.VINI_PLAN_VERSION;
+export const VINI_QUICK_BUILDER_GROUP_IDS = active.VIVI_QUICK_BUILDER_GROUP_IDS || Object.freeze([]);
 export const VINI_REQUIRED_MEALS = active.VIVI_REQUIRED_MEALS || active.VINI_REQUIRED_MEALS;
 
 export const calculateViniDietDay = active.calculateViviDietDay || active.calculateViniDietDay;
