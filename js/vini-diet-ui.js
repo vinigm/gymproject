@@ -535,19 +535,12 @@ function quickBuilderBlankCount(group, selectedCount) {
   return selectedCount || stored ? stored : 1;
 }
 
-function quickBuilderNutritionHTML(nutrition) {
-  if (!nutrition) return "Informe as gramas";
-  return `${formatNumber(nutrition.kcal)} kcal · P ${formatMacro(nutrition.p)}g · C ${formatMacro(nutrition.c)}g · G ${formatMacro(nutrition.f)}g`;
-}
-
 function quickBuilderRowHTML(group, day, { food = null, removable = false, blankIndex = -1 } = {}) {
   const selectedIds = day.foods[group.id] || [];
   const amount = food ? day.amounts[group.id]?.[food.id] ?? food.defaultQuantity : "";
-  const nutrition = food ? nutritionForFoodQuantity(food, amount) : null;
   return `
     <div class="vivi-quick-builder-row${food ? " has-food" : ""}" data-quick-builder-row>
       <label class="vivi-quick-builder-select">
-        <span>Alimento</span>
         <select data-quick-food-select data-group="${group.id}" data-old-food="${food?.id || ""}"
                 data-blank-index="${blankIndex}" aria-label="Escolher alimento em ${group.label}">
           <option value="">Selecione…</option>
@@ -557,13 +550,11 @@ function quickBuilderRowHTML(group, day, { food = null, removable = false, blank
         </select>
       </label>
       <label class="vivi-quick-builder-grams">
-        <span>Quantidade</span>
         <span><input type="number" min="1" max="3000" step="0.1" inputmode="decimal"
-                     value="${amount}" ${food ? "" : "disabled"}
+                     value="${amount}" placeholder="Quantidade" ${food ? "" : "disabled"}
                      data-quick-food-grams data-group="${group.id}" data-food="${food?.id || ""}"
                      aria-label="Quantidade em gramas de ${food?.label || "alimento"}" /><b>g</b></span>
       </label>
-      <output class="vivi-quick-builder-nutrition" data-quick-food-nutrition>${quickBuilderNutritionHTML(nutrition)}</output>
       ${removable ? `<button type="button" class="vivi-quick-builder-remove" data-quick-remove
                      data-group="${group.id}" data-food="${food?.id || ""}" data-blank-index="${blankIndex}"
                      aria-label="Remover esta linha">−</button>` : ""}
@@ -1670,18 +1661,18 @@ function bindTracker() {
         }
         return updated;
       });
+      if (food) {
+        window.requestAnimationFrame(() => {
+          const input = tracker.root?.querySelector(
+            `[data-quick-food-grams][data-group="${groupId}"][data-food="${foodId}"]`
+          );
+          input?.focus({ preventScroll: true });
+          input?.select();
+        });
+      }
     });
   });
   tracker.root.querySelectorAll("[data-quick-food-grams]").forEach((input) => {
-    input.addEventListener("input", () => {
-      const group = VINI_FOOD_GROUPS.find((entry) => entry.id === input.dataset.group);
-      const food = foodForGroup(group, input.dataset.food);
-      const preview = input.closest("[data-quick-builder-row]")?.querySelector("[data-quick-food-nutrition]");
-      const amount = Number(String(input.value).replace(",", "."));
-      if (preview) preview.textContent = amount > 0 && food
-        ? quickBuilderNutritionHTML(nutritionForFoodQuantity(food, amount))
-        : "Informe as gramas";
-    });
     input.addEventListener("change", () => {
       const amount = Number(String(input.value).replace(",", "."));
       if (!(amount > 0)) {

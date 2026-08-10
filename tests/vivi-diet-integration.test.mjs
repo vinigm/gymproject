@@ -54,6 +54,8 @@ assert.match(ui, /DIET_PROFILE\.reportTitle/);
 assert.match(ui, /Montador rápido/);
 assert.match(ui, /data-quick-food-select/);
 assert.match(ui, /data-quick-food-grams/);
+assert.match(ui, /placeholder="Quantidade"/);
+assert.doesNotMatch(ui, /data-quick-food-nutrition/);
 assert.match(ui, /data-quick-add/);
 assert.match(ui, /data-quick-remove/);
 assert.match(official, /DIET_PROFILE\.hydrationDescription/);

@@ -3665,24 +3665,22 @@ body.presence-fullscreen .presence-fs-exit { display: flex; }
 .vivi-quick-builder-group > header button:hover { color: #fff; background: var(--quick-builder); }
 .vivi-quick-builder-group > header button:disabled { opacity: .28; cursor: not-allowed; }
 .vivi-quick-builder-rows { display: flex; padding: 9px; flex-direction: column; gap: 7px; }
-.vivi-quick-builder-row { display: grid; grid-template-columns: minmax(155px, 1.3fr) minmax(100px, .55fr) minmax(210px, 1fr) auto; align-items: end; gap: 7px; padding: 9px; background: var(--card-2); border: 1px solid var(--border); border-radius: 10px; }
+.vivi-quick-builder-row { display: grid; grid-template-columns: minmax(155px, 1fr) minmax(112px, .32fr) auto; align-items: center; gap: 7px; padding: 9px; background: var(--card-2); border: 1px solid var(--border); border-radius: 10px; }
 .vivi-quick-builder-row.has-food { background: rgba(167,139,250,.045); border-color: rgba(167,139,250,.28); }
 .vivi-quick-builder-select,
-.vivi-quick-builder-grams { display: flex; min-width: 0; flex-direction: column; gap: 4px; }
-.vivi-quick-builder-select > span,
-.vivi-quick-builder-grams > span:first-child { color: var(--muted); font-size: 7px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+.vivi-quick-builder-grams { display: block; min-width: 0; }
 .vivi-quick-builder-select select,
-.vivi-quick-builder-grams > span:last-child { width: 100%; min-height: 38px; color: var(--text); background: var(--card); border: 1px solid var(--border); border-radius: 8px; }
+.vivi-quick-builder-grams > span { width: 100%; min-height: 42px; color: var(--text); background: var(--card); border: 1px solid var(--border); border-radius: 8px; }
+.vivi-quick-builder-select select { width: 100%; min-height: 42px; color: var(--text); background: var(--card); border: 1px solid var(--border); border-radius: 8px; }
 .vivi-quick-builder-select select { padding: 7px 28px 7px 9px; outline: 0; font-size: 10px; }
 .vivi-quick-builder-select select:focus,
-.vivi-quick-builder-grams > span:last-child:focus-within { border-color: var(--quick-builder); box-shadow: 0 0 0 2px rgba(167,139,250,.12); }
-.vivi-quick-builder-grams > span:last-child { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; padding: 0 9px; }
-.vivi-quick-builder-grams input { width: 100%; min-width: 0; padding: 7px 2px; color: var(--text); background: transparent; border: 0; outline: 0; font-size: 13px; font-weight: 800; text-align: right; }
+.vivi-quick-builder-grams > span:focus-within { border-color: var(--quick-builder); box-shadow: 0 0 0 2px rgba(167,139,250,.12); }
+.vivi-quick-builder-grams > span { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; padding: 0 9px; }
+.vivi-quick-builder-grams input { width: 100%; min-width: 0; padding: 7px 2px; color: var(--text); background: transparent; border: 0; outline: 0; font-size: 12px; font-weight: 800; text-align: left; }
+.vivi-quick-builder-grams input::placeholder { color: var(--muted); opacity: .9; }
 .vivi-quick-builder-grams input:disabled { opacity: .4; }
 .vivi-quick-builder-grams b { color: var(--muted); font-size: 8px; }
-.vivi-quick-builder-nutrition { display: flex; min-height: 38px; padding: 6px 9px; align-items: center; color: var(--muted); background: rgba(2,6,23,.25); border: 1px solid var(--border); border-radius: 8px; font-size: 8px; font-weight: 700; line-height: 1.35; }
-.vivi-quick-builder-row.has-food .vivi-quick-builder-nutrition { color: var(--good); }
-.vivi-quick-builder-remove { width: 38px; height: 38px; color: var(--bad); background: rgba(248,113,113,.06); border-color: rgba(248,113,113,.28); }
+.vivi-quick-builder-remove { width: 42px; height: 42px; color: var(--bad); background: rgba(248,113,113,.06); border-color: rgba(248,113,113,.28); }
 .vivi-quick-builder-remove:hover { color: #fff; background: var(--bad); }
 
 .vini-custom-foods-block { margin-bottom: 22px; }
@@ -4183,9 +4181,7 @@ body.presence-fullscreen .presence-fs-exit { display: flex; }
   .vini-beverage-row { grid-template-columns: auto minmax(0, 1fr); }
   .vini-beverage-stepper { grid-column: 1 / -1; grid-template-columns: 42px 1fr 42px; }
   .vini-beverage-stepper button { width: 42px; height: 42px; }
-  .vivi-quick-builder-row { grid-template-columns: minmax(0, 1fr) 104px auto; }
-  .vivi-quick-builder-nutrition { grid-column: 1 / span 2; min-height: 32px; }
-  .vivi-quick-builder-remove { grid-column: 3; grid-row: 1 / span 2; align-self: center; }
+  .vivi-quick-builder-row { grid-template-columns: minmax(0, 1fr) 112px auto; }
   .vini-fat-goal-hero { grid-template-columns: 1fr; }
   .vini-fat-goal-target { min-width: 0; }
   .vini-fat-today-balance { grid-template-columns: 1fr; }
@@ -4237,7 +4233,7 @@ body.presence-fullscreen .presence-fs-exit { display: flex; }
   .vini-food-nutri { grid-column: 2; }
   .vini-checkbox-row { grid-template-columns: auto minmax(0, 1fr); }
   .vini-checkbox-nutri { grid-column: 2; }
-  .vivi-quick-builder-row { grid-template-columns: minmax(0, 1fr) 88px auto; padding: 7px; }
+  .vivi-quick-builder-row { grid-template-columns: minmax(0, 1fr) 102px auto; padding: 7px; }
   .vivi-quick-builder-select select { padding-right: 21px; }
   .vini-quantity-picker { padding-left: 43px; }
   .vini-water-actions { grid-template-columns: repeat(2, 1fr); }
