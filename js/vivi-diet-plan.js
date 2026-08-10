@@ -10,7 +10,7 @@ import {
   normalizeViniExercises,
 } from "./vini-exercise.js";
 
-export const VIVI_PLAN_VERSION = "vivi-nutri-2026-02-v6";
+export const VIVI_PLAN_VERSION = "vivi-nutri-2026-02-v7";
 
 // Mantém as referências provisórias que a página da Vivi já utilizava.
 export const VIVI_DAILY_GOALS = Object.freeze({
@@ -288,6 +288,7 @@ const QUANTITY_RULES = Object.freeze({
   leite_semidesnatado: { unit: "ml", values: [100, 150, 200, 250, 300, 400, 500] },
   panalose: { unit: "g", values: [5, 10, 15, 20, 25, 30] },
   palatinose: { unit: "g", values: [10, 15, 20, 25, 30, 35, 40, 50, 60] },
+  hipercalorico_growth: { unit: "dosador", values: [1, 2, 3, 4, 5, 5.5] },
   body_balance: { unit: "g", values: [5, 10, 15, 20, 25, 30] },
   proteina_magra: { unit: "g", values: [50, 80, 100, 120, 150, 180, 200, 250] },
   carbo_cozido: { unit: "g", values: [50, 80, 100, 130, 150, 180, 200, 250] },
@@ -430,6 +431,16 @@ const PALATINOSE_30_G = item(
   { trackerDefaultQuantity: 30, trackerReferenceQuantity: 30 }
 );
 
+// Rótulo informado: 344 kcal, 27 g de proteína, 55 g de carboidratos e
+// 1,5 g de gordura em 5,5 dosadores (aproximadamente 90,5 g).
+const HIPERCALORICO_GROWTH = item(
+  "hipercalorico_growth",
+  "Hipercalórico Growth",
+  "5,5 dosadores · aproximadamente 90,5 g",
+  nutrition(344, 27, 55, 1.5, "product-label"),
+  { trackerDefaultQuantity: 3, trackerReferenceQuantity: 5.5 }
+);
+
 const VIVI_TRACKER_ONLY_MEALS = Object.freeze([
   Object.freeze({
     id: "ceia",
@@ -468,7 +479,7 @@ const VIVI_TRACKER_EXTRA_FOODS = Object.freeze({
   pre_treino: Object.freeze([MARIOLA_34_G, PASTA_AMENDOPOWER_15_G]),
   jantar: Object.freeze([ALCATRA_GRELHADA_100, AIPIM_COZIDO_170, AZEITE_15_G]),
   ceia: Object.freeze([MACA_FUJI_30_G, CASTANHA_CAJU_30_G]),
-  suplemento: Object.freeze([WHEY_PROBIOTICA_31, PALATINOSE_30_G]),
+  suplemento: Object.freeze([WHEY_PROBIOTICA_31, PALATINOSE_30_G, HIPERCALORICO_GROWTH]),
 });
 
 function parseLocaleNumber(value) {
@@ -497,6 +508,7 @@ export function formatViviFoodQuantity(food, quantity) {
   if (food?.quantityUnit === "un") return `${value} un`;
   if (food?.quantityUnit === "fatia") return `${value} ${Number(quantity) === 1 ? "fatia" : "fatias"}`;
   if (food?.quantityUnit === "porcao") return `${value} ${Number(quantity) === 1 ? "porção" : "porções"}`;
+  if (food?.quantityUnit === "dosador") return `${value} ${Number(quantity) === 1 ? "dosador" : "dosadores"}`;
   return `${value}${food?.quantityUnit || ""}`;
 }
 

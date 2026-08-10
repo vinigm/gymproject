@@ -23,13 +23,13 @@ import {
 const group = (id) => VIVI_FOOD_GROUPS.find((entry) => entry.id === id);
 const food = (groupId, foodId) => group(groupId).foods.find((entry) => entry.id === foodId);
 
-assert.equal(VIVI_PLAN_VERSION, "vivi-nutri-2026-02-v6");
+assert.equal(VIVI_PLAN_VERSION, "vivi-nutri-2026-02-v7");
 assert.deepEqual(VIVI_DAILY_GOALS, { kcal: 2000, p: 90, c: 250, f: 65 });
 assert.deepEqual(VIVI_HYDRATION, { baseMl: 1600, trainingMinMl: 1600, trainingMaxMl: 1600 });
 assert.deepEqual(VIVI_REQUIRED_MEALS, ["desjejum", "almoco", "lanche_tarde", "jantar"]);
 assert.equal(VIVI_MEALS.length, 7);
 assert.equal(VIVI_OFFICIAL_MEALS.flatMap((meal) => meal.options).length, 19);
-assert.equal(VIVI_MEAL_PRESETS.length, 11);
+assert.equal(VIVI_MEAL_PRESETS.length, 12);
 assert.deepEqual(VIVI_MEAL_PRESETS.map((preset) => preset.id), [
   "base_desjejum",
   "base_almoco",
@@ -39,6 +39,7 @@ assert.deepEqual(VIVI_MEAL_PRESETS.map((preset) => preset.id), [
   "lanche_castanha",
   "whey_agua",
   "palatinose_30g",
+  "hipercalorico_growth_3_dosadores",
   "base_pre_treino",
   "base_jantar",
   "base_ceia",
@@ -54,6 +55,8 @@ assert.deepEqual(food("lanche_tarde", "maca").quantityChoices, [1, 2, 3, 4, 5]);
 assert.ok(food("lanche_tarde", "castanha_caju").quantityChoices.includes(30));
 assert.equal(food("suplemento", "whey_probiotica").defaultQuantity, 31);
 assert.equal(food("suplemento", "palatinose").defaultQuantity, 30);
+assert.equal(food("suplemento", "hipercalorico_growth").defaultQuantity, 3);
+assert.ok(food("suplemento", "hipercalorico_growth").quantityChoices.includes(5.5));
 
 for (const meal of VIVI_MEALS) {
   const foodGroup = group(meal.id);
@@ -121,7 +124,7 @@ fruit = toggleViviFoodQuantity(fruit, {
 });
 assert.equal(fruit.foods.desjejum, undefined);
 
-// Os onze atalhos representam a dieta base da Vivi e as opções avulsas.
+// Os atalhos representam a dieta base da Vivi e as opções avulsas.
 for (const presetId of VIVI_MEAL_PRESETS.map((preset) => preset.id)) {
   const day = toggleViviMealPreset(emptyViviDietDay(), presetId);
   assert.equal(isViviMealPresetApplied(day, presetId), true, presetId);
@@ -169,6 +172,12 @@ assert.deepEqual(calculateViviDietDay(toggleViviMealPreset(emptyViviDietDay(), "
   p: 0,
   c: 30,
   f: 0,
+});
+assert.deepEqual(calculateViviDietDay(toggleViviMealPreset(emptyViviDietDay(), "hipercalorico_growth_3_dosadores")).consumed, {
+  kcal: 188,
+  p: 14.7,
+  c: 30,
+  f: 0.8,
 });
 assert.deepEqual(calculateViviDietDay(toggleViviMealPreset(emptyViviDietDay(), "base_pre_treino")).consumed, {
   kcal: 178,

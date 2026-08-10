@@ -108,6 +108,16 @@ export const VIVI_MEAL_PRESETS = Object.freeze([
     ]
   ),
   preset(
+    "hipercalorico_growth_3_dosadores",
+    "🥤",
+    "Hipercalórico Growth",
+    "3 dosadores · aproximadamente 49 g",
+    "suplemento",
+    [
+      { foodId: "hipercalorico_growth", amount: 3 },
+    ]
+  ),
+  preset(
     "base_pre_treino",
     "🏃",
     "Pré-treino",
