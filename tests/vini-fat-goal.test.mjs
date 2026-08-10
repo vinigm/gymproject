@@ -5,6 +5,7 @@ import {
   averageDietNutrition,
   calculateViniFatGoal,
   estimateSkeletalMuscleKg,
+  hasDietNutrition,
   mifflinStJeorMale,
   simulateMonthlyDeficit,
 } from "../js/vini-fat-goal.js";
@@ -28,6 +29,10 @@ const averages = averageDietNutrition(records);
 assert.equal(averages.days, 3);
 assert.equal(Math.round(averages.averages.kcal), -133);
 assert.equal(Math.round(averages.averages.p * 10) / 10, 146.7);
+
+const hydrationOnly = { date: "2026-07-17", summary: { consumed: { kcal: 0 }, hydrationMl: 2500 } };
+assert.equal(hasDietNutrition(hydrationOnly), false);
+assert.equal(averageDietNutrition([...records, hydrationOnly]).days, 3);
 
 const eventSimulation = simulateMonthlyDeficit({
   averageDailyDeficitKcal: 500,
@@ -88,6 +93,22 @@ assert.equal(Math.round((
 assert.equal(progress.composition.today.muscleKg, progress.composition.target.muscleKg);
 assert.equal(progress.composition.today.otherKg, progress.composition.target.otherKg);
 assert.equal(Math.round(progress.composition.target.bodyFatPct), 18);
+
+const partialToday = calculateViniFatGoal({
+  records: [
+    records[1],
+    { date: "2026-07-17", summary: { consumed: { kcal: 800, p: 60, c: 70, f: 25 } } },
+    hydrationOnly,
+  ],
+  weightEntries: weights,
+  activityLevel: "medium",
+  today: "2026-07-17",
+});
+assert.equal(partialToday.records, 1);
+assert.equal(partialToday.closedDailyDeficits.length, 1);
+assert.equal(partialToday.todayBalance.date, "2026-07-17");
+assert.equal(partialToday.todayBalance.provisional, true);
+assert.equal(partialToday.cumulativeDeficitKcal, partialToday.closedDailyDeficits[0].deficitKcal);
 
 const customTarget = calculateViniFatGoal({
   records,

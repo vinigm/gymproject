@@ -64,9 +64,21 @@ export function netKcalForDietRecord(record) {
   return Math.max(0, finite(record?.summary?.consumed?.kcal));
 }
 
+// Água ou treino, isoladamente, deixam o dia com `hasData`, mas não tornam o
+// registro alimentar completo o bastante para estimar saldo energético.
+export function hasDietNutrition(record) {
+  const summary = record?.summary || {};
+  const consumed = summary.consumed || {};
+  const additional = summary.additionalNutrition || {};
+  return finite(summary.itemsChecked) > 0
+    || finite(summary.beverageCount) > 0
+    || [consumed.kcal, consumed.p, consumed.c, consumed.f].some((value) => finite(value) > 0)
+    || [additional.kcal, additional.p, additional.c, additional.f].some((value) => finite(value) > 0);
+}
+
 export function averageDietNutrition(records) {
   const valid = (Array.isArray(records) ? records : [])
-    .filter((record) => validDate(record?.date));
+    .filter((record) => validDate(record?.date) && hasDietNutrition(record));
   const totals = valid.reduce((sum, record) => ({
     kcal: sum.kcal + balanceKcalForRecord(record),
     p: sum.p + Math.max(0, finite(record?.summary?.consumed?.p)),
@@ -186,8 +198,14 @@ export function calculateViniFatGoal({
   const startWeightEntry = closestWeight(weights, goal.startDate);
   const currentWeightEntry = weights.at(-1) || null;
   const level = activityLevelFor(activityLevel);
+  const currentDate = validDate(today) ? today : null;
   const goalRecords = (Array.isArray(records) ? records : [])
-    .filter((record) => validDate(record?.date) && record.date >= goal.startDate)
+    .filter((record) => (
+      validDate(record?.date)
+      && record.date >= goal.startDate
+      && (!currentDate || record.date <= currentDate)
+      && hasDietNutrition(record)
+    ))
     .sort((a, b) => a.date.localeCompare(b.date));
 
   if (!startWeightEntry || !currentWeightEntry) {
@@ -217,7 +235,12 @@ export function calculateViniFatGoal({
       }),
     },
   }));
-  const nutrition = averageDietNutrition(balancedRecords);
+  // O dia atual é necessariamente parcial. Ele continua visível para consulta,
+  // mas só passa a afetar o progresso acumulado quando vira um dia encerrado.
+  const closedBalancedRecords = currentDate
+    ? balancedRecords.filter((record) => record.date < currentDate)
+    : balancedRecords;
+  const nutrition = averageDietNutrition(closedBalancedRecords);
   const currentEnergy = energyBalanceForRecord({
     date: currentWeightEntry.date,
     summary: { consumed: { kcal: 0 }, exerciseKcal: 0 },
@@ -232,13 +255,17 @@ export function calculateViniFatGoal({
     const energy = record.summary.energyBalance;
     return {
       date: record.date,
+      provisional: currentDate === record.date,
+      consumedKcal: energy.consumedKcal,
       netKcal: netKcalForDietRecord(record),
       balanceKcal: energy.balanceKcal,
       expenditureKcal: energy.expenditureKcal,
       deficitKcal: energy.deficitKcal,
     };
   });
-  const cumulativeDeficitKcal = dailyDeficits.reduce(
+  const closedDailyDeficits = dailyDeficits.filter((entry) => !entry.provisional);
+  const todayBalance = dailyDeficits.find((entry) => entry.provisional) || null;
+  const cumulativeDeficitKcal = closedDailyDeficits.reduce(
     (sum, entry) => sum + entry.deficitKcal,
     0,
   );
@@ -286,6 +313,8 @@ export function calculateViniFatGoal({
     routineSafetyFactor: currentEnergy.routineSafetyFactor,
     exerciseSafetyFactor: currentEnergy.exerciseSafetyFactor,
     dailyDeficits,
+    closedDailyDeficits,
+    todayBalance,
     cumulativeDeficitKcal,
     achievedDeficitKcal,
     estimatedFatLostKg,

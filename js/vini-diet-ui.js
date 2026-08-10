@@ -871,6 +871,10 @@ function fatGoalCountdownHTML() {
       ? "objetivo energético atingido"
       : "sem previsão com a média atual";
   const deficitTone = averageDeficit > 0 ? "is-positive" : averageDeficit < 0 ? "is-negative" : "";
+  const todayBalance = progress.todayBalance;
+  const todayDeficit = Math.round(todayBalance?.deficitKcal || 0);
+  const todayTone = todayDeficit > 0 ? "is-deficit" : todayDeficit < 0 ? "is-surplus" : "is-neutral";
+  const todaySign = todayDeficit > 0 ? "−" : todayDeficit < 0 ? "+" : "";
   return `
     <section class="block vini-fat-goal-block">
       <div class="block-head">
@@ -903,12 +907,24 @@ function fatGoalCountdownHTML() {
           <strong>${formatNumber(progress.progressPct, 1)}% percorrido</strong>
         </div>
 
+        ${todayBalance ? `
+          <div class="vini-fat-today-balance ${todayTone}">
+            <div>
+              <span>Hoje · saldo provisório</span>
+              <strong>Fora do progresso até o dia terminar</strong>
+            </div>
+            <div>
+              <strong>${todaySign}${formatNumber(Math.abs(todayDeficit))} kcal</strong>
+              <small>${formatNumber(todayBalance.consumedKcal)} ingeridas · ${formatNumber(todayBalance.expenditureKcal)} de gasto diário estimado</small>
+            </div>
+          </div>` : ""}
+
         ${bodyCompositionHTML(progress)}
 
         <div class="vini-fat-goal-grid">
           <div><span>Peso de partida</span><strong>${formatNumber(progress.startWeightKg, 1)} kg</strong><small>pesagem mais próxima de 15/07</small></div>
           <div><span>Peso-alvo estimado</span><strong>${formatNumber(progress.targetWeightKg, 1)} kg</strong><small>mantendo ~${formatNumber(progress.leanMassKg, 1)} kg de massa magra</small></div>
-          <div class="${deficitTone}"><span>Déficit médio</span><strong>${averageDeficit > 0 ? "−" : averageDeficit < 0 ? "+" : ""}${formatNumber(Math.abs(averageDeficit))} kcal</strong><small>por dia alimentar registrado</small></div>
+          <div class="${deficitTone}"><span>Déficit médio</span><strong>${averageDeficit > 0 ? "−" : averageDeficit < 0 ? "+" : ""}${formatNumber(Math.abs(averageDeficit))} kcal</strong><small>por dia alimentar encerrado</small></div>
           <div><span>Previsão matemática</span><strong>${projection}</strong><small>${progress.projectedDays === null ? "requer déficit médio positivo" : `cerca de ${progress.projectedDays} dias`}</small></div>
         </div>
 
@@ -942,7 +958,7 @@ function fatGoalCountdownHTML() {
           <summary>Como esta conta foi feita?</summary>
           <p>Usamos homem, 36 anos, 1,86 m e o peso mais recente na equação de Mifflin–St Jeor. A massa magra inicial é estimada a partir dos 28%; o peso-alvo supõe essa massa preservada no percentual escolhido. Cada kg de gordura restante usa a aproximação de 7.700 kcal.</p>
           <p>“Músculo” usa uma estimativa antropométrica de Lee et al. baseada em peso, altura, idade e sexo; “outros” é o restante da massa magra, como água, ossos e órgãos. Esses componentes são mantidos no objetivo e não substituem bioimpedância, DEXA ou avaliação clínica.</p>
-          <p>O saldo é ingestão menos gasto total estimado. Para não inflar o déficit, usamos 90% do gasto de rotina e 70% das kcal estimadas dos treinos. Dias sem alimentação registrada não entram na média. Bioimpedância, metabolismo e composição da perda oscilam: trate a data como tendência e recalibre após cada avaliação com a nutricionista.</p>
+          <p>O saldo é ingestão menos gasto total estimado. Para não inflar o déficit, usamos 90% do gasto de rotina e 70% das kcal estimadas dos treinos. O dia atual fica provisório e só entra no progresso depois de encerrado; dias com apenas água ou treino também não entram. Bioimpedância, metabolismo e composição da perda oscilam: trate a data como tendência e recalibre após cada avaliação com a nutricionista.</p>
         </details>
       </div>
     </section>`;
@@ -1141,7 +1157,8 @@ function fatGoalDeficitCalendarHTML() {
   const today = todayISO();
   const byDate = new Map(progress.dailyDeficits.map((entry) => [entry.date, entry]));
   const monthEntries = progress.dailyDeficits.filter((entry) => entry.date.startsWith(`${monthISO}-`));
-  const monthBalance = monthEntries.reduce((sum, entry) => sum + entry.deficitKcal, 0);
+  const closedMonthEntries = monthEntries.filter((entry) => !entry.provisional);
+  const monthBalance = closedMonthEntries.reduce((sum, entry) => sum + entry.deficitKcal, 0);
   const monthTone = monthBalance > 0 ? "is-deficit" : monthBalance < 0 ? "is-surplus" : "is-neutral";
   const balanceLabel = monthBalance > 0 ? "Déficit acumulado" : monthBalance < 0 ? "Superávit acumulado" : "Saldo acumulado";
   const balanceSign = monthBalance > 0 ? "−" : monthBalance < 0 ? "+" : "";
@@ -1171,11 +1188,11 @@ function fatGoalDeficitCalendarHTML() {
         ? `superávit estimado de ${formatNumber(Math.abs(deficit))} kcal`
         : "equilíbrio energético estimado";
     cells += `
-      <div class="vini-deficit-cal-cell ${tone}${isToday ? " is-today" : ""}"
-           style="--balance-alpha:${intensity}" title="${fmtDateBR(date, true)} · ${description}">
+      <div class="vini-deficit-cal-cell ${tone}${isToday ? " is-today" : ""}${entry.provisional ? " is-provisional" : ""}"
+           style="--balance-alpha:${intensity}" title="${fmtDateBR(date, true)} · ${description}${entry.provisional ? " · parcial, fora do acumulado" : ""}">
         <span class="vini-deficit-cal-day">${day}</span>
         <strong>${sign}${formatNumber(Math.abs(deficit))}<small>kcal</small></strong>
-        <em>${deficit > 0 ? "déficit" : deficit < 0 ? "superávit" : "equilíbrio"}</em>
+        <em>${entry.provisional ? "parcial" : deficit > 0 ? "déficit" : deficit < 0 ? "superávit" : "equilíbrio"}</em>
       </div>`;
   }
 
@@ -1201,10 +1218,10 @@ function fatGoalDeficitCalendarHTML() {
             <strong>${balanceSign}${formatNumber(Math.abs(Math.round(monthBalance)))} kcal</strong>
           </div>
           <div>
-            <span>Dias registrados</span>
-            <strong>${monthEntries.length}</strong>
+            <span>Dias encerrados</span>
+            <strong>${closedMonthEntries.length}</strong>
           </div>
-          <small>Usa a mesma estimativa atual de ${formatNumber(Math.round(progress.maintenanceKcal))} kcal/dia do painel.</small>
+          <small>Usa a mesma estimativa atual de ${formatNumber(Math.round(progress.maintenanceKcal))} kcal/dia. Hoje aparece como parcial, mas fica fora do acumulado.</small>
         </div>
         <div class="vini-deficit-cal-grid">${cells}</div>
         <div class="vini-deficit-cal-legend">
