@@ -35,6 +35,28 @@ export const VIVI_MEAL_PRESETS = Object.freeze([
     ]
   ),
   preset(
+    "cafe_leite_whey_palatinose",
+    "☕",
+    "Café com leite · whey + Palatinose",
+    "100ml leite · 18g whey (16g proteína) · 1 scoop Palatinose (30g)",
+    "desjejum",
+    [
+      { foodId: "leite_semidesnatado", amount: 100 },
+      { foodId: "whey_18g_16p", amount: 18 },
+      { foodId: "palatinose", amount: 30 },
+    ]
+  ),
+  preset(
+    "cafe_2_ovos_cozidos",
+    "🥚",
+    "Café · 2 ovos cozidos",
+    "2 ovos cozidos",
+    "desjejum",
+    [
+      { foodId: "ovo_cozido", amount: 2 },
+    ]
+  ),
+  preset(
     "base_almoco",
     "☀️",
     "Almoço",

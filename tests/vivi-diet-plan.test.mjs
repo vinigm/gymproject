@@ -25,15 +25,17 @@ import {
 const group = (id) => VIVI_FOOD_GROUPS.find((entry) => entry.id === id);
 const food = (groupId, foodId) => group(groupId).foods.find((entry) => entry.id === foodId);
 
-assert.equal(VIVI_PLAN_VERSION, "vivi-nutri-2026-02-v8");
+assert.equal(VIVI_PLAN_VERSION, "vivi-nutri-2026-02-v9");
 assert.deepEqual(VIVI_DAILY_GOALS, { kcal: 2000, p: 90, c: 250, f: 65 });
 assert.deepEqual(VIVI_HYDRATION, { baseMl: 1600, trainingMinMl: 1600, trainingMaxMl: 1600 });
 assert.deepEqual(VIVI_REQUIRED_MEALS, ["desjejum", "almoco", "lanche_tarde", "jantar"]);
 assert.equal(VIVI_MEALS.length, 7);
 assert.equal(VIVI_OFFICIAL_MEALS.flatMap((meal) => meal.options).length, 19);
-assert.equal(VIVI_MEAL_PRESETS.length, 12);
+assert.equal(VIVI_MEAL_PRESETS.length, 14);
 assert.deepEqual(VIVI_MEAL_PRESETS.map((preset) => preset.id), [
   "base_desjejum",
+  "cafe_leite_whey_palatinose",
+  "cafe_2_ovos_cozidos",
   "base_almoco",
   "base_lanche_tarde",
   "lanche_banana",
@@ -50,6 +52,8 @@ assert.deepEqual(food("desjejum", "ovo_cozido").quantityChoices, [1, 2, 3, 4, 5,
 assert.ok(food("desjejum", "aveia").quantityChoices.includes(30));
 assert.ok(food("desjejum", "banana").quantityChoices.includes(1));
 assert.ok(food("desjejum", "whey_probiotica").quantityChoices.includes(18));
+assert.deepEqual(food("desjejum", "whey_18g_16p").quantityChoices, [18]);
+assert.equal(food("desjejum", "palatinose").defaultQuantity, 30);
 assert.ok(food("desjejum", "banana_prata_g").quantityChoices.includes(70));
 assert.ok(food("almoco", "aipim_cozido").quantityChoices.includes(170));
 assert.ok(food("ceia", "maca_fuji").quantityChoices.includes(30));
@@ -127,6 +131,25 @@ assert.deepEqual(calculateViviDietDay(breakfast).consumed, {
   p: 21.7,
   c: 44.7,
   f: 5.1,
+});
+
+assert.deepEqual(calculateViviDietDay(toggleViviMealPreset(
+  emptyViviDietDay(),
+  "cafe_leite_whey_palatinose",
+)).consumed, {
+  kcal: 241,
+  p: 19.2,
+  c: 36.3,
+  f: 2.1,
+});
+assert.deepEqual(calculateViviDietDay(toggleViviMealPreset(
+  emptyViviDietDay(),
+  "cafe_2_ovos_cozidos",
+)).consumed, {
+  kcal: 144,
+  p: 12.6,
+  c: 0.8,
+  f: 9.6,
 });
 
 // Os alimentos que não fazem mais parte dos atalhos continuam disponíveis

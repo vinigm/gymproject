@@ -10,7 +10,7 @@ import {
   normalizeViniExercises,
 } from "./vini-exercise.js";
 
-export const VIVI_PLAN_VERSION = "vivi-nutri-2026-02-v8";
+export const VIVI_PLAN_VERSION = "vivi-nutri-2026-02-v9";
 
 // Mantém as referências provisórias que a página da Vivi já utilizava.
 export const VIVI_DAILY_GOALS = Object.freeze({
@@ -312,6 +312,7 @@ const QUANTITY_RULES = Object.freeze({
   nude_proteico: { unit: "un", values: [1, 2, 3] },
   queijo_minas_bufala: { unit: "g", values: [15, 20, 30, 40, 50, 60] },
   whey_probiotica: { unit: "g", values: [10, 15, 18, 20, 25, 30, 31, 35, 40, 45, 50, 60] },
+  whey_18g_16p: { unit: "g", values: [18] },
   aveia_floco_g: { unit: "g", values: [15, 20, 30, 40, 50, 60, 80, 100] },
   banana_prata_g: { unit: "g", values: [50, 70, 80, 100, 120, 150, 180, 200, 250] },
   alcatra_grelhada: { unit: "g", values: [50, 80, 100, 120, 150, 180, 200, 250] },
@@ -339,6 +340,17 @@ const WHEY_PROBIOTICA_31 = item(
   "31 g",
   nutrition(120, 23, 3.01, 1.49, "product-estimate"),
   { trackerDefaultQuantity: 31, trackerReferenceQuantity: 31, estimatedRecipe: true }
+);
+
+// Referência informada pelo usuário para o whey usado no café com leite.
+// A marca não foi identificada; carboidrato e gordura são estimativas para
+// completar o rótulo, enquanto os 16 g de proteína em 18 g são o dado-base.
+const WHEY_18_G_16_P = item(
+  "whey_18g_16p",
+  "Whey Protein · 18 g (16 g de proteína)",
+  "18 g",
+  nutrition(75, 16, 1.5, 0.5, "user-provided-estimate"),
+  { trackerDefaultQuantity: 18, trackerReferenceQuantity: 18, estimatedRecipe: true }
 );
 
 const AVEIA_FLOCOS_30 = item(
@@ -553,6 +565,8 @@ const VIVI_TRACKER_EXTRA_FOODS = Object.freeze({
     FOODS.oats30,
     OVO_COZIDO_1,
     WHEY_PROBIOTICA_31,
+    WHEY_18_G_16_P,
+    PALATINOSE_30_G,
     AVEIA_FLOCOS_30,
     BANANA_PRATA_100,
   ]),
