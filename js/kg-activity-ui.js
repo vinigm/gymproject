@@ -1,6 +1,5 @@
-import { getDay, saveDay } from "./storage.js";
+import { getDay, getRange, saveDay } from "./storage.js";
 import {
-  RUN_KM_OPTIONS,
   normalizeTrackerDay,
   toggleTrackerValue,
 } from "./tracker-model.js";
@@ -9,6 +8,13 @@ import {
   formatWaterLitres,
   waterKey,
 } from "./water-options.js";
+import { trackingCycleFor } from "./tracking-cycle.js";
+import {
+  RUN_SESSION_TYPES,
+  RUNNING_PLAN,
+  currentRunPlanWeek,
+  runPlanCompletions,
+} from "./running-plan.js";
 
 export const KG_GYM_GROUPS = Object.freeze([
   Object.freeze({ id: "costa", label: "Costa" }),
@@ -31,6 +37,7 @@ const state = {
   loading: false,
   status: "",
   onSaved: null,
+  activityDays: [],
 };
 
 function pad2(value) { return String(value).padStart(2, "0"); }
@@ -68,8 +75,14 @@ function chip(label, group, value, extraClass = "") {
 export async function loadKgActivityTracker(userId = "vinicius") {
   state.userId = userId;
   state.selectedDate = todayISO();
-  state.day = cleanDay(await getDay(userId, state.selectedDate));
+  const startDate = trackingCycleFor(userId)?.startDate || state.selectedDate;
+  const [day, activityDays] = await Promise.all([
+    getDay(userId, state.selectedDate),
+    getRange(userId, startDate, todayISO()),
+  ]);
+  state.day = cleanDay(day);
   state.savedDay = cloneDay(state.day);
+  state.activityDays = activityDays;
   state.status = "";
 }
 
@@ -148,27 +161,84 @@ function waterHTML() {
 
 function runHTML() {
   const hasRun = isOn("exercises", "corrida");
+  const planDays = activityDaysWithDraft();
+  const currentWeek = currentRunPlanWeek(planDays);
   return `
     ${dateNavigatorHTML()}
     <section class="block kg-activity-block">
-      <div class="block-head"><h2>🏃 Corrida</h2><span class="muted">registro inicial</span></div>
-      <div class="kg-activity-card">
+      <div class="block-head"><h2>🏃 Corrida de hoje</h2><span class="muted">registre o que realmente aconteceu</span></div>
+      <div class="kg-activity-card" id="kg-run-form">
         <div class="chip-grid chip-grid--1">
           ${chip(hasRun ? "Corrida realizada ✓" : "Marcar corrida", "exercises", "corrida", "kg-activity-main-chip")}
         </div>
         <div class="kg-activity-detail${hasRun ? " is-open" : ""}">
-          <h3 class="mini-title">Distância percorrida</h3>
-          <div class="chip-grid chip-grid--3">
-            ${RUN_KM_OPTIONS.map((km) => chip(`${String(km).replace(".", ",")} km`, "run_km", km)).join("")}
+          <div class="kg-run-fields">
+            <label><span>Distância</span><div class="kg-run-input"><input type="number" min="0.1" max="100" step="0.1" inputmode="decimal" data-run-field="run_km" value="${state.day.run_km ?? ""}" placeholder="0,0"><em>km</em></div></label>
+            <label><span>Tempo total</span><div class="kg-run-input"><input type="number" min="1" max="1440" step="1" inputmode="decimal" data-run-field="run_duration_min" value="${state.day.run_duration_min ?? ""}" placeholder="0"><em>min</em></div></label>
+            <label class="kg-run-session-field"><span>Treino da planilha</span><select data-run-field="run_plan">
+              <option value="">Corrida livre</option>
+              ${RUNNING_PLAN.map((item) => RUN_SESSION_TYPES.map((session) => {
+                const selected = Number(state.day.run_plan_week) === item.number && state.day.run_plan_session === session.id;
+                return `<option value="${item.number}:${session.id}" ${selected ? "selected" : ""}>Semana ${item.number} · ${session.label}</option>`;
+              }).join("")).join("")}
+            </select></label>
+            <label class="kg-run-notes-field"><span>Observações</span><textarea rows="2" maxlength="240" data-run-field="run_notes" placeholder="Como foi o treino?">${escapeHTML(state.day.run_notes || "")}</textarea></label>
           </div>
         </div>
       </div>
     </section>
-    <section class="block kg-running-next">
-      <div class="kg-running-next-icon">🗺️</div>
-      <div><h2>Planilha de corrida</h2><p>Na próxima etapa vamos definir juntos frequência, progressão, ritmos e recuperação. Por enquanto esta aba registra o que foi realizado.</p></div>
-    </section>
+    ${runningPlanHTML(planDays, currentWeek)}
     ${saveHTML()}`;
+}
+
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (char) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+  }[char]));
+}
+
+function activityDaysWithDraft() {
+  const byDate = new Map((state.activityDays || []).map((day) => [day.date, day]));
+  byDate.set(state.selectedDate, { ...state.day, date: state.selectedDate, userId: state.userId });
+  return [...byDate.values()];
+}
+
+function runningPlanHTML(days, currentWeek) {
+  const completions = runPlanCompletions(days);
+  const completedCount = completions.size;
+  const total = RUNNING_PLAN.length * RUN_SESSION_TYPES.length;
+  return `
+    <section class="block kg-running-plan">
+      <div class="block-head"><div><h2>🗺️ Planilha rumo aos 5 km</h2><p>Três sessões por etapa, realizadas nos dias que funcionarem para você.</p></div><strong>${completedCount}/${total}</strong></div>
+      <div class="kg-running-progress"><i style="width:${(completedCount / total) * 100}%"></i></div>
+      <p class="kg-running-guidance">Base sugerida: leve na segunda, intervalado na quarta e longo no sábado. Faça 5 min de caminhada antes e depois; repita uma etapa se precisar.</p>
+      <div class="kg-running-plan-grid">
+        ${RUNNING_PLAN.map((item) => `
+          <article class="kg-running-week${item.number === currentWeek ? " is-current" : ""}${item.number < currentWeek ? " is-complete" : ""}">
+            <header><span>Etapa</span><strong>${item.number}</strong>${item.number === currentWeek ? "<em>atual</em>" : ""}</header>
+            <div class="kg-running-week-sessions">
+              ${RUN_SESSION_TYPES.map((session) => {
+                const completion = completions.get(`${item.number}:${session.id}`);
+                const isDraft = completion?.date === state.selectedDate && isDirty();
+                return `<button type="button" class="kg-run-plan-session${completion ? " is-done" : ""}${isDraft ? " is-draft" : ""}"
+                  data-run-plan-week="${item.number}" data-run-plan-session="${session.id}" data-run-plan-date="${completion?.date || ""}">
+                  <span class="kg-run-plan-check">${completion ? "✓" : ""}</span>
+                  <span><strong>${session.icon} ${session.label}</strong><small>${item.sessions[session.id]}</small>${completion ? `<em>${formatDateBR(completion.date)} · ${formatRunAmount(completion.run_km)} km</em>` : ""}</span>
+                </button>`;
+              }).join("")}
+            </div>
+          </article>`).join("")}
+      </div>
+    </section>`;
+}
+
+function formatDateBR(iso) {
+  const [, month, day] = String(iso || "").split("-");
+  return day && month ? `${day}/${month}` : "";
+}
+
+function formatRunAmount(value) {
+  return new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 2 }).format(Number(value) || 0);
 }
 
 function saveHTML() {
@@ -224,6 +294,10 @@ async function persist() {
     await saveDay(state.userId, state.selectedDate, payload);
     state.day = payload;
     state.savedDay = cloneDay(payload);
+    const index = state.activityDays.findIndex((day) => day.date === state.selectedDate);
+    const stored = { ...payload, date: state.selectedDate, userId: state.userId };
+    if (index >= 0) state.activityDays[index] = stored;
+    else state.activityDays.push(stored);
     state.status = "saved";
     state.onSaved?.(cloneDay(payload));
   } catch (error) {
@@ -249,6 +323,55 @@ function bind() {
     loadSelectedDate(event.target.value);
   });
   state.root.querySelector("[data-activity-save]")?.addEventListener("click", persist);
+  state.root.querySelectorAll("[data-run-field]").forEach((field) => {
+    const eventName = field.tagName === "SELECT" ? "change" : "input";
+    field.addEventListener(eventName, () => updateRunField(field));
+  });
+  state.root.querySelectorAll("[data-run-plan-session]").forEach((button) => {
+    button.addEventListener("click", async () => {
+      const completedDate = button.dataset.runPlanDate;
+      if (completedDate && completedDate !== state.selectedDate) {
+        await loadSelectedDate(completedDate);
+      } else {
+        selectRunPlanSession(Number(button.dataset.runPlanWeek), button.dataset.runPlanSession);
+      }
+      state.root.querySelector("#kg-run-form")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  });
+}
+
+function updateRunField(field) {
+  const key = field.dataset.runField;
+  if (key === "run_plan") {
+    const [week, session] = String(field.value || "").split(":");
+    state.day.run_plan_week = week ? Number(week) : null;
+    state.day.run_plan_session = session || null;
+  } else if (key === "run_notes") {
+    state.day.run_notes = field.value;
+  } else {
+    state.day[key] = field.value === "" ? null : Number(field.value);
+  }
+  if (!isOn("exercises", "corrida")) toggleTrackerValue(state.day, "exercises", "corrida");
+  state.status = "";
+  updateSaveButtonOnly();
+}
+
+function updateSaveButtonOnly() {
+  const wrap = state.root?.querySelector(".kg-activity-save-wrap");
+  if (!wrap) return;
+  const container = document.createElement("div");
+  container.innerHTML = saveHTML();
+  wrap.replaceWith(container.firstElementChild);
+  state.root.querySelector("[data-activity-save]")?.addEventListener("click", persist);
+}
+
+function selectRunPlanSession(week, session) {
+  if (!isOn("exercises", "corrida")) toggleTrackerValue(state.day, "exercises", "corrida");
+  const same = Number(state.day.run_plan_week) === week && state.day.run_plan_session === session;
+  state.day.run_plan_week = same ? null : week;
+  state.day.run_plan_session = same ? null : session;
+  state.status = "";
+  render();
 }
 
 export function renderKgActivityTracker(root, {

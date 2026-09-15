@@ -14,7 +14,9 @@ assert.equal(isTrackerMultiGroup("exercises"), true);
 assert.equal(isTrackerMultiGroup("run_km"), false);
 assert.equal(normalizeRunKm(undefined), null);
 assert.equal(normalizeRunKm("2.5"), 2.5);
-assert.equal(normalizeRunKm(2), null);
+assert.equal(normalizeRunKm(2), 2);
+assert.equal(normalizeRunKm("4.37"), 4.37);
+assert.equal(normalizeRunKm(0), null);
 assert.equal(normalizeTrackerDay({ exercises: ["corrida"] }).run_km, null);
 
 const day = { exercises: [] };
@@ -32,9 +34,9 @@ const sameDistance = { exercises: ["corrida"], run_km: 5 };
 toggleTrackerValue(sameDistance, "run_km", "5");
 assert.equal(sameDistance.run_km, null);
 
-const invalidDistance = { exercises: ["corrida"], run_km: null };
-toggleTrackerValue(invalidDistance, "run_km", "2");
-assert.equal(invalidDistance.run_km, null);
+const freeDistance = { exercises: ["corrida"], run_km: null };
+toggleTrackerValue(freeDistance, "run_km", "2");
+assert.equal(freeDistance.run_km, 2);
 
 const html = await readFile(new URL("../habitos.html", import.meta.url), "utf8");
 const groups = [...html.matchAll(/<div class="chip-grid chip-grid--3" data-group="run_km">([\s\S]*?)<\/div>/g)];

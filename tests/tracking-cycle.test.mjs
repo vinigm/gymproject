@@ -26,7 +26,9 @@ assert.match(kgPage, /histórico completo/);
 assert.match(activityUi, /Costa/);
 assert.match(activityUi, /Abdominal/);
 assert.match(activityUi, /WATER_LITRES_OPTIONS/);
-assert.match(activityUi, /RUN_KM_OPTIONS/);
+assert.match(activityUi, /RUNNING_PLAN/);
+assert.match(activityUi, /run_duration_min/);
+assert.match(activityUi, /Corrida livre/);
 assert.match(activityUi, /saveDay\(state\.userId, state\.selectedDate, payload\)/);
 assert.deepEqual(
   filterRecordsForTrackingScope(records, "vinicius", "all").map((record) => record.date),
