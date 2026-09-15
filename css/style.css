@@ -3357,6 +3357,7 @@ body.presence-fullscreen .presence-fs-exit { display: flex; }
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
+.kg-seg.kg-seg--6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
 .kg-seg .seg-btn {
   min-width: 0;
   padding-inline: 5px;
@@ -3364,6 +3365,62 @@ body.presence-fullscreen .presence-fs-exit { display: flex; }
   white-space: nowrap;
 }
 .kg-seg .seg-btn.is-on { box-shadow: inset 0 -2px 0 var(--kg-accent); }
+
+/* Registro dedicado de academia, corrida e água */
+.kg-activity-date-card {
+  display: flex;
+  margin-bottom: 18px;
+  padding: 13px 14px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  background: linear-gradient(135deg, rgba(52,211,153,.08), rgba(96,165,250,.08)), var(--card);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--good);
+  border-radius: var(--radius);
+}
+.kg-activity-date-card > div:first-child { display: flex; flex-direction: column; gap: 3px; }
+.kg-activity-date-card > div:first-child span { color: var(--good); font-size: 9px; font-weight: 900; letter-spacing: .12em; }
+.kg-activity-date-card > div:first-child strong { font-size: 14px; }
+.kg-activity-date-nav { display: grid; grid-template-columns: 38px minmax(120px, auto) 38px; gap: 7px; }
+.kg-activity-date-nav button,
+.kg-activity-date-nav input {
+  min-height: 38px;
+  color: var(--text);
+  background: var(--card-2);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+}
+.kg-activity-date-nav button { font-size: 20px; cursor: pointer; }
+.kg-activity-date-nav button:disabled { opacity: .35; cursor: default; }
+.kg-activity-date-nav input { padding: 0 9px; color-scheme: dark; font: inherit; font-size: 11px; }
+.kg-activity-block .block-head .muted { font-size: 10px; }
+.kg-activity-card {
+  padding: 13px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.kg-activity-main-chip { min-height: 48px; font-size: 13px; font-weight: 900; }
+.kg-activity-detail { display: none; padding-top: 15px; }
+.kg-activity-detail.is-open { display: block; }
+.kg-activity-detail .mini-title { margin: 0 0 9px; }
+.kg-running-next {
+  display: flex;
+  padding: 16px;
+  align-items: flex-start;
+  gap: 12px;
+  background: rgba(96,165,250,.055);
+  border: 1px dashed rgba(96,165,250,.32);
+  border-radius: var(--radius);
+}
+.kg-running-next-icon { font-size: 24px; }
+.kg-running-next h2 { margin: 0 0 5px; font-size: 14px; }
+.kg-running-next p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
+.kg-activity-save-wrap { margin-top: 22px; }
+.kg-activity-save { width: 100%; }
+.kg-activity-save.is-saved { color: var(--good); }
 
 /* Gráfico */
 .kg-chart-wrap {
@@ -4173,6 +4230,45 @@ body.presence-fullscreen .presence-fs-exit { display: flex; }
 .vini-trend-tooltip-open { width: 100%; min-height: 36px; margin-top: 10px; color: #06101f; background: var(--trend-color); border: 0; border-radius: 9px; font-size: 10px; font-weight: 900; cursor: pointer; }
 .vini-trend-tooltip-open:hover { filter: brightness(1.08); }
 
+/* Graphs — água, grupos de academia e corrida */
+.vini-activity-trends-block { margin-top: 20px; }
+.vini-activity-trends-list { display: flex; flex-direction: column; gap: 14px; }
+.vini-activity-card {
+  overflow: hidden;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--water);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.vini-activity-card.is-training { border-top-color: var(--good); }
+.vini-activity-card > header {
+  display: flex;
+  padding: 11px 14px 5px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.vini-activity-card > header > div { display: flex; flex-direction: column; gap: 2px; }
+.vini-activity-card > header strong { color: var(--water); font-size: 14px; }
+.vini-activity-card.is-training > header strong { color: var(--good); }
+.vini-activity-card > header small,
+.vini-activity-card > header > span { color: var(--muted); font-size: 9px; }
+.vini-activity-chart { display: block; width: 100%; height: auto; padding: 0 8px 4px; }
+.vini-activity-water-line { fill: none; stroke: var(--water); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.vini-activity-water-dot { fill: var(--card); stroke: var(--water); stroke-width: 2.4; }
+.vini-activity-axis-title,
+.vini-activity-right-label { fill: var(--muted); font-size: 7px; font-weight: 800; }
+.vini-training-bar { opacity: .88; }
+.vini-training-run-line { fill: none; stroke: #f8fafc; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.vini-training-run-dot { fill: var(--card); stroke: #f8fafc; stroke-width: 2.3; }
+.vini-training-run-key { display: flex; align-items: center; gap: 5px; }
+.vini-training-run-key i { width: 19px; border-top: 2px solid #f8fafc; }
+.vini-training-legend { display: flex; padding: 0 14px 12px; flex-wrap: wrap; gap: 5px 10px; }
+.vini-training-legend span { display: flex; align-items: center; gap: 4px; color: var(--muted); font-size: 7px; }
+.vini-training-legend i { width: 7px; height: 7px; border-radius: 2px; }
+.vini-activity-empty { margin: 8px 14px 14px; padding: 16px; color: var(--muted); background: rgba(255,255,255,.025); border: 1px dashed var(--border); border-radius: 10px; font-size: 11px; text-align: center; }
+
 @media (max-width: 620px) {
   .vini-date-card { grid-template-columns: 1fr; }
   .vini-date-nav { width: 100%; }
@@ -4219,6 +4315,11 @@ body.presence-fullscreen .presence-fs-exit { display: flex; }
 }
 
 @media (max-width: 440px) {
+  .kg-seg.kg-seg--6 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .kg-seg.kg-seg--6 .seg-btn { white-space: normal; }
+  .kg-activity-date-card { align-items: stretch; flex-direction: column; }
+  .kg-activity-date-nav { grid-template-columns: 42px minmax(0, 1fr) 42px; }
+  .vini-activity-card > header { align-items: flex-start; flex-direction: column; }
   .vini-official-summary { grid-template-columns: auto 1fr; }
   .vini-official-options { grid-template-columns: 1fr; }
   .vini-official-food { align-items: flex-start; flex-direction: column; gap: 3px; }

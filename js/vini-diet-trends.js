@@ -7,6 +7,7 @@ import {
   nutritionForBeverageCount,
   nutritionForFoodQuantity,
 } from "./diet-profile.js";
+import { waterLitres } from "./water-options.js";
 
 export const VINI_TREND_METRICS = Object.freeze([
   Object.freeze({ key: "kcal", label: "Saldo energético", short: "kcal", unit: "kcal", cls: "is-kcal" }),
@@ -448,9 +449,166 @@ export function bindViniTrendTooltips(root, { records = [], onOpenDate } = {}) {
   };
 }
 
+const GYM_GROUPS = Object.freeze([
+  Object.freeze({ id: "costa", label: "Costa", color: "#60a5fa" }),
+  Object.freeze({ id: "triceps", label: "Tríceps", color: "#a78bfa" }),
+  Object.freeze({ id: "peito", label: "Peito", color: "#f472b6" }),
+  Object.freeze({ id: "biceps", label: "Bíceps", color: "#fb7185" }),
+  Object.freeze({ id: "perna", label: "Perna", color: "#34d399" }),
+  Object.freeze({ id: "ombro", label: "Ombro", color: "#fbbf24" }),
+  Object.freeze({ id: "lombar", label: "Lombar", color: "#fb923c" }),
+  Object.freeze({ id: "abdominal", label: "Abdominal", color: "#22d3ee" }),
+]);
+
+function chartXLabels(points, height, width) {
+  const maxLabels = width < 420 ? 4 : width < 640 ? 6 : 8;
+  const step = Math.max(1, Math.ceil((points.length - 1) / Math.max(1, maxLabels - 1)));
+  return points.map((point, index) => (
+    index === 0 || index === points.length - 1 || index % step === 0
+      ? `<text x="${point.x.toFixed(1)}" y="${height - 9}" class="vini-trend-xlabel" text-anchor="middle">${formatDate(point.date)}</text>`
+      : ""
+  )).join("");
+}
+
+function activityDateX(rows, width, padLeft, padRight) {
+  const first = dateEpoch(rows[0].date);
+  const last = dateEpoch(rows.at(-1).date);
+  const span = Math.max(1, last - first);
+  const plotWidth = width - padLeft - padRight;
+  return (date) => padLeft + (rows.length === 1
+    ? plotWidth / 2
+    : ((dateEpoch(date) - first) / span) * plotWidth);
+}
+
+function waterRows(records, activityDays) {
+  const byDate = new Map();
+  normalizedRecords(records).forEach((entry) => {
+    const litres = (Number(entry.source?.summary?.hydrationMl ?? entry.source?.day?.hydrationMl) || 0) / 1000;
+    if (litres > 0) byDate.set(entry.date, litres);
+  });
+  (Array.isArray(activityDays) ? activityDays : []).forEach((day) => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(day?.date || ""))) return;
+    const litres = waterLitres(day.water);
+    if (litres > 0) byDate.set(day.date, litres);
+  });
+  return [...byDate].map(([date, litres]) => ({ date, litres }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+}
+
+function waterTrendHTML(records, activityDays, viewportWidth) {
+  const rows = waterRows(records, activityDays);
+  if (!rows.length) {
+    return `<article class="vini-activity-card is-water"><header><div><strong>Água</strong><small>litros por dia</small></div></header><p class="vini-activity-empty">Registre a água na aba Academia para formar este gráfico.</p></article>`;
+  }
+  const W = Math.max(320, Math.min(900, Number(viewportWidth) || 360));
+  const H = 220;
+  const padL = 42, padR = 14, padT = 22, padB = 34;
+  const plotH = H - padT - padB;
+  const maxY = Math.max(5, niceCeiling(Math.max(...rows.map((row) => row.litres)) * 1.08));
+  const x = activityDateX(rows, W, padL, padR);
+  const y = (value) => padT + ((maxY - value) / maxY) * plotH;
+  const points = rows.map((row) => ({ ...row, x: x(row.date), y: y(row.litres) }));
+  const ticks = Array.from({ length: 6 }, (_, index) => maxY - (maxY * index) / 5);
+  const grid = ticks.map((tick) => `<line x1="${padL}" y1="${y(tick).toFixed(1)}" x2="${W - padR}" y2="${y(tick).toFixed(1)}" class="vini-trend-grid"/><text x="${padL - 6}" y="${(y(tick) + 3).toFixed(1)}" class="vini-trend-ylabel">${formatNumber(tick, 1)}L</text>`).join("");
+  const path = points.map((point, index) => `${index ? "L" : "M"}${point.x.toFixed(1)} ${point.y.toFixed(1)}`).join(" ");
+  const dots = points.map((point) => `<circle cx="${point.x.toFixed(1)}" cy="${point.y.toFixed(1)}" r="4" class="vini-activity-water-dot"><title>${formatDate(point.date)} · ${formatNumber(point.litres, 1)} L</title></circle>`).join("");
+  return `
+    <article class="vini-activity-card is-water">
+      <header><div><strong>Água</strong><small>último: ${formatNumber(rows.at(-1).litres, 1)} L</small></div><span>litros por dia</span></header>
+      <svg viewBox="0 0 ${W} ${H}" width="100%" class="vini-activity-chart" role="img" aria-label="Água consumida em litros por dia">
+        ${grid}<path d="${path}" class="vini-activity-water-line"/>${dots}${chartXLabels(points, H, W)}
+      </svg>
+    </article>`;
+}
+
+function normalizedActivityRows(activityDays) {
+  return (Array.isArray(activityDays) ? activityDays : [])
+    .filter((day) => /^\d{4}-\d{2}-\d{2}$/.test(String(day?.date || "")))
+    .map((day) => {
+      const exercises = Array.isArray(day.exercises) ? day.exercises : [];
+      const groups = [...new Set(Array.isArray(day.gym_groups) ? day.gym_groups : [])]
+        .filter((id) => GYM_GROUPS.some((group) => group.id === id));
+      return {
+        date: day.date,
+        groups,
+        hasGym: exercises.includes("academia") || groups.length > 0,
+        runKm: exercises.includes("corrida") || Number(day.run_km) > 0
+          ? Math.max(0, Number(day.run_km) || 0)
+          : 0,
+      };
+    })
+    .filter((row) => row.hasGym || row.runKm > 0)
+    .sort((a, b) => a.date.localeCompare(b.date));
+}
+
+function trainingTrendHTML(activityDays, viewportWidth) {
+  const rows = normalizedActivityRows(activityDays);
+  if (!rows.length) {
+    return `<article class="vini-activity-card is-training"><header><div><strong>Academia + corrida</strong><small>treinos por dia</small></div></header><p class="vini-activity-empty">Marque academia ou corrida para formar este gráfico combinado.</p></article>`;
+  }
+  const W = Math.max(320, Math.min(900, Number(viewportWidth) || 360));
+  const H = 250;
+  const padL = 42, padR = 42, padT = 24, padB = 38;
+  const plotH = H - padT - padB;
+  const maxGroups = Math.max(4, ...rows.map((row) => Math.max(1, row.groups.length)));
+  const maxKm = Math.max(10, niceCeiling(Math.max(...rows.map((row) => row.runKm), 1)));
+  const x = activityDateX(rows, W, padL, padR);
+  const yGroups = (value) => padT + ((maxGroups - value) / maxGroups) * plotH;
+  const yKm = (value) => padT + ((maxKm - value) / maxKm) * plotH;
+  const barWidth = Math.max(7, Math.min(30, (W - padL - padR) / Math.max(3, rows.length * 1.8)));
+  const segmentHeight = plotH / maxGroups;
+  const grid = Array.from({ length: maxGroups + 1 }, (_, index) => {
+    const y = yGroups(index);
+    return `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${W - padR}" y2="${y.toFixed(1)}" class="vini-trend-grid"/><text x="${padL - 6}" y="${(y + 3).toFixed(1)}" class="vini-trend-ylabel">${index}</text>`;
+  }).join("");
+  const bars = rows.map((row) => {
+    const groups = row.groups.length ? row.groups : (row.hasGym ? ["academia"] : []);
+    return groups.map((id, index) => {
+      const meta = GYM_GROUPS.find((group) => group.id === id);
+      const fill = meta?.color || "#64748b";
+      const label = meta?.label || "Academia (sem grupo informado)";
+      const y = yGroups(index + 1);
+      return `<rect x="${(x(row.date) - barWidth / 2).toFixed(1)}" y="${y.toFixed(1)}" width="${barWidth.toFixed(1)}" height="${segmentHeight.toFixed(1)}" rx="2" fill="${fill}" class="vini-training-bar"><title>${formatDate(row.date)} · ${escapeHTML(label)}</title></rect>`;
+    }).join("");
+  }).join("");
+  const runPoints = rows.filter((row) => row.runKm > 0).map((row) => ({
+    ...row,
+    x: x(row.date),
+    y: yKm(row.runKm),
+  }));
+  const line = runPoints.map((point, index) => `${index ? "L" : "M"}${point.x.toFixed(1)} ${point.y.toFixed(1)}`).join(" ");
+  const dots = runPoints.map((point) => `<circle cx="${point.x.toFixed(1)}" cy="${point.y.toFixed(1)}" r="4" class="vini-training-run-dot"><title>${formatDate(point.date)} · ${formatNumber(point.runKm, 1)} km</title></circle>`).join("");
+  const labelPoints = rows.map((row) => ({ date: row.date, x: x(row.date) }));
+  return `
+    <article class="vini-activity-card is-training">
+      <header><div><strong>Academia + corrida</strong><small>barras: grupos treinados · linha: km corridos</small></div><span class="vini-training-run-key"><i></i> corrida</span></header>
+      <svg viewBox="0 0 ${W} ${H}" width="100%" class="vini-activity-chart" role="img" aria-label="Grupos musculares treinados e quilômetros corridos por dia">
+        ${grid}
+        <text x="12" y="14" class="vini-activity-axis-title">grupos</text>
+        <text x="${W - 9}" y="14" text-anchor="end" class="vini-activity-axis-title">km</text>
+        ${[0, maxKm / 2, maxKm].map((tick) => `<text x="${W - padR + 7}" y="${(yKm(tick) + 3).toFixed(1)}" class="vini-activity-right-label">${formatNumber(tick)}</text>`).join("")}
+        ${bars}${line ? `<path d="${line}" class="vini-training-run-line"/>` : ""}${dots}${chartXLabels(labelPoints, H, W)}
+      </svg>
+      <div class="vini-training-legend">${GYM_GROUPS.map((group) => `<span><i style="background:${group.color}"></i>${group.label}</span>`).join("")}</div>
+    </article>`;
+}
+
+export function viniActivityTrendsHTML(records, activityDays, { viewportWidth = 360 } = {}) {
+  return `
+    <section class="block vini-activity-trends-block">
+      <div class="block-head"><h2>💧🏃 Atividade e hidratação</h2></div>
+      <p class="vini-trends-note">A água é exibida em litros. No gráfico combinado, cada cor da barra representa um grupo treinado e a linha mostra a distância corrida.</p>
+      <div class="vini-activity-trends-list">
+        ${waterTrendHTML(records, activityDays, viewportWidth)}
+        ${trainingTrendHTML(activityDays, viewportWidth)}
+      </div>
+    </section>`;
+}
+
 export function viniDietTrendsHTML(records, {
   goals = VINI_DAILY_GOALS,
   viewportWidth = 360,
+  activityDays = null,
 } = {}) {
   const clean = normalizedRecords(records);
   const chartWidth = Math.max(320, Math.min(900, Number(viewportWidth) || 360));
@@ -466,5 +624,6 @@ export function viniDietTrendsHTML(records, {
       <p class="vini-trends-note">O gráfico vermelho mostra o saldo energético estimado: ingestão menos gasto total conservador. Abaixo de zero indica déficit; acima, superávit. Os gráficos de macros mostram o consumo ingerido.</p>
       ${clean.length ? `<div class="vini-trends-list">${VINI_TREND_METRICS.map((metric) => chartHTML(clean, metric, goals, chartWidth)).join("")}</div>` : `
         <div class="stat-card"><p class="muted" style="margin:0">Registre alimentos para acompanhar kcal e macros ao longo do tempo.</p></div>`}
-    </section>`;
+    </section>
+    ${Array.isArray(activityDays) ? viniActivityTrendsHTML(records, activityDays, { viewportWidth: chartWidth }) : ""}`;
 }

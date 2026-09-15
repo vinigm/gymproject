@@ -40,7 +40,7 @@ const official = await readFile(new URL("../js/vini-official-diet.js", import.me
 const documentation = await readFile(new URL("../DIETA_VIVI.md", import.meta.url), "utf8");
 
 assert.match(page, /includeOfficialDiet: true/);
-assert.match(page, /await loadViniDietTracker\(\)/);
+assert.match(page, /loadViniDietTracker\(\)/);
 assert.match(page, /renderViniOfficialDiet\(el\)/);
 assert.match(page, /renderViniDietTracker\(el/);
 assert.match(page, /data-section="stats"/);

@@ -1,7 +1,7 @@
 // Implementação compartilhada das páginas "Kg Vivi" e "Kg Vini".
 // O usuário vem de data-kg-user no <body>; na ausência, mantém Vivi como padrão.
-// São quatro seções: Peso, Dieta, Stats e Graphs. O tracker alimentar,
-// estatísticas e gráficos são compartilhados entre Vini e Vivi.
+// Peso, Dieta, Estatísticas e Graphs são compartilhados. No Vini também
+// existem as seções Academia e Corrida, usando os registros de Hábitos.
 
 import { setupAuthGate, renderAuthFooter } from "./auth.js";
 import { mountNavMenu } from "./nav-menu.js";
@@ -11,8 +11,16 @@ import {
   wasSeeded, markSeeded,
 } from "./weight-storage.js";
 import { getDietDay, setDietDay, getDietMap } from "./diet-storage.js";
-import { loadViniDietTracker, renderViniDietTracker } from "./vini-diet-ui.js";
+import {
+  loadViniDietTracker,
+  renderViniDietTracker,
+  upsertViniActivityDay,
+} from "./vini-diet-ui.js";
 import { renderViniOfficialDiet } from "./vini-official-diet.js";
+import {
+  loadKgActivityTracker,
+  renderKgActivityTracker,
+} from "./kg-activity-ui.js";
 import {
   DEFAULT_TRACKING_SCOPE,
   TRACKING_SCOPE,
@@ -103,7 +111,7 @@ const GOAL_META = [
 const WD = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"];
 
 const stateData = {
-  section: "peso",       // "peso" | "dieta" | "stats" | "graphs"
+  section: "peso",       // "peso" | "dieta" | "academia" | "corrida" | "stats" | "graphs"
   entries: [],
   height: IS_VINI ? null : DEFAULT_HEIGHT_M,
   dietFoods: {},         // mapa { "refeição.alimento": quantidade } do dia atual
@@ -145,9 +153,11 @@ function render() {
   if (!root) return;
   root.innerHTML = `
     <div class="stats-toggle-bar">
-      <div class="seg stats-user-seg kg-seg" id="kg-section-seg">
+      <div class="seg stats-user-seg kg-seg${IS_VINI ? " kg-seg--6" : ""}" id="kg-section-seg">
         <button data-section="peso"  class="seg-btn">⚖️ Peso</button>
         <button data-section="dieta" class="seg-btn">🍽️ Dieta</button>
+        ${IS_VINI ? `<button data-section="academia" class="seg-btn">🏋️ Academia</button>` : ""}
+        ${IS_VINI ? `<button data-section="corrida" class="seg-btn">🏃 Corrida</button>` : ""}
         <button data-section="stats" class="seg-btn">📊 Estatísticas</button>
         <button data-section="graphs" class="seg-btn">📈 Graphs</button>
       </div>
@@ -175,7 +185,10 @@ function render() {
 }
 
 function selectSection(section) {
-  if (!["peso", "dieta", "stats", "graphs"].includes(section)) section = "peso";
+  const sections = IS_VINI
+    ? ["peso", "dieta", "academia", "corrida", "stats", "graphs"]
+    : ["peso", "dieta", "stats", "graphs"];
+  if (!sections.includes(section)) section = "peso";
   if (section !== "dieta" && stateData.trackingScope === TRACKING_SCOPE.OFFICIAL_DIET) {
     stateData.trackingScope = TRACKING_SCOPE.CYCLE;
     stateData.section = section;
@@ -189,6 +202,13 @@ function selectSection(section) {
     b.classList.toggle("is-on", b.dataset.section === section);
   });
   if (section === "peso") renderWeight();
+  else if (section === "academia" || section === "corrida") {
+    renderKgActivityTracker(document.getElementById("kg-section"), {
+      userId: USER,
+      view: section,
+      onSaved: upsertViniActivityDay,
+    });
+  }
   else renderDietSection(section);
 }
 
@@ -196,7 +216,10 @@ function selectSection(section) {
 function renderWeight() {
   const el = document.getElementById("kg-section");
   if (!el) return;
-  const entries = filterRecordsForTrackingScope(stateData.entries, USER, stateData.trackingScope);
+  // Peso é a exceção do novo ciclo: o histórico completo permanece visível.
+  const entries = IS_VINI
+    ? [...stateData.entries]
+    : filterRecordsForTrackingScope(stateData.entries, USER, stateData.trackingScope);
   const latest = entries[entries.length - 1] || null;
   const prev = entries[entries.length - 2] || null;
   const baseline = entries[0] || null;
@@ -224,7 +247,7 @@ function renderWeight() {
 
     <section class="block">
       <div class="block-head"><h2>Evolução do peso</h2>
-        <span class="muted" style="font-size:11px">${entries.length} registro${entries.length === 1 ? "" : "s"}</span>
+        <span class="muted" style="font-size:11px">histórico completo · ${entries.length} registro${entries.length === 1 ? "" : "s"}</span>
       </div>
       <div class="kg-chart-wrap">${chartHTML(entries)}</div>
     </section>
@@ -265,7 +288,7 @@ function heroHTML(latest, prev, baseline) {
   if (baseline && baseline.id !== latest.id) {
     const d = latest.weight - baseline.weight;
     const arrow = d > 0 ? "↑" : d < 0 ? "↓" : "→";
-    const period = stateData.trackingScope === TRACKING_SCOPE.CYCLE ? "início do ciclo" : "primeiro registro";
+    const period = "primeiro registro";
     const txt = d === 0 ? `sem mudança desde o ${period}` : `${arrow} ${fmtWeight(Math.abs(d))} kg desde o ${period}`;
     cycleDelta = `<span class="kg-hero-cycle-delta">${txt}</span>`;
   }
@@ -733,14 +756,20 @@ document.addEventListener("DOMContentLoaded", () => {
         renderAuthFooter(user);
         try {
           const savedSection = localStorage.getItem(SECTION_KEY);
-          if (["peso", "dieta", "stats", "graphs"].includes(savedSection)) {
+          const validSections = IS_VINI
+            ? ["peso", "dieta", "academia", "corrida", "stats", "graphs"]
+            : ["peso", "dieta", "stats", "graphs"];
+          if (validSections.includes(savedSection)) {
             stateData.section = savedSection;
           }
         } catch {}
         stateData.height = loadHeight(USER, IS_VINI ? null : DEFAULT_HEIGHT_M);
         stateData.entries = await getWeightEntries(USER);
         await seedIfEmpty();
-        await loadViniDietTracker();
+        await Promise.all([
+          loadViniDietTracker(),
+          IS_VINI ? loadKgActivityTracker(USER) : Promise.resolve(),
+        ]);
         render();
       } catch (err) {
         console.error(`Erro ao inicializar Kg ${PERSON_NAME}:`, err);

@@ -11,9 +11,9 @@ export const DEFAULT_TRACKING_SCOPE = TRACKING_SCOPE.CYCLE;
 
 export const TRACKING_CYCLES = Object.freeze({
   vinicius: Object.freeze({
-    id: "nutri-2026-07",
-    label: "Acompanhamento Nutri",
-    startDate: "2026-07-15",
+    id: "tracking-2026-09",
+    label: "Novo ciclo",
+    startDate: "2026-09-15",
     endDate: null,
   }),
   victoria: Object.freeze({

@@ -81,6 +81,24 @@ assert.match(empty, /Registre alimentos/);
 assert.doesNotMatch(empty, /data-export-diet-pdf/);
 assert.doesNotMatch(empty, /<svg/);
 
+const activity = viniDietTrendsHTML(records, {
+  viewportWidth: 500,
+  activityDays: [
+    { date: "2026-07-15", exercises: ["academia"], gym_groups: ["peito", "triceps"], water: "2.5L" },
+    { date: "2026-07-16", exercises: ["corrida"], run_km: 3, water: "3L" },
+    { date: "2026-07-18", exercises: ["academia", "corrida"], gym_groups: ["perna"], run_km: 5, water: "3.5L" },
+  ],
+});
+assert.match(activity, /Atividade e hidratação/);
+assert.match(activity, /Água/);
+assert.match(activity, /vini-activity-water-line/);
+assert.match(activity, /Academia \+ corrida/);
+assert.match(activity, /vini-training-run-line/);
+assert.match(activity, /Peito/);
+assert.match(activity, /Perna/);
+assert.match(activity, /5,0 km/);
+assert.doesNotMatch(activity, /NaN|Infinity/);
+
 const details = viniTrendDetailHTML(records[0], "p");
 assert.match(details, /Proteína/);
 assert.match(details, /quarta-feira, 15 de julho de 2026/i);

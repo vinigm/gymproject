@@ -57,6 +57,7 @@ import {
 } from "./diet-profile.js";
 
 const USER = DIET_PROFILE.userId;
+const ACTIVITY_HISTORY_START = "2026-05-18";
 const WEEKDAYS = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"];
 const FAT_GOAL_ACTIVITY_KEY = `habitos-vini-fat-goal-activity-${USER}`;
 const FAT_GOAL_TARGET_KEY = `habitos-vini-fat-goal-target-${USER}`;
@@ -114,6 +115,7 @@ const tracker = {
   loaded: false,
   map: {},
   weightEntries: [],
+  activityDays: [],
   selectedDate: todayISO(),
   scope: "cycle",
   view: "diet",
@@ -198,13 +200,25 @@ function divideNutrition(total, divisor) {
 }
 
 export async function loadViniDietTracker() {
-  const [map, weightEntries] = await Promise.all([
+  const [map, weightEntries, activityDays] = await Promise.all([
     getViniDietPlanMap(USER),
     getWeightEntries(USER),
+    USER === "vinicius"
+      ? getRange(USER, ACTIVITY_HISTORY_START, todayISO()).catch(() => [])
+      : Promise.resolve([]),
   ]);
   tracker.map = map;
   tracker.weightEntries = weightEntries;
+  tracker.activityDays = activityDays;
   tracker.loaded = true;
+}
+
+export function upsertViniActivityDay(day) {
+  if (!day?.date || day.userId !== USER) return;
+  tracker.activityDays = [
+    ...tracker.activityDays.filter((entry) => entry.date !== day.date),
+    day,
+  ].sort((a, b) => a.date.localeCompare(b.date));
 }
 
 function weightForSelectedDate() {
@@ -362,6 +376,7 @@ function renderTracker() {
   } else if (tracker.view === "graphs") {
     tracker.root.innerHTML = viniDietTrendsHTML(recordsInScope(), {
       viewportWidth: Math.max(320, tracker.root.clientWidth - 48),
+      activityDays: USER === "vinicius" ? activityDaysInScope() : null,
     });
   } else {
     tracker.root.innerHTML = `
@@ -816,6 +831,11 @@ function recordsInScope() {
     .filter((entry) => entry.summary.hasData)
     .sort((a, b) => a.date.localeCompare(b.date));
   return enrichEnergyBalanceRecords(records, energyBalanceOptions());
+}
+
+function activityDaysInScope() {
+  return filterRecordsForTrackingScope(tracker.activityDays, USER, tracker.scope)
+    .sort((a, b) => a.date.localeCompare(b.date));
 }
 
 function energyBalanceOptions() {
