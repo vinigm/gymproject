@@ -210,7 +210,7 @@ function runningPlanHTML(days, currentWeek) {
   const total = RUNNING_PLAN.length * RUN_SESSION_TYPES.length;
   return `
     <section class="block kg-running-plan">
-      <div class="block-head"><div><h2>🗺️ Planilha rumo aos 5 km</h2><p>Três sessões por etapa, realizadas nos dias que funcionarem para você.</p></div><strong>${completedCount}/${total}</strong></div>
+      <div class="block-head"><div><h2>🗺️ Plano acelerado rumo aos 5 km</h2><p>Seis etapas · três sessões flexíveis por etapa.</p></div><strong>${completedCount}/${total}</strong></div>
       <div class="kg-running-goal"><span>Objetivo</span><strong>5 km sem parar</strong><em>pace 5:50/km</em></div>
       <div class="kg-running-progress"><i style="width:${(completedCount / total) * 100}%"></i></div>
       <div class="kg-running-baseline"><span>Base usada para recalibrar</span><strong>${formatRunAmount(RUNNING_PLAN_BASELINE.estimatedKm)} km em 33:15</strong><small>24:12 correndo · FC ${RUNNING_PLAN_BASELINE.averageHeartRate}/${RUNNING_PLAN_BASELINE.maxHeartRate} · efeito aeróbico ${String(RUNNING_PLAN_BASELINE.aerobicEffect).replace(".", ",")}</small></div>

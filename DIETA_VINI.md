@@ -389,6 +389,7 @@ Estas diretrizes orientam a implementação atual:
 - **15/09/2026 — plano de corrida:** a aba Corrida passou a registrar distância digitável, tempo, observações e o tipo de sessão. Foi incluída uma planilha de 12 etapas, com três sessões flexíveis por etapa (leve, intervalada e longa), culminando em 5 km. A conclusão fica ligada ao documento diário; pode ser revisada ou retirada sem apagar a corrida, e registros livres não avançam o plano.
 - **16/09/2026 — recalibração da corrida:** após a primeira sessão real (33:15 totais, cerca de 4,74 km, 24:12 correndo, 9:03 caminhando, FC 137/153 e efeito aeróbico 2,6), o plano foi reduzido de 12 para 8 etapas. A primeira etapa agora parte de blocos de 3 min correndo e 1min30 caminhando; a progressão amplia primeiro os blocos contínuos e termina com a tentativa confortável de 5 km.
 - **16/09/2026 — paces da corrida:** o objetivo final passou a ser 5 km contínuos em 5:50/km. Cada sessão da planilha mostra uma faixa de pace para os blocos correndo, separando treino leve, intervalado controlado e longo. Ao concluir um treino com distância e tempo, o check também mostra o pace global realizado.
+- **16/09/2026 — plano acelerado:** considerando que os blocos iniciais de 3 min já foram executados perto de 6:00/km com esforço controlado, a planilha foi encurtada para 6 etapas. O início passou a usar blocos de 5–7 min, a primeira tentativa de 5 km contínuos ocorre na etapa 5 em 6:00–6:10/km e o teste de 5:50/km permanece na etapa 6.
 
 ## 15. Implementação no tracker
 

@@ -31,7 +31,7 @@ function normalizePositiveMinutes(value) {
 
 function normalizePlanWeek(value) {
   const week = nullableNumber(value);
-  return Number.isInteger(week) && week >= 1 && week <= 8 ? week : null;
+  return Number.isInteger(week) && week >= 1 && week <= 6 ? week : null;
 }
 
 function normalizePlanSession(value) {

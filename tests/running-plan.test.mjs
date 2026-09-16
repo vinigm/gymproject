@@ -9,16 +9,16 @@ import {
   validRunPlanWeek,
 } from "../js/running-plan.js";
 
-assert.equal(RUNNING_PLAN.length, 8);
+assert.equal(RUNNING_PLAN.length, 6);
 assert.deepEqual(RUN_SESSION_TYPES.map((session) => session.id), ["easy", "interval", "long"]);
-assert.match(RUNNING_PLAN[0].sessions.easy.description, /3 min/);
-assert.equal(RUNNING_PLAN[0].sessions.easy.pace, "6:40–7:00/km");
+assert.match(RUNNING_PLAN[0].sessions.easy.description, /5 min/);
+assert.equal(RUNNING_PLAN[0].sessions.easy.pace, "6:15–6:30/km");
 assert.match(RUNNING_PLAN.at(-1).sessions.long.description, /5 km/);
 assert.equal(RUNNING_PLAN.at(-1).sessions.long.pace, "5:50/km");
 assert.equal(RUNNING_PLAN_BASELINE.runningMinutes, 24.2);
 assert.equal(RUNNING_PLAN_BASELINE.averageHeartRate, 137);
 assert.equal(validRunPlanWeek(1), 1);
-assert.equal(validRunPlanWeek(9), null);
+assert.equal(validRunPlanWeek(7), null);
 assert.equal(validRunPlanSession("interval"), "interval");
 assert.equal(validRunPlanSession("free"), null);
 
