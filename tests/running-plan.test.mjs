@@ -2,17 +2,21 @@ import assert from "node:assert/strict";
 import {
   RUN_SESSION_TYPES,
   RUNNING_PLAN,
+  RUNNING_PLAN_BASELINE,
   currentRunPlanWeek,
   runPlanCompletions,
   validRunPlanSession,
   validRunPlanWeek,
 } from "../js/running-plan.js";
 
-assert.equal(RUNNING_PLAN.length, 12);
+assert.equal(RUNNING_PLAN.length, 8);
 assert.deepEqual(RUN_SESSION_TYPES.map((session) => session.id), ["easy", "interval", "long"]);
+assert.match(RUNNING_PLAN[0].sessions.easy, /3 min/);
 assert.match(RUNNING_PLAN.at(-1).sessions.long, /5 km/);
+assert.equal(RUNNING_PLAN_BASELINE.runningMinutes, 24.2);
+assert.equal(RUNNING_PLAN_BASELINE.averageHeartRate, 137);
 assert.equal(validRunPlanWeek(1), 1);
-assert.equal(validRunPlanWeek(13), null);
+assert.equal(validRunPlanWeek(9), null);
 assert.equal(validRunPlanSession("interval"), "interval");
 assert.equal(validRunPlanSession("free"), null);
 

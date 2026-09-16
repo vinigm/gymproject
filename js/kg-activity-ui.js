@@ -12,6 +12,7 @@ import { trackingCycleFor } from "./tracking-cycle.js";
 import {
   RUN_SESSION_TYPES,
   RUNNING_PLAN,
+  RUNNING_PLAN_BASELINE,
   currentRunPlanWeek,
   runPlanCompletions,
 } from "./running-plan.js";
@@ -179,7 +180,7 @@ function runHTML() {
               <option value="">Corrida livre</option>
               ${RUNNING_PLAN.map((item) => RUN_SESSION_TYPES.map((session) => {
                 const selected = Number(state.day.run_plan_week) === item.number && state.day.run_plan_session === session.id;
-                return `<option value="${item.number}:${session.id}" ${selected ? "selected" : ""}>Semana ${item.number} · ${session.label}</option>`;
+                return `<option value="${item.number}:${session.id}" ${selected ? "selected" : ""}>Etapa ${item.number} · ${session.label}</option>`;
               }).join("")).join("")}
             </select></label>
             <label class="kg-run-notes-field"><span>Observações</span><textarea rows="2" maxlength="240" data-run-field="run_notes" placeholder="Como foi o treino?">${escapeHTML(state.day.run_notes || "")}</textarea></label>
@@ -211,7 +212,8 @@ function runningPlanHTML(days, currentWeek) {
     <section class="block kg-running-plan">
       <div class="block-head"><div><h2>🗺️ Planilha rumo aos 5 km</h2><p>Três sessões por etapa, realizadas nos dias que funcionarem para você.</p></div><strong>${completedCount}/${total}</strong></div>
       <div class="kg-running-progress"><i style="width:${(completedCount / total) * 100}%"></i></div>
-      <p class="kg-running-guidance">Base sugerida: leve na segunda, intervalado na quarta e longo no sábado. Faça 5 min de caminhada antes e depois; repita uma etapa se precisar.</p>
+      <div class="kg-running-baseline"><span>Base usada para recalibrar</span><strong>${formatRunAmount(RUNNING_PLAN_BASELINE.estimatedKm)} km em 33:15</strong><small>24:12 correndo · FC ${RUNNING_PLAN_BASELINE.averageHeartRate}/${RUNNING_PLAN_BASELINE.maxHeartRate} · efeito aeróbico ${String(RUNNING_PLAN_BASELINE.aerobicEffect).replace(".", ",")}</small></div>
+      <p class="kg-running-guidance">Base sugerida: leve na segunda, intervalado na quarta e longo no sábado. Os blocos devem ser confortáveis, não tiros. Faça 5 min de caminhada antes e depois; avance somente sem dor e podendo falar frases curtas.</p>
       <div class="kg-running-plan-grid">
         ${RUNNING_PLAN.map((item) => `
           <article class="kg-running-week${item.number === currentWeek ? " is-current" : ""}${item.number < currentWeek ? " is-complete" : ""}">

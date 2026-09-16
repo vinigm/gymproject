@@ -4,6 +4,17 @@ export const RUN_SESSION_TYPES = Object.freeze([
   Object.freeze({ id: "long", label: "Longo", icon: "🛣️" }),
 ]);
 
+export const RUNNING_PLAN_BASELINE = Object.freeze({
+  totalMinutes: 33.25,
+  runningMinutes: 24.2,
+  walkingMinutes: 9.05,
+  estimatedKm: 4.74,
+  averagePace: "7:01/km",
+  averageHeartRate: 137,
+  maxHeartRate: 153,
+  aerobicEffect: 2.6,
+});
+
 function week(number, easy, interval, long) {
   return Object.freeze({
     number,
@@ -14,18 +25,14 @@ function week(number, easy, interval, long) {
 // Plano-base deliberadamente orientado por sessões, não por dias da semana.
 // Toda sessão inclui 5 min de caminhada antes e depois do bloco descrito.
 export const RUNNING_PLAN = Object.freeze([
-  week(1, "8× 1 min corrida / 1min30 caminhada", "8× 1 min corrida / 1min30 caminhada", "10× 1 min corrida / 1min30 caminhada"),
-  week(2, "6× 1min30 corrida / 2 min caminhada", "7× 1min30 corrida / 1min30 caminhada", "8× 1min30 corrida / 2 min caminhada"),
-  week(3, "6× 2 min corrida / 2 min caminhada", "5× 3 min corrida / 2 min caminhada", "6× 3 min corrida / 2 min caminhada"),
-  week(4, "5× 4 min corrida / 2 min caminhada", "4× 5 min corrida / 2 min caminhada", "3× 6 min corrida / 2 min caminhada"),
-  week(5, "3× 6 min corrida / 2 min caminhada", "3× 8 min corrida / 3 min caminhada", "20 min de corrida contínua leve"),
-  week(6, "20 min de corrida contínua leve", "5 + 8 + 5 min, com 3 min caminhando", "25 min de corrida contínua leve"),
-  week(7, "22 min de corrida contínua leve", "4× 5 min corrida / 2 min caminhada", "28 min de corrida contínua leve"),
-  week(8, "25 min de corrida contínua leve", "3× 8 min corrida / 2 min caminhada", "30 min de corrida contínua leve"),
-  week(9, "25 min de corrida contínua leve", "4× 6 min corrida / 1min30 caminhada", "32 min de corrida contínua leve"),
-  week(10, "28 min de corrida contínua leve", "3× 8 min corrida / 2 min caminhada", "35 min de corrida contínua leve"),
-  week(11, "30 min de corrida contínua leve", "5× 5 min corrida / 1min30 caminhada", "4,5 km em ritmo confortável"),
-  week(12, "25 min bem leves", "3× 5 min corrida / 2 min caminhada", "5 km em ritmo confortável"),
+  week(1, "7× 3 min corrida / 1min30 caminhada", "6× 4 min corrida / 1min30 caminhada", "8× 3 min corrida / 1min30 caminhada"),
+  week(2, "6× 4 min corrida / 1min30 caminhada", "5× 5 min corrida / 1min30 caminhada", "7× 4 min corrida / 1min30 caminhada"),
+  week(3, "5× 5 min corrida / 1min30 caminhada", "4× 6 min corrida / 1min30 caminhada", "4× 7 min corrida / 2 min caminhada"),
+  week(4, "4× 6 min corrida / 1min30 caminhada", "3× 8 min corrida / 2 min caminhada", "12 + 12 + 5 min, com 2 min caminhando"),
+  week(5, "20 min de corrida contínua leve", "2× 12 min corrida / 2 min caminhada", "25 min de corrida contínua leve"),
+  week(6, "22 min de corrida contínua leve", "3× 8 min corrida / 1min30 caminhada", "30 min de corrida contínua leve"),
+  week(7, "25 min de corrida contínua leve", "2× 15 min corrida / 2 min caminhada", "35 min de corrida contínua leve"),
+  week(8, "20 min bem leves", "3× 5 min controlados / 1min30 caminhada", "5 km em ritmo confortável"),
 ]);
 
 export function validRunPlanWeek(value) {
