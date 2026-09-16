@@ -3438,6 +3438,10 @@ body.presence-fullscreen .presence-fs-exit { display: flex; }
 .kg-running-plan .block-head h2 { margin: 0; }
 .kg-running-plan .block-head p { margin: 0; color: var(--muted); font-size: 10px; }
 .kg-running-plan .block-head > strong { color: var(--kg-accent); font-size: 13px; }
+.kg-running-goal { display: flex; margin-bottom: 10px; padding: 10px 12px; align-items: baseline; gap: 8px; background: linear-gradient(90deg, rgba(96,165,250,.11), rgba(52,211,153,.08)); border: 1px solid rgba(96,165,250,.25); border-radius: 10px; }
+.kg-running-goal span { color: var(--kg-accent); font-size: 8px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
+.kg-running-goal strong { margin-left: auto; font-size: 13px; }
+.kg-running-goal em { color: var(--good); font-size: 11px; font-style: normal; font-weight: 900; }
 .kg-running-progress { height: 8px; margin-bottom: 10px; overflow: hidden; background: rgba(2,6,23,.48); border: 1px solid var(--border); border-radius: 999px; }
 .kg-running-progress i { display: block; height: 100%; background: linear-gradient(90deg, var(--good), var(--kg-accent)); border-radius: inherit; transition: width .25s ease; }
 .kg-running-baseline { display: grid; margin-bottom: 10px; padding: 10px 12px; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 3px 12px; background: rgba(52,211,153,.055); border: 1px solid rgba(52,211,153,.2); border-radius: 10px; }
@@ -3460,6 +3464,7 @@ body.presence-fullscreen .presence-fs-exit { display: flex; }
 .kg-run-plan-session > span:last-child { display: flex; min-width: 0; flex-direction: column; gap: 4px; }
 .kg-run-plan-session strong { font-size: 10px; }
 .kg-run-plan-session small { color: var(--muted); font-size: 8px; line-height: 1.4; }
+.kg-run-plan-session b { color: var(--kg-accent); font-size: 8px; font-weight: 900; }
 .kg-run-plan-session em { color: var(--good); font-size: 8px; font-style: normal; font-weight: 800; }
 .kg-run-plan-session.is-done { background: rgba(52,211,153,.045); }
 .kg-run-plan-session.is-done .kg-run-plan-check { background: var(--good); border-color: var(--good); }
@@ -4376,6 +4381,8 @@ body.presence-fullscreen .presence-fs-exit { display: flex; }
   .kg-run-plan-session:last-child { border-bottom: 0; }
   .kg-running-baseline { grid-template-columns: 1fr; }
   .kg-running-baseline strong { grid-row: auto; grid-column: auto; }
+  .kg-running-goal { align-items: flex-start; flex-direction: column; }
+  .kg-running-goal strong { margin-left: 0; }
   .vini-activity-card > header { align-items: flex-start; flex-direction: column; }
   .vini-official-summary { grid-template-columns: auto 1fr; }
   .vini-official-options { grid-template-columns: 1fr; }

@@ -211,9 +211,10 @@ function runningPlanHTML(days, currentWeek) {
   return `
     <section class="block kg-running-plan">
       <div class="block-head"><div><h2>🗺️ Planilha rumo aos 5 km</h2><p>Três sessões por etapa, realizadas nos dias que funcionarem para você.</p></div><strong>${completedCount}/${total}</strong></div>
+      <div class="kg-running-goal"><span>Objetivo</span><strong>5 km sem parar</strong><em>pace 5:50/km</em></div>
       <div class="kg-running-progress"><i style="width:${(completedCount / total) * 100}%"></i></div>
       <div class="kg-running-baseline"><span>Base usada para recalibrar</span><strong>${formatRunAmount(RUNNING_PLAN_BASELINE.estimatedKm)} km em 33:15</strong><small>24:12 correndo · FC ${RUNNING_PLAN_BASELINE.averageHeartRate}/${RUNNING_PLAN_BASELINE.maxHeartRate} · efeito aeróbico ${String(RUNNING_PLAN_BASELINE.aerobicEffect).replace(".", ",")}</small></div>
-      <p class="kg-running-guidance">Base sugerida: leve na segunda, intervalado na quarta e longo no sábado. Os blocos devem ser confortáveis, não tiros. Faça 5 min de caminhada antes e depois; avance somente sem dor e podendo falar frases curtas.</p>
+      <p class="kg-running-guidance">Base sugerida: leve na segunda, intervalado na quarta e longo no sábado. O pace indicado vale somente para os blocos correndo; caminhe livremente para recuperar. Os blocos são controlados, não tiros. Faça 5 min de caminhada antes e depois; avance somente sem dor e com a respiração compatível com o treino.</p>
       <div class="kg-running-plan-grid">
         ${RUNNING_PLAN.map((item) => `
           <article class="kg-running-week${item.number === currentWeek ? " is-current" : ""}${item.number < currentWeek ? " is-complete" : ""}">
@@ -225,7 +226,7 @@ function runningPlanHTML(days, currentWeek) {
                 return `<button type="button" class="kg-run-plan-session${completion ? " is-done" : ""}${isDraft ? " is-draft" : ""}"
                   data-run-plan-week="${item.number}" data-run-plan-session="${session.id}" data-run-plan-date="${completion?.date || ""}">
                   <span class="kg-run-plan-check">${completion ? "✓" : ""}</span>
-                  <span><strong>${session.icon} ${session.label}</strong><small>${item.sessions[session.id]}</small>${completion ? `<em>${formatDateBR(completion.date)} · ${formatRunAmount(completion.run_km)} km</em>` : ""}</span>
+                  <span><strong>${session.icon} ${session.label}</strong><small>${item.sessions[session.id].description}</small><b>pace correndo ${item.sessions[session.id].pace}</b>${completion ? `<em>${formatDateBR(completion.date)} · ${formatRunAmount(completion.run_km)} km${formatRunPace(completion.run_km, completion.run_duration_min) ? ` · ${formatRunPace(completion.run_km, completion.run_duration_min)}` : ""}</em>` : ""}</span>
                 </button>`;
               }).join("")}
             </div>
@@ -241,6 +242,16 @@ function formatDateBR(iso) {
 
 function formatRunAmount(value) {
   return new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 2 }).format(Number(value) || 0);
+}
+
+function formatRunPace(km, minutes) {
+  const distance = Number(km);
+  const duration = Number(minutes);
+  if (!(distance > 0) || !(duration > 0)) return "";
+  const seconds = Math.round((duration * 60) / distance);
+  const paceMinutes = Math.floor(seconds / 60);
+  const paceSeconds = String(seconds % 60).padStart(2, "0");
+  return `${paceMinutes}:${paceSeconds}/km`;
 }
 
 function saveHTML() {
